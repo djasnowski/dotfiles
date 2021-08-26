@@ -1,0 +1,19 @@
+{
+    "workbench.colorTheme": "Bearded Theme Black & Amethyst",
+    "window.zoomLevel": 2,
+    "workbench.iconTheme": "bearded-icons",
+    "files.associations": {
+        "**/.i3/config": "i3",
+        "**/i3/config": "i3",
+    },
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "git.enableSmartCommit": true,
+    "git.autofetch": true,
+    "editor.minimap.enabled": false,
+    "workbench.editor.untitled.hint": "hidden",
+    "explorer.confirmDelete": false,
+    "workbench.activityBar.visible": false,
+    "git.confirmSync": false,
+    "editor.formatOnSave": true,
+    "editor.tabSize": 2
+}
