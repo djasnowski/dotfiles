@@ -17,6 +17,7 @@ function! Plug(plugin) abort
 endfunction
 " }}}
 
+
 " Plugins {{{
 " Begin vim plug
 call plug#begin(expand('~/.config/nvim/plugged'))
@@ -45,8 +46,8 @@ Plug 'rbgrouleff/bclose.vim' " Needed with nvim for ranger to work
 " Navigation {{{
 Plug 'lambdalisue/fern.vim'                                  | " netrw replacement
 Plug 'ap/vim-buftabline'                                     | " Displays buffers
-Plug 'chaoren/vim-wordmotion'
 Plug 'wellle/targets.vim'
+Plug 'phaazon/hop.nvim', { 'branch': 'pre-extmarks' }
 " }}}
 
 " Visual {{{
@@ -57,6 +58,10 @@ Plug 'vim-airline/vim-airline'                               | " Airline
 Plug 'vim-airline/vim-airline-themes'                        | " Airline themes
 Plug 'nathanaelkane/vim-indent-guides'                       | " Provides indentation guides
 Plug 'edkolev/tmuxline.vim'
+Plug 'mboughaba/i3config.vim'
+Plug 'folke/lsp-colors.nvim'                                 | "  Neovim LSP colors
+Plug 'i3d/vim-jimbothemes'                                   | " Matrix
+Plug 'arcticicestudio/nord-vim'
 " }}}
 
 " Editor {{{
@@ -141,8 +146,9 @@ autocmd FileType netrw setl bufhidden=wipe
 " }}}
 
 " Visual {{{
-colorscheme onedark                                   | " Vim theme
-let g:airline_theme='onedark'                         | " Airline theme
+colorscheme matrix
+" colorscheme danmatrix                                   | " Vim theme
+let g:airline_theme='biogoo'                         | " Airline theme
 set background=dark
 let &colorcolumn="121"                             | " Add indicator for 80 and 120
 " set t_CO=256 " Set term color to 256
@@ -152,11 +158,23 @@ set foldtext=clean_fold#fold_text_minimal()           | " Clean folds
 set noshowmode                                        | " Always show what mode we are on
 set novisualbell                                      | " Don't display visual bell
 set nowrap                                            | " Don't wrap lines
-set nonu rnu                                          | " Show line numbers and relative number
+" set nonu                                              | " Do not show line numbers and relative number
+" Set completeopt to have a better completion experience
+" :help completeopt
+" menuone: popup even when there's only one match
+" noinsert: Do not insert text until a selection is made
+" noselect: Do not select, force user to select one from the menu
+set completeopt=menuone,noinsert,noselect
+set rnu
 set showmatch                                         | " Show matching braces
 set termguicolors                                     | " Enables 24bit colors
 set showcmd                                           | " Show (partial) command in the status line
 set cursorline
+hi CursorLine term=bold cterm=bold guibg=Grey30
+aug i3config_ft_detection
+  au!
+  au BufNewFile,BufRead ~/.config/i3/config set filetype=i3config
+aug end
 " }}}
 " }}}
 
@@ -171,6 +189,7 @@ nmap ]c <Plug>(GitGutterNextHunk)
 nmap [c <Plug>(GitGutterPrevHunk)
 nmap gs <Plug>(coc-git-chunkinfo)
 nmap <silent> <Leader>ev :vs $MYNVIMRC<CR>
+nnoremap <leader>sv :source $MYNVIMRC<CR>
 nmap <silent> <Leader>et :vs $TMUXCONF<CR>
 nmap <silent> <Leader>u :UndotreeToggle <bar> :UndotreeFocus<CR>
 " }}}
@@ -188,7 +207,7 @@ nnoremap <silent> <Leader>b :Buffers<CR>
 nnoremap <silent> <Leader>w :Windows<CR>
 " Open ripgrep
 nnoremap <silent> <Leader>f :Rg<CR>
-nnoremap <silent> <Leader>ra :FloatermNew ranger<CR>
+nnoremap <silent> <Leader>ra :FloatermNew --width=0.75 --height=0.75 ranger<CR>
 nnoremap <silent> <Leader>F :FloatermNew vifm<CR>
 " Search for next character undor cursor
 nnoremap <silent> <leader>a vy/<C-R>='\V'.escape(getreg('"'),'\\/')<CR><CR>
@@ -196,6 +215,16 @@ nnoremap <silent> <leader>a vy/<C-R>='\V'.escape(getreg('"'),'\\/')<CR><CR>
 nmap <Leader>/ <Plug>RgRawSearch
 vmap <Leader>/ <Plug>RgRawVisualSelection
 nmap <Leader>* <Plug>RgRawWordUnderCursor
+
+" Sane next/prev defaults
+nnoremap n nzzzv
+nnoremap N Nzzzv
+
+" NVIM built in terminal
+if has("nvim")
+    nnoremap <Leader>ts :sp term://zsh<CR>
+    nnoremap <Leader>te :vs term://zsh<CR> 
+endif
 " }}}
 
 " Switching {{{
@@ -208,6 +237,12 @@ nnoremap <silent> <Leader>a :A<CR>
 " Alternate file navigation vertical split
 nnoremap <silent> <Leader><S-a> :AV<CR>
 " }}}
+
+
+" trouble.nvim
+" Vim Script
+Plug 'kyazdani42/nvim-web-devicons'
+Plug 'folke/trouble.nvim'
 
 " View Management {{{
 " Open current file in fern
@@ -454,6 +489,15 @@ function! s:show_documentation()
     call CocAction('doHover')
   endif
 endfunction
+" }}}
+
+" Matching bracket pairing {{{
+inoremap { {}<Esc>ha
+inoremap ( ()<Esc>ha
+inoremap [ []<Esc>ha
+inoremap " ""<Esc>ha
+inoremap ' ''<Esc>ha
+inoremap ` ``<Esc>ha
 " }}}
 
 
