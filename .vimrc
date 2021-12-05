@@ -19,7 +19,9 @@ Plug 'junegunn/fzf', { 'do': { -> fzf#install() } }
 Plug 'junegunn/fzf.vim'
 Plug 'pbogut/fzf-mru.vim'
 Plug 'airblade/vim-gitgutter'
-Plug 'NLKNguyen/papercolor-theme'
+Plug 'i3d/vim-jimbothemes'
+
+Plug 'itchyny/lightline.vim'
 
 call plug#end()
 
@@ -30,7 +32,19 @@ set foldtext=clean_fold#fold_text_minimal()
 set background=dark
 " Set term color to 256
 set t_CO=256
-colorscheme PaperColor
+
+colorscheme matrix
+
+" pop-punk ANSI colors for vim terminal
+let g:terminal_ansi_colors = pop_punk#AnsiColors()
+
+" for the airline theme - note the underscore instead of the hyphen
+let g:airline_theme = 'pop_punk'
+
+" just for fun
+let g:airline_section_c = '🎸 %F'
+
+
 let g:terminal_ansi_colors = pop_punk#AnsiColors()
 let g:fzf_layout = { 'window': { 'width': 0.8, 'height': 0.5, 'highlight': 'Comment'} }
 hi! fzf_fg ctermfg=14                                                                                                                                                       
