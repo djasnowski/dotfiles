@@ -1,6 +1,12 @@
-export PATH=$HOME/bin:/usr/local/bin:~/.config/composer/vendor/bin:$PATH
-ZSH_DISABLE_COMPFIX=true
-ZSH_THEME="afowler"
+# If you come from bash you might have to change your $PATH.
+# export PATH=$HOME/bin:/usr/local/bin:$PATH;
+
+export ZSH="/home/dan/.oh-my-zsh"
+export PATH="${PATH}:${HOME}/.local/bin/"
+
+export PKG_CONFIG_PATH=/usr/lib/x86_64-linux-gnu/pkgconfig:/usr/share/pkgconfig/
+
+ZSH_THEME="spaceship"
 
 # export VIMINIT='source $MYVIMRC'
 export EDITOR='vim'
@@ -8,18 +14,13 @@ export MYVIMRC='~/.vimrc'
 export MYNVIMRC='~/.config/nvim/init.vim'
 export TMUXCONF='~/.tmux.conf'
 
-eval "$(fasd --init auto)"
-
-# If you come from bash you might have to change your $PATH.
-export PATH=/usr/local/bin:$PATH
-source /home/dan/.bash_profile
-
-# Path to your oh-my-zsh installation.
-export ZSH=/home/dan/.oh-my-zsh
-
 export FZF_DEFAULT_COMMAND='rg --files --no-ignore --hidden --follow --glob "!.git/*"'
 
-ZSH_THEME=""
+# History in cache directory:
+HISTSIZE=10000
+SAVEHIST=10000
+HISTFILE=~/.cache/zshhistory
+setopt appendhistory
 
 # NPM Scripts
 alias vs="npm run serve"
@@ -28,14 +29,20 @@ alias nb="npm run build"
 alias nrw="npm run watch"
 alias qq="npm run ndb"
 
-alias nrbg="npm run build:graphql"
+# Fedora
+alias btr="sudo systemctl restart bluetooth.service"
 
-# Private SSHs
-alias sshdf="sshcd root@delaford.com:/usr/share/nginx/html"
+# Rust
+alias cr="cargo run"
+alias cb="cargo build"
+
+# Docker
+alias dc="docker compose"
 
 alias q="yarn server"
 alias lg="lazygit"
 alias g="git"
+alias gc="git checkout"
 alias glog="git log --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit"
 alias wip="git add . && git commit -m 'wip'"
 alias nah="git reset --hard && git clean -df"
@@ -57,8 +64,6 @@ alias vd="ls -la"
 alias cls="clear"
 alias phpserv="php -S localhost:7777 -t ."
 
-alias ss="sublime ."
-
 alias ..="cd ../"
 alias ...="cd ../../"
 alias ....="cd ../../../"
@@ -68,30 +73,23 @@ alias finder='open -a 'Finder' .'
 alias ip="curl icanhazip.com"
 alias rcli="redis-cli"
 
+alias cat="bat"
+
+alias i3r="i3-msg restart"
 alias ezsh="vim ~/.zshrc"
 alias ebash="vim ~/.bash_profile"
 alias ephpcs="vim ~/.vscode/.php_cs"
 alias etmux="vim ~/.tmux.conf"
 alias envim="nvim ~/.config/nvim/init.vim"
+alias evim="vim ~/.vimrc"
+alias exr="vim ~/.Xresources"
 
-# Uncomment the following line to automatically update without prompting.
-DISABLE_UPDATE_PROMPT="true"
+alias nrbg="npm run build:graphql"
 
-plugins=(git zsh-autosuggestions zsh-syntax-highlighting)
+
+plugins=(git fasd zsh-autosuggestions zsh-syntax-highlighting docker docker-compose)
 
 source $ZSH/oh-my-zsh.sh
-fpath=($fpath "/home/dan/.zfunctions")
 
-# Set Spaceship ZSH as a prompt
-autoload -U promptinit; promptinit
-prompt spaceship
-
-# History in cache directory:
-HISTSIZE=10000
-SAVEHIST=10000
-HISTFILE=~/.cache/zshhistory
-setopt appendhistory
-
-export PATH=$PATH:/usr/local/go/bin
-
-export CYPRESS_CRASH_REPORTS=0
+export PNPM_HOME="/home/dan/.local/share/pnpm"
+export PATH="$PNPM_HOME:$PATH"
