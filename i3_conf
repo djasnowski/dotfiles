@@ -8,10 +8,10 @@ for_window [class="^.*"] border pixel 0
 
 # Polybar
 # https://github.com/polybar/polybar/wiki
-exec_always --no-startup-id ~/.config/polybar/launch.sh &
+exec_always --no-startup-id sh /home/dan/.config/polybar/launch.sh
 
-bindsym Mod1+Tab focus right
-bindsym Mod1+Shift+Tab focus left
+# bindsym Mod1+Tab focus right
+# bindsym Mod1+Shift+Tab focus left
 
 set $mod Mod4
 
@@ -28,7 +28,7 @@ set $workspace10 "10: "
 
 # Font for window titles. Will also be used by the bar unless a different font
 # is used in the bar {} block below.
-font pango:Ubuntu 8
+font pango:Hack 13
 
 # This font is widely installed, provides lots of unicode glyphs, right-to-left
 # text rendering and scalability on retina/hidpi displays (thanks to pango).
@@ -40,6 +40,8 @@ font pango:Ubuntu 8
 # xss-lock grabs a logind suspend inhibit lock and will use i3lock to lock the
 # screen before suspend. Use loginctl lock-session to lock your screen.
 exec --no-startup-id xss-lock --transfer-sleep-lock -- i3lock --nofork
+
+exec --no-startup-id compton --config ~/.config/i3/compton.conf
 
 # NetworkManager is the most popular way to manage wireless networks on Linux,
 # and nm-applet is a desktop environment-independent system tray GUI for it.
@@ -59,10 +61,12 @@ floating_modifier $mod
 bindsym $mod+Return exec "xfce4-terminal"
 
 #start rofi
-bindsym $mod+Shift+Return exec --no-startup-id rofi -show run -width 650 -lines 5 -font "3270Medium Nerd Font 14" -separator-style "none"
+bindsym $mod+Shift+Return exec --no-startup-id ~/.config/rofi/scripts/t3_launcher
 
 # kill focused window
 bindsym $mod+Shift+q kill
+
+bindsym Print exec flameshot gui
 
 # change focus
 bindsym $mod+j focus left
@@ -102,12 +106,6 @@ bindsym $mod+s layout stacking
 bindsym $mod+w layout tabbed
 bindsym $mod+e layout toggle split
 
-# toggle tiling / floating
-bindsym $mod+Shift+space floating toggle
-
-# change focus between tiling / floating windows
-bindsym $mod+space focus mode_toggle
-
 # focus the parent container
 bindsym $mod+a focus parent
 
@@ -142,7 +140,7 @@ bindsym $mod+8 workspace number $ws8
 bindsym $mod+9 workspace number $ws9
 bindsym $mod+0 workspace number $ws10
 
-bindsym $mod+Tab workspace next
+# bindsym $mod+Tab workspace next
 bindsym $mod+Shift+Tab workspace prev
 
 # move focused container to workspace
@@ -190,6 +188,9 @@ mode "resize" {
 }
 
 bindsym $mod+r mode "resize"
+
+bindsym --whole-window $mod+button4 workspace next_on_output
+bindsym --whole-window $mod+button5 workspace prev_on_output
 
 # Start i3bar to display a workspace bar (plus the system information i3status
 # finds out, if available)
