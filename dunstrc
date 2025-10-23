@@ -1,63 +1,117 @@
+# Matrix-themed Dunst Configuration
+# Green-on-black notification theme inspired by The Matrix
+
 [global]
-  title = Dunst
-  class = Dunst
+    ### Display ###
+    monitor = 0
+    follow = keyboard
 
-  frame_color = "#007d00"
-  ;font = 3270Medium Nerd Font Mono 12
-  font = Fira Code Light 12
+    ### Geometry ###
+    width = 400
+    height = 300
+    origin = top-right
+    offset = 20x50
+    scale = 0
+    notification_limit = 5
 
-  monitor = 0
-  follow = mouse
-  geometry = "650x4-25+25"
-  indicate_hidden = yes
-  shrink = yes
+    ### Progress bar ###
+    progress_bar = true
+    progress_bar_height = 10
+    progress_bar_frame_width = 1
+    progress_bar_min_width = 150
+    progress_bar_max_width = 300
 
-  transparency = 0
-  separator_height = 2
-  padding = 6
-  horizontal_padding = 9
-  frame_width = 4
+    ### Appearance ###
+    transparency = 10
+    horizontal_padding = 12
+    text_icon_padding = 12
+    frame_width = 2
+    frame_color = "#00FF41"
+    separator_color = frame
+    separator_height = 2
+    padding = 12
+    sort = yes
+    idle_threshold = 120
 
+    ### Text ###
+    font = VCR OSD Mono 11
+    line_height = 0
+    markup = full
+    format = "<b>%s</b>\n%b"
+    alignment = left
+    vertical_alignment = center
+    show_age_threshold = 60
+    word_wrap = yes
+    ellipsize = middle
+    ignore_newline = no
+    stack_duplicates = true
+    hide_duplicate_count = false
+    show_indicators = yes
 
-  line_height = 0
-  markup = yes
-  alignment = left
+    ### Icons ###
+    icon_position = left
+    min_icon_size = 32
+    max_icon_size = 48
+    icon_path = /usr/share/icons/gnome/32x32/status/:/usr/share/icons/gnome/32x32/devices/
 
-  idle_threshold = 120
-  show_age_threshold = 60
-  sort = yes
-  word_wrap = yes
-  ignore_newline = no
-  stack_duplicates = false
-  hide_duplicate_count = yes
-  show_indicators = no
-  sticky_history = no
-  history_length = 20
-  always_run_script = true
-  corner_radius = 0
-  icon_position = left
-  max_icon_size = 64
+    ### History ###
+    sticky_history = yes
+    history_length = 20
 
-  icon_path = /usr/share/icons/Adwaita/16x16/status/:/usr/share/icons/Adwaita/16x16/devices/
+    ### Misc/Advanced ###
+    dmenu = /usr/bin/rofi -dmenu -p dunst -theme /home/dan/.local/share/rofi/themes/matrix.rasi
+    browser = /usr/bin/xdg-open
+    always_run_script = true
+    title = Dunst
+    class = Dunst
+    corner_radius = 0
+    ignore_dbusclose = false
 
-  browser = brave-bin
-
-  mouse_left_click = close_current
-  mouse_middle_click = do_action
-  mouse_right_click = close_all
+    ### Mouse ###
+    mouse_left_click = close_current
+    mouse_middle_click = do_action, close_current
+    mouse_right_click = close_all
 
 [urgency_low]
-  timeout = 5
-  background = "#001100"
-  foreground = "#688c69"
+    background = "#001900"
+    foreground = "#008F11"
+    frame_color = "#008F11"
+    timeout = 5
+    highlight = "#00FF41"
 
 [urgency_normal]
-  timeout = 8
-  background = "#001100"
-  foreground = "#d2f7d2"
-
+    background = "#001900"
+    foreground = "#00FF41"
+    frame_color = "#00FF41"
+    timeout = 10
+    highlight = "#33FF66"
 
 [urgency_critical]
-  timeout = 0
-  background = "#003d00"
-  foreground = "#ffffff"
+    background = "#1A0000"
+    foreground = "#FF0000"
+    frame_color = "#FF0000"
+    timeout = 0
+    highlight = "#FF3333"
+
+# Matrix-style rules for specific apps
+[matrix_terminal]
+    appname = "terminal"
+    format = "<span foreground='#00FF41' font='VCR OSD Mono 10'>SYSTEM</span>\n<span foreground='#00CC33'>%s</span>\n%b"
+
+[matrix_system]
+    summary = "*system*"
+    format = "<span foreground='#00FF41'>⚡ SYSTEM ALERT ⚡</span>\n%s\n%b"
+    urgency = normal
+
+[matrix_download]
+    summary = "*download*"
+    format = "<span foreground='#00FF41'>↓ DOWNLOAD</span>\n%s\n%b"
+
+[matrix_volume]
+    summary = "*volume*"
+    summary = "*brightness*"
+    format = "%s %b"
+    history_ignore = yes
+    timeout = 2
+
+# vim: ft=cfg
