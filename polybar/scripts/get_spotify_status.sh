@@ -14,7 +14,7 @@ PLAYER="spotify"
 # Format of the information displayed
 # Eg. {{ artist }} - {{ album }} - {{ title }}
 # See more attributes here: https://github.com/altdesktop/playerctl/#printing-properties-and-metadata
-FORMAT="{{ title }} - {{ artist }}"
+FORMAT="{{ title }} - {{ artist }} - {{ album }}"
 
 # Sends $2 as message to all polybar PIDs that are part of $1
 update_hooks() {
@@ -40,11 +40,27 @@ else
         echo "No music is playing"
     elif [ "$STATUS" = "Paused"  ]; then
         update_hooks "$PARENT_BAR_PID" 2
-        playerctl --player=$PLAYER metadata --format "$FORMAT"
+        # Get song info and time
+        SONG_INFO=$(playerctl --player=$PLAYER metadata --format "$FORMAT")
+        POSITION=$(playerctl --player=$PLAYER position --format "{{ duration(position) }}" 2>/dev/null)
+        LENGTH=$(playerctl --player=$PLAYER metadata --format "{{ duration(mpris:length) }}" 2>/dev/null)
+        if [ -n "$POSITION" ] && [ -n "$LENGTH" ]; then
+            echo "$SONG_INFO [$POSITION/$LENGTH]"
+        else
+            echo "$SONG_INFO"
+        fi
     elif [ "$STATUS" = "No player is running"  ]; then
         echo "$STATUS"
     else
         update_hooks "$PARENT_BAR_PID" 1
-        playerctl --player=$PLAYER metadata --format "$FORMAT"
+        # Get song info and time
+        SONG_INFO=$(playerctl --player=$PLAYER metadata --format "$FORMAT")
+        POSITION=$(playerctl --player=$PLAYER position --format "{{ duration(position) }}" 2>/dev/null)
+        LENGTH=$(playerctl --player=$PLAYER metadata --format "{{ duration(mpris:length) }}" 2>/dev/null)
+        if [ -n "$POSITION" ] && [ -n "$LENGTH" ]; then
+            echo "$SONG_INFO [$POSITION/$LENGTH]"
+        else
+            echo "$SONG_INFO"
+        fi
     fi
 fi

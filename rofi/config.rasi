@@ -1,0 +1,27 @@
+
+configuration {
+    modi: "drun";
+    font: "DejaVu Sans Mono 12";
+    show-icons: false;
+    icon-theme: "ubuntu-mono-dark";
+    display-drun: "";
+    display-run: "Run";
+    display-window: "Windows";
+    display-ssh: "SSH";
+    drun-display-format: "{name}";
+    sidebar-mode: false;
+    hover-select: true;
+    eh: 1;
+    auto-select: false;
+    parse-hosts: false;
+    parse-known-hosts: true;
+    matching: "normal";
+    tokenize: true;
+    m: "-5";
+    filter: "";
+    dpi: -1;
+    threads: 0;
+    scroll-method: 0;
+    window-format: "{w} · {c} · {t}";
+}
+@theme "/home/dan/.local/share/rofi/themes/matrix.rasi"

@@ -1,29 +1,32 @@
-# If you come from bash you might have to change your $PATH.
-# export PATH=$HOME/bin:/usr/local/bin:$PATH;
+# ===== PATH & basics =====
+export PATH="$HOME/.local/bin:$PATH"
+export PATH="$HOME/.config/rofi/scripts:$PATH"
+export PKG_CONFIG_PATH="/usr/lib/x86_64-linux-gnu/pkgconfig:/usr/share/pkgconfig/"
 
-export ZSH="/home/dan/.oh-my-zsh"
-export PATH="${PATH}:${HOME}/.local/bin/"
-export PATH=$HOME/.config/rofi/scripts:$PATH
-
-export PKG_CONFIG_PATH=/usr/lib/x86_64-linux-gnu/pkgconfig:/usr/share/pkgconfig/
-
+# ===== oh-my-zsh =====
+export ZSH="$HOME/.oh-my-zsh"
 ZSH_THEME="spaceship"
 
-# export VIMINIT='source $MYVIMRC'
-export EDITOR='vim'
-export MYVIMRC='~/.vimrc'
-export MYNVIMRC='~/.config/nvim/init.vim'
-export TMUXCONF='~/.tmux.conf'
-
+# ===== Editor & configs =====
+export EDITOR="vim"
+export MYVIMRC="$HOME/.vimrc"
+export MYNVIMRC="$HOME/.config/nvim/init.vim"
+export TMUXCONF="$HOME/.tmux.conf"
 export FZF_DEFAULT_COMMAND='rg --files --no-ignore --hidden --follow --glob "!.git/*"'
 
-# History in cache directory:
+# ===== History =====
 HISTSIZE=10000
 SAVEHIST=10000
-HISTFILE=~/.cache/zshhistory
+HISTFILE="$HOME/.cache/zshhistory"
 setopt appendhistory
 
-# NPM Scripts
+# ===== FNM (must come BEFORE oh-my-zsh) =====
+export FNM_DIR="$HOME/.local/share/fnm"
+export PATH="$FNM_DIR:$PATH"
+eval "$(fnm env --use-on-cd)"
+
+
+# ===== Aliases =====
 alias vs="npm run serve"
 alias ns="npm start"
 alias nb="npm run build"
@@ -35,27 +38,21 @@ alias pd="p dev"
 alias ps="p run start"
 alias pb="p build"
 
-# Fedora
 alias btr="sudo systemctl restart bluetooth.service"
 alias 1p="op signin"
 
-# Rust
 alias cr="cargo run"
 alias cb="cargo build"
 
-# Tmux
 alias t="tmux"
 
-# bun
 alias b="bun"
 alias bd="bun dev"
 alias bb="bun build"
 
-# Heroku
 alias h="heroku"
 alias hlogs="heroku addons:open logdna"
 
-# Docker
 alias dc="docker compose"
 
 alias spot="flatpak run com.spotify.Client"
@@ -69,7 +66,6 @@ alias nah="git reset --hard && git clean -df"
 alias pu="vendor/bin/phpunit"
 alias pf="vendor/bin/phpunit --filter "
 alias art="php artisan"
-alias gc="git checkout"
 alias gtd="git checkout dev"
 alias gtm="git checkout master"
 alias gfp="git fetch && git pull"
@@ -87,11 +83,18 @@ alias phpserv="php -S localhost:7777 -t ."
 alias ..="cd ../"
 alias ...="cd ../../"
 
-alias finder='open -a 'Finder' .'
+# macOS-only; harmless on Linux if 'open' exists via xdg-utils shim, else remove it
+alias finder='open -a "Finder" .'
+
 alias ip="curl icanhazip.com"
 alias rcli="redis-cli"
 
-alias cat="bat"
+# On Ubuntu 'bat' is usually 'batcat'; switch if 'bat' isn't found
+if ! command -v bat >/dev/null 2>&1 && command -v batcat >/dev/null 2>&1; then
+  alias cat="batcat"
+else
+  alias cat="bat"
+fi
 
 alias i3r="i3-msg restart"
 alias ezsh="nvim ~/.zshrc"
@@ -102,39 +105,32 @@ alias envim="nvim ~/.config/nvim/init.vim"
 alias evim="nvim ~/.vimrc"
 alias exr="nvim ~/.Xresources"
 alias eqt="nvim ~/.config/qutebrowser/config.py"
-
 alias nrbg="npm run build:graphql"
 
+# ===== Plugins (syntax-highlighting MUST be last) =====
+plugins=(
+  git
+  fasd
+  docker
+  docker-compose
+  zsh-autosuggestions
+  zsh-syntax-highlighting
+)
 
-plugins=(git fasd zsh-autosuggestions zsh-syntax-highlighting docker docker-compose)
+source "$ZSH/oh-my-zsh.sh"
 
-source $ZSH/oh-my-zsh.sh
-
-export PNPM_HOME="/home/dan/.local/share/pnpm"
-export PATH="$PNPM_HOME:$PATH"
-
-# fnm
-export PATH=/home/dan/.fnm:$PATH
-eval "`fnm env`"
-
-# bun completions
-[ -s "/home/dan/.bun/_bun" ] && source "/home/dan/.bun/_bun"
-
-eval "$(op completion zsh)"; compdef _op op
-
-# Bun
-export BUN_INSTALL="/home/dan/.bun"
-export PATH="$BUN_INSTALL/bin:$PATH"
-fpath=($fpath "/home/dan/.zfunctions")
-
-# Set Spaceship ZSH as a prompt
-autoload -U promptinit; promptinit
-prompt spaceship
-
-# pnpm
-export PNPM_HOME="/home/dan/.local/share/pnpm"
+# ===== pnpm =====
+export PNPM_HOME="$HOME/.local/share/pnpm"
 case ":$PATH:" in
   *":$PNPM_HOME:"*) ;;
   *) export PATH="$PNPM_HOME:$PATH" ;;
 esac
-# pnpm end
+
+# ===== Bun =====
+export BUN_INSTALL="$HOME/.bun"
+export PATH="$BUN_INSTALL/bin:$PATH"
+
+# Optional: extra functions path
+fpath=($fpath "$HOME/.zfunctions")
+export PATH="$HOME/.local/bin:$PATH"
+export PATH="$HOME/.local/bin:$PATH"
