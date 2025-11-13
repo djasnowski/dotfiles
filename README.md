@@ -62,6 +62,14 @@ This is a complete desktop environment configuration optimized for:
 |-----------|---------|----------------|
 | **Tridactyl** | Firefox vim bindings | `tridactyl/tridactylrc` |
 
+### Music & Media
+
+| Component | Purpose | Config Location |
+|-----------|---------|----------------|
+| **ncspot** | Terminal-based Spotify client | Flatpak (alias: `spt`) |
+| **Spotify** | Desktop Spotify client | Flatpak (alias: `spot`) |
+| **playerctl** | Media player controller | Used for keyboard shortcuts |
+
 ### Custom Scripts
 
 | Script | Purpose | Location |
@@ -143,6 +151,40 @@ curl -fsSL https://bun.sh/install | bash
 
 # Optional: pnpm
 curl -fsSL https://get.pnpm.io/install.sh | sh -
+```
+
+### Flatpak Applications (Manual Install)
+
+**Important**: Make sure you follow the [Flatpak setup guide](https://flatpak.org/setup/) for your Linux distribution before installing applications.
+
+```bash
+# Install Flatpak
+sudo apt install flatpak
+
+# Add the Flathub repository
+flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
+
+# Restart your system (or log out/in) to complete Flatpak setup
+# Then install applications:
+
+# ncspot - Terminal-based Spotify client (aliased as 'spt')
+flatpak install flathub io.github.hrkfdn.ncspot
+
+# Spotify Desktop Client (aliased as 'spot')
+flatpak install flathub com.spotify.Client
+```
+
+**Running Flatpak applications:**
+```bash
+# ncspot (terminal Spotify client)
+flatpak run io.github.hrkfdn.ncspot
+# Or use the alias:
+spt
+
+# Spotify Desktop
+flatpak run com.spotify.Client
+# Or use the alias:
+spot
 ```
 
 ## Installation
@@ -344,6 +386,7 @@ Extensive aliases for:
 - **i3**: `i3r` (restart)
 - **PHP/Laravel**: `art`, `migrate`, `tinker`, `mfs`
 - **Cargo**: `cr`, `cb`
+- **Spotify**: `spot` (Spotify desktop), `spt` (ncspot terminal client)
 - **Heroku**: `h`, `hlogs`
 - **System**: `btr` (restart bluetooth), `ip` (external IP)
 

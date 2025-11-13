@@ -56,6 +56,7 @@ alias hlogs="heroku addons:open logdna"
 alias dc="docker compose"
 
 alias spot="flatpak run com.spotify.Client"
+alias spt="flatpak run io.github.hrkfdn.ncspot"
 alias q="yarn server"
 alias lg="lazygit"
 alias g="git"
