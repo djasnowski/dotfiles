@@ -44,11 +44,11 @@ get_network_speed() {
 }
 
 # Check if wired is connected
-WIRED_STATE=$(ip link show enp8s0 2>/dev/null | grep -o "state [A-Z]*" | cut -d' ' -f2)
+WIRED_STATE=$(ip link show enx806d9723ca27 2>/dev/null | grep -o "state [A-Z]*" | cut -d' ' -f2)
 
 if [ "$WIRED_STATE" = "UP" ]; then
     # Wired is connected
-    SPEED=$(get_network_speed enp8s0)
+    SPEED=$(get_network_speed enx806d9723ca27)
     echo " (Wired)  $SPEED"
 else
     # Check WiFi
@@ -57,7 +57,7 @@ else
     if [ -n "$WIFI_STATUS" ]; then
         # WiFi is connected
         SIGNAL=$(nmcli -t -f active,signal dev wifi | grep "^yes" | cut -d':' -f2)
-        SPEED=$(get_network_speed wlp7s0)
+        SPEED=$(get_network_speed wlp9s0f0)
         echo " $WIFI_STATUS  $SPEED"
     else
         echo " No Network"
