@@ -1,1 +1,205 @@
-/home/dan/dotfiles/i3/config
+# i3 config file (v4)
+# Simple and clean i3 configuration
+
+# Set mod key (Mod4 = Windows/Super key)
+set $mod Mod4
+
+# Auto-detect and configure displays
+exec_always --no-startup-id /home/dan/.config/i3/auto-display.sh
+
+# Font for window titles and bar
+font pango:DejaVu Sans Mono 10
+
+# Default split orientation (horizontal = side by side)
+default_orientation horizontal
+
+# Remove all window borders and title bars
+default_border none
+default_floating_border none
+
+# Use Mouse+$mod to drag floating windows
+floating_modifier $mod
+
+# Focus on new window activation
+focus_on_window_activation focus
+
+# Start a terminal
+bindsym $mod+Return exec xfce4-terminal
+
+# Kill focused window
+bindsym $mod+Shift+q kill
+
+# Power menu
+bindsym $mod+Shift+e exec /home/dan/.config/rofi/power-menu-matrix.sh
+
+# Refresh display configuration
+bindsym $mod+Shift+p exec /home/dan/.config/i3/auto-display.sh
+
+# Screenshot selection to clipboard
+bindsym $mod+Shift+s exec flameshot gui --clipboard
+
+# Start rofi (program launcher)
+bindsym $mod+Shift+Return exec rofi -show drun -show-icons
+bindsym $mod+Shift+d exec rofi -show run
+
+# Change focus
+bindsym $mod+h focus left
+bindsym $mod+j focus down
+bindsym $mod+k focus up
+bindsym $mod+l focus right
+
+# Alternatively, use arrow keys
+bindsym $mod+Left focus left
+bindsym $mod+Down focus down
+bindsym $mod+Up focus up
+bindsym $mod+Right focus right
+
+# Move focused window
+bindsym $mod+Shift+h move left
+bindsym $mod+Shift+j move down
+bindsym $mod+Shift+k move up
+bindsym $mod+Shift+l move right
+
+# Alternatively, use arrow keys
+bindsym $mod+Shift+Left move left
+bindsym $mod+Shift+Down move down
+bindsym $mod+Shift+Up move up
+bindsym $mod+Shift+Right move right
+
+# Split in horizontal orientation
+bindsym $mod+b split h
+
+# Split in vertical orientation
+bindsym $mod+v split v
+
+# Enter fullscreen mode
+bindsym $mod+f fullscreen toggle
+
+# Change container layout (stacked, tabbed, toggle split)
+# bindsym $mod+s layout stacking
+bindsym $mod+w layout tabbed
+bindsym $mod+e layout toggle split
+
+# Toggle tiling / floating
+bindsym $mod+Shift+space floating toggle
+
+# Change focus between tiling / floating windows
+bindsym $mod+space focus mode_toggle
+
+# Focus the parent container
+bindsym $mod+a focus parent
+
+# Define workspace names
+set $ws1 "1"
+set $ws2 "2"
+set $ws3 "3"
+set $ws4 "4"
+set $ws5 "5"
+set $ws6 "6"
+set $ws7 "7"
+set $ws8 "8"
+set $ws9 "9"
+set $ws10 "10"
+
+# Navigate workspaces (like vim buffer navigation)
+bindsym $mod+bracketleft workspace prev
+bindsym $mod+bracketright workspace next
+
+# Quick toggle between current and previous workspace
+bindsym $mod+Tab workspace back_and_forth
+
+# Jump to urgent window (switches workspace and focuses the window)
+bindsym $mod+grave [urgent=latest] focus
+
+# Application shortcuts (jump to workspace and focus)
+bindsym $mod+Shift+f [class="(?i)firefox"] focus
+bindsym $mod+Shift+t [class="Xfce4-terminal"] focus
+bindsym $mod+Shift+v [class="Code"] focus
+bindsym $mod+Shift+m [class="Spotify"] focus
+bindsym $mod+Shift+a [class="Slack"] focus
+
+# Switch to workspace
+bindsym $mod+1 workspace $ws1
+bindsym $mod+2 workspace $ws2
+bindsym $mod+3 workspace $ws3
+bindsym $mod+4 workspace $ws4
+bindsym $mod+5 workspace $ws5
+bindsym $mod+6 workspace $ws6
+bindsym $mod+7 workspace $ws7
+bindsym $mod+8 workspace $ws8
+bindsym $mod+9 workspace $ws9
+bindsym $mod+0 workspace $ws10
+
+# Move focused container to workspace
+bindsym $mod+Shift+1 move container to workspace $ws1
+bindsym $mod+Shift+2 move container to workspace $ws2
+bindsym $mod+Shift+3 move container to workspace $ws3
+bindsym $mod+Shift+4 move container to workspace $ws4
+bindsym $mod+Shift+5 move container to workspace $ws5
+bindsym $mod+Shift+6 move container to workspace $ws6
+bindsym $mod+Shift+7 move container to workspace $ws7
+bindsym $mod+Shift+8 move container to workspace $ws8
+bindsym $mod+Shift+9 move container to workspace $ws9
+bindsym $mod+Shift+0 move container to workspace $ws10
+
+# Reload the configuration file
+bindsym $mod+Shift+c reload
+
+# Restart i3 inplace (preserves layout/session)
+bindsym $mod+Shift+r restart
+
+# Exit i3 (logs you out of your X session)
+# bindsym $mod+Shift+e exec "i3-nagbar -t warning -m 'Exit i3?' -B 'Yes' 'i3-msg exit'" # Replaced with power menu
+
+# Resize window mode
+mode "resize" {
+    bindsym h resize shrink width 10 px or 10 ppt
+    bindsym j resize grow height 10 px or 10 ppt
+    bindsym k resize shrink height 10 px or 10 ppt
+    bindsym l resize grow width 10 px or 10 ppt
+
+    # Same bindings, but for the arrow keys
+    bindsym Left resize shrink width 10 px or 10 ppt
+    bindsym Down resize grow height 10 px or 10 ppt
+    bindsym Up resize shrink height 10 px or 10 ppt
+    bindsym Right resize grow width 10 px or 10 ppt
+
+    # Back to normal: Enter, Escape or $mod+r
+    bindsym Return mode "default"
+    bindsym Escape mode "default"
+    bindsym $mod+r mode "default"
+}
+
+bindsym $mod+r mode "resize"
+
+# Window colors
+# class                 border  backgr. text    indicator child_border
+client.focused          #4c7899 #285577 #ffffff #2e9ef4   #285577
+client.focused_inactive #333333 #5f676a #ffffff #484e50   #5f676a
+client.unfocused        #333333 #222222 #888888 #292d2e   #222222
+client.urgent           #2f343a #900000 #ffffff #900000   #900000
+client.placeholder      #000000 #0c0c0c #ffffff #000000   #0c0c0c
+
+# Start polybar
+exec_always --no-startup-id ~/.config/polybar/launch.sh
+
+# Gaps (optional - requires i3-gaps)
+# gaps inner 10
+# gaps outer 5
+
+# Remove window borders for single window
+# smart_borders on
+
+# Focus follows mouse
+focus_follows_mouse yes
+
+# Automatic back-and-forth when switching workspaces
+workspace_auto_back_and_forth yes
+
+# Matrix wallpaper
+exec_always --no-startup-id feh --bg-scale ~/Documents/matrix-wallpaper.png
+
+# Spotify controls
+bindsym Control+Mod1+z exec --no-startup-id playerctl play-pause
+bindsym Control+Mod1+x exec --no-startup-id playerctl next
+bindsym Control+Mod1+c exec --no-startup-id playerctl previous

@@ -1,11 +1,19 @@
+/* Matrix Terminal Theme */
+/* Inspired by The Matrix digital rain */
+
 * {
-    bg:             #0D0D0DFF;
-    bg-alt:         #1A1A1AFF;
-    fg:             #00FF41FF;
-    fg-alt:         #008F11FF;
-    selected:       #003B00FF;
-    active:         #00FF41FF;
-    urgent:         #FF0000FF;
+    /* Pure black void */
+    bg:             #000000;
+    bg-alt:         #0a0a0a;
+    bg-selected:    #003300;
+
+    /* Matrix greens */
+    fg:             #00ff41;
+    fg-dim:         #008f11;
+    fg-bright:      #33ff66;
+
+    /* Accent */
+    urgent:         #ff0000;
 
     background-color:   transparent;
     text-color:         @fg;
@@ -18,75 +26,86 @@ window {
     location:           center;
     anchor:             center;
     background-color:   @bg;
-    border:             2px;
-    border-color:       @fg;
-    border-radius:      0;
-    width:              600px;
-    padding:            20px;
+    border:             1px;
+    border-color:       @fg-dim;
+    width:              500px;
+    padding:            0;
+    transparency:       "real";
 }
 
 mainbox {
-    children:           [ inputbar, message, listview ];
-    spacing:            10px;
+    children:           [ inputbar, listview ];
+    background-color:   @bg;
+    spacing:            0;
 }
 
 inputbar {
     children:           [ prompt, entry ];
-    background-color:   @bg-alt;
-    border-radius:      0;
-    padding:            10px;
+    background-color:   @bg;
+    border:             0 0 1px 0;
+    border-color:       @fg-dim;
+    padding:            15px;
 }
 
 prompt {
     text-color:         @fg;
-    padding:            0 10px 0 0;
+    background-color:   transparent;
+    padding:            0 8px 0 0;
 }
 
 entry {
     text-color:         @fg;
-    placeholder:        "Search...";
-    placeholder-color:  @fg-alt;
-}
-
-message {
-    background-color:   @bg-alt;
-    border-radius:      0;
-    padding:            10px;
+    background-color:   transparent;
+    placeholder:        "enter the matrix...";
+    placeholder-color:  @fg-dim;
+    cursor:             text;
 }
 
 listview {
-    lines:              8;
+    lines:              12;
     columns:            1;
     fixed-height:       false;
-    spacing:            5px;
+    background-color:   @bg;
+    padding:            5px 0;
+    scrollbar:          false;
 }
 
 element {
-    padding:            10px;
-    border-radius:      0;
+    padding:            8px 15px;
+    background-color:   transparent;
 }
 
 element normal.normal {
     background-color:   transparent;
-    text-color:         @fg-alt;
-}
-
-element selected.normal {
-    background-color:   @selected;
-    text-color:         @fg;
+    text-color:         @fg-dim;
 }
 
 element alternate.normal {
     background-color:   transparent;
-    text-color:         @fg-alt;
+    text-color:         @fg-dim;
+}
+
+element selected.normal {
+    background-color:   @bg-selected;
+    text-color:         @fg-bright;
+    border:             0 0 0 3px;
+    border-color:       @fg;
 }
 
 element-text {
     text-color:         inherit;
-    highlight:          bold underline;
+    background-color:   transparent;
+    highlight:          bold;
 }
 
 element-icon {
-    size:               24px;
+    size:               20px;
     padding:            0 10px 0 0;
+    background-color:   transparent;
+}
+
+scrollbar {
+    handle-color:       @fg-dim;
+    handle-width:       4px;
+    background-color:   @bg-alt;
 }
