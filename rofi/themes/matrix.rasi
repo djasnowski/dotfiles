@@ -1,0 +1,92 @@
+* {
+    bg:             #0D0D0DFF;
+    bg-alt:         #1A1A1AFF;
+    fg:             #00FF41FF;
+    fg-alt:         #008F11FF;
+    selected:       #003B00FF;
+    active:         #00FF41FF;
+    urgent:         #FF0000FF;
+
+    background-color:   transparent;
+    text-color:         @fg;
+    margin:             0;
+    padding:            0;
+    spacing:            0;
+}
+
+window {
+    location:           center;
+    anchor:             center;
+    background-color:   @bg;
+    border:             2px;
+    border-color:       @fg;
+    border-radius:      0;
+    width:              600px;
+    padding:            20px;
+}
+
+mainbox {
+    children:           [ inputbar, message, listview ];
+    spacing:            10px;
+}
+
+inputbar {
+    children:           [ prompt, entry ];
+    background-color:   @bg-alt;
+    border-radius:      0;
+    padding:            10px;
+}
+
+prompt {
+    text-color:         @fg;
+    padding:            0 10px 0 0;
+}
+
+entry {
+    text-color:         @fg;
+    placeholder:        "Search...";
+    placeholder-color:  @fg-alt;
+}
+
+message {
+    background-color:   @bg-alt;
+    border-radius:      0;
+    padding:            10px;
+}
+
+listview {
+    lines:              8;
+    columns:            1;
+    fixed-height:       false;
+    spacing:            5px;
+}
+
+element {
+    padding:            10px;
+    border-radius:      0;
+}
+
+element normal.normal {
+    background-color:   transparent;
+    text-color:         @fg-alt;
+}
+
+element selected.normal {
+    background-color:   @selected;
+    text-color:         @fg;
+}
+
+element alternate.normal {
+    background-color:   transparent;
+    text-color:         @fg-alt;
+}
+
+element-text {
+    text-color:         inherit;
+    highlight:          bold underline;
+}
+
+element-icon {
+    size:               24px;
+    padding:            0 10px 0 0;
+}
