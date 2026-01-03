@@ -208,6 +208,11 @@
       text-transform: uppercase;
       letter-spacing: 0.2em;
     }
+    .group-num {
+      color: #00ff41;
+      font-weight: bold;
+      margin-right: 0.5rem;
+    }
     .links {
       display: flex;
       flex-direction: column;
@@ -588,17 +593,18 @@
         const container = document.getElementById('bookmarks');
         const rows = [];
         for (let i = 0; i < groups.length; i += 4) {
-          rows.push(groups.slice(i, i + 4));
+          rows.push(groups.slice(i, i + 4).map((g, j) => ({ ...g, index: i + j + 1 })));
         }
         container.innerHTML = rows.map(row => `
           <div class="row">
             ${row.map(group => `
               <div class="group">
-                <div class="group-title">${group.title}</div>
+                <div class="group-title"><span class="group-num">${group.index}</span>${group.title}</div>
                 <div class="links">
                   ${group.links.map(link => {
                     keyMap[link.key] = link.url;
-                    return `<a class="link" href="${link.url}"><span class="key">${link.key}</span><span class="link-text"><span class="link-name">${link.name}</span><span class="link-url">${link.display}</span></span></a>`;
+                    const displayKey = link.key.length > 1 ? link.key.slice(1) : link.key;
+                    return `<a class="link" href="${link.url}"><span class="key">${displayKey}</span><span class="link-text"><span class="link-name">${link.name}</span><span class="link-url">${link.display}</span></span></a>`;
                   }).join('')}
                 </div>
               </div>
