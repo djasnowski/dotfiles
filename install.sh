@@ -75,6 +75,12 @@ link_config "$DOTFILES_DIR/dunst" "$CONFIG_DIR/dunst"
 link_config "$DOTFILES_DIR/xfce4" "$CONFIG_DIR/xfce4"
 link_config "$DOTFILES_DIR/tridactyl" "$CONFIG_DIR/tridactyl"
 link_config "$DOTFILES_DIR/scripts" "$CONFIG_DIR/scripts"
+link_config "$DOTFILES_DIR/zscroll" "$CONFIG_DIR/zscroll"
+
+# Local bin (zscroll for polybar spotify)
+info "Linking local bin scripts..."
+mkdir -p "$HOME/.local/bin"
+link_config "$CONFIG_DIR/zscroll/zscroll" "$HOME/.local/bin/zscroll"
 
 # Home directory dotfiles
 info "Linking home directory dotfiles..."
