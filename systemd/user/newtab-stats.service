@@ -4,7 +4,7 @@ After=default.target
 
 [Service]
 Type=simple
-ExecStart=/home/dan/dotfiles/tridactyl/newtab/stats.sh
+ExecStart=%h/.config/tridactyl/newtab/stats.sh
 Restart=always
 RestartSec=5
 

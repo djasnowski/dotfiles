@@ -103,6 +103,11 @@ install_packages() {
     sudo apt install -y \
         x11-xserver-utils \
         arandr || true
+
+    info "Installing monitoring tools..."
+    sudo apt install -y \
+        lm-sensors \
+        python3 || true
 }
 
 # Install additional dependencies (oh-my-zsh, plugins, etc.)
@@ -275,6 +280,30 @@ create_symlinks() {
     fi
 }
 
+# Setup newtab services
+setup_newtab() {
+    section "Setting up newtab services"
+
+    local systemd_user_dir="$HOME/.config/systemd/user"
+    mkdir -p "$systemd_user_dir"
+
+    # Link service files
+    link_config "$DOTFILES_DIR/systemd/user/newtab-stats.service" "$systemd_user_dir/newtab-stats.service"
+    link_config "$DOTFILES_DIR/systemd/user/newtab-server.service" "$systemd_user_dir/newtab-server.service"
+
+    # Reload systemd user daemon
+    systemctl --user daemon-reload
+
+    # Enable and start services
+    info "Enabling newtab services..."
+    systemctl --user enable newtab-stats.service newtab-server.service
+
+    info "Starting newtab services..."
+    systemctl --user start newtab-stats.service newtab-server.service
+
+    info "Newtab services running at http://127.0.0.1:8384/"
+}
+
 # Post-install setup
 post_install() {
     section "Post-install setup"
@@ -316,6 +345,7 @@ if [ "$INSTALL_ALL" = true ]; then
 fi
 
 create_symlinks
+setup_newtab
 
 if [ "$INSTALL_ALL" = true ]; then
     post_install

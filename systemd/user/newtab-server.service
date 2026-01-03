@@ -4,7 +4,7 @@ After=default.target
 
 [Service]
 Type=simple
-WorkingDirectory=/home/dan/.config/tridactyl/newtab
+WorkingDirectory=%h/.config/tridactyl/newtab
 ExecStart=/usr/bin/python3 -m http.server 8384 --bind 127.0.0.1
 Restart=always
 RestartSec=5
