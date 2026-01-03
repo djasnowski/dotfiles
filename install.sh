@@ -275,6 +275,37 @@ create_symlinks() {
     fi
 }
 
+# Post-install setup
+post_install() {
+    section "Post-install setup"
+
+    # Set zsh as default shell
+    if [ "$SHELL" != "$(which zsh)" ]; then
+        info "Setting zsh as default shell..."
+        chsh -s "$(which zsh)"
+    else
+        info "Zsh already default shell"
+    fi
+
+    # Install tmux plugins
+    if [ -x "$HOME/.tmux/plugins/tpm/bin/install_plugins" ]; then
+        info "Installing tmux plugins..."
+        "$HOME/.tmux/plugins/tpm/bin/install_plugins"
+    fi
+
+    # Reload i3 if running
+    if pgrep -x "i3" > /dev/null; then
+        info "Reloading i3..."
+        i3-msg reload > /dev/null 2>&1 || true
+    fi
+
+    # Reload tmux if running
+    if pgrep -x "tmux" > /dev/null; then
+        info "Reloading tmux config..."
+        tmux source-file "$HOME/.tmux.conf" 2>/dev/null || true
+    fi
+}
+
 # Run installation
 if [ "$INSTALL_DEPS" = true ]; then
     install_packages
@@ -286,16 +317,12 @@ fi
 
 create_symlinks
 
+if [ "$INSTALL_ALL" = true ]; then
+    post_install
+fi
+
 echo ""
 info "Installation complete!"
 echo ""
-echo "Next steps:"
-echo "  1. Reload i3: Mod+Shift+r"
-echo "  2. Reload tmux: tmux source ~/.tmux.conf"
-echo "  3. Reload zsh: source ~/.zshrc"
-echo "  4. Reload Tridactyl: :source in Firefox"
-if [ "$INSTALL_ALL" = true ]; then
-    echo "  5. Install tmux plugins: prefix + I (inside tmux)"
-    echo "  6. Set zsh as default: chsh -s \$(which zsh)"
-fi
+echo "Note: Reload Tridactyl in Firefox with :source"
 echo ""

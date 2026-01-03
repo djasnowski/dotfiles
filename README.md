@@ -99,20 +99,11 @@ cd ~/dotfiles
 ```
 
 The script will:
-- Install required apt packages (with `--deps` or `--all`)
-- Install oh-my-zsh, spaceship theme, zsh plugins, tpm (with `--all`)
-- Backup any existing configs to `~/.config/backup-YYYYMMDD-HHMMSS/`
-- Create symbolic links from `~/.config/*` to `~/dotfiles/*`
+- Install apt packages, oh-my-zsh, zsh plugins, tpm, fnm, bun, pnpm
+- Create symlinks and backup existing configs
+- Set zsh as default shell, install tmux plugins, reload i3/tmux
 
-### 3. Post-Install
-
-```bash
-chsh -s $(which zsh)           # Set zsh as default shell
-i3-msg reload                   # Reload i3
-tmux source ~/.tmux.conf        # Reload tmux
-```
-
-In tmux, press `prefix + I` to install plugins.
+**Note:** Reload Tridactyl in Firefox with `:source`
 
 ## Configuration Details
 
