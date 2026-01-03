@@ -433,13 +433,6 @@ chmod +x ~/.config/polybar/scripts/*.sh
 chmod +x ~/dotfiles/scripts/spotify/*.sh
 ```
 
-### Rofi Theme Missing
-
-The config references `/home/dan/.local/share/rofi/themes/matrix.rasi`. Either:
-1. Create the theme file at that location
-2. Use an existing theme: `rofi-theme-selector`
-3. Update the path in `rofi/config.rasi` line 27
-
 ### Tmux Plugins Not Loading
 
 ```bash
