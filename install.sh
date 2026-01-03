@@ -158,6 +158,30 @@ install_extras() {
     else
         info "rofi-bluetooth already installed"
     fi
+
+    # FNM (Fast Node Manager)
+    if [ ! -d "$HOME/.local/share/fnm" ]; then
+        info "Installing FNM..."
+        curl -fsSL https://fnm.vercel.app/install | bash
+    else
+        info "FNM already installed"
+    fi
+
+    # Bun
+    if [ ! -d "$HOME/.bun" ]; then
+        info "Installing Bun..."
+        curl -fsSL https://bun.sh/install | bash
+    else
+        info "Bun already installed"
+    fi
+
+    # pnpm
+    if ! command -v pnpm &> /dev/null; then
+        info "Installing pnpm..."
+        curl -fsSL https://get.pnpm.io/install.sh | sh -
+    else
+        info "pnpm already installed"
+    fi
 }
 
 # Function to create symlink with backup
@@ -218,6 +242,25 @@ create_symlinks() {
     info "Linking home directory dotfiles..."
     link_config "$DOTFILES_DIR/.zshrc" "$HOME/.zshrc"
     link_config "$DOTFILES_DIR/.tmux.conf" "$HOME/.tmux.conf"
+
+    # Rofi themes
+    info "Linking rofi themes..."
+    mkdir -p "$HOME/.local/share/rofi/themes"
+    link_config "$DOTFILES_DIR/rofi/matrix.rasi" "$HOME/.local/share/rofi/themes/matrix.rasi"
+
+    # Wallpaper
+    info "Setting up wallpaper..."
+    mkdir -p "$HOME/Pictures"
+    if [ -f "$DOTFILES_DIR/wallpapers/matrix-wallpaper.png" ]; then
+        cp "$DOTFILES_DIR/wallpapers/matrix-wallpaper.png" "$HOME/Pictures/"
+        info "Wallpaper copied to ~/Pictures/"
+    elif [ ! -f "$HOME/Pictures/matrix-wallpaper.png" ]; then
+        info "Downloading wallpaper..."
+        wget -q -O "$HOME/Pictures/matrix-wallpaper.png" \
+            "https://raw.githubusercontent.com/djasnowski/dotfiles/master/wallpapers/matrix-wallpaper.png"
+    else
+        info "Wallpaper already exists"
+    fi
 
     # Make scripts executable
     info "Making scripts executable..."

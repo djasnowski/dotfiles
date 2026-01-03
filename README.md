@@ -73,24 +73,9 @@ This is a complete desktop environment configuration optimized for:
 
 ## Prerequisites
 
-The install script (`./install.sh --all`) handles most dependencies automatically. You only need to install these manually:
+The install script (`./install.sh --all`) handles all dependencies automatically.
 
-### JetBrains Mono Nerd Font
-
-Download from [nerd-fonts releases](https://github.com/ryanoasis/nerd-fonts/releases) and install.
-
-### Optional: Node.js Development Tools
-
-```bash
-# FNM (Fast Node Manager)
-curl -fsSL https://fnm.vercel.app/install | bash
-
-# Bun
-curl -fsSL https://bun.sh/install | bash
-
-# pnpm
-curl -fsSL https://get.pnpm.io/install.sh | sh -
-```
+**Manual install:** [JetBrains Mono Nerd Font](https://github.com/ryanoasis/nerd-fonts/releases)
 
 ## Installation
 
@@ -122,42 +107,12 @@ The script will:
 ### 3. Post-Install
 
 ```bash
-# Set zsh as default shell
-chsh -s $(which zsh)
-
-# Install tmux plugins (inside tmux)
-# Press: prefix + I
+chsh -s $(which zsh)           # Set zsh as default shell
+i3-msg reload                   # Reload i3
+tmux source ~/.tmux.conf        # Reload tmux
 ```
 
-### 4. Install Rofi Themes
-
-```bash
-# The Matrix theme is referenced in rofi config
-# Make sure the theme file exists at:
-# ~/.local/share/rofi/themes/matrix.rasi
-# Or update the path in rofi/config.rasi
-```
-
-### 5. Set Up Wallpaper
-
-```bash
-# Place your Matrix wallpaper at:
-mkdir -p ~/Documents
-# Download or copy your matrix-wallpaper.png to ~/Documents/
-# Or update the path in i3/config line 200
-```
-
-### 6. Reload Configurations
-
-```bash
-# Reload i3
-i3-msg reload
-# Or restart i3
-i3-msg restart
-
-# Reload tmux (if already running)
-tmux source ~/.tmux.conf
-```
+In tmux, press `prefix + I` to install plugins.
 
 ## Configuration Details
 
