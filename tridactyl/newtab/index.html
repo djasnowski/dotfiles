@@ -12,55 +12,210 @@
       height: 100vh;
       display: flex;
       flex-direction: column;
-      justify-content: space-evenly;
+      justify-content: space-between;
       padding: 1rem 2rem;
+      gap: 1rem;
+    }
+
+    /* Header */
+    .header {
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      align-items: center;
+      gap: 2rem;
+    }
+    .clock-section {
+      display: flex;
+      align-items: baseline;
+      gap: 1.5rem;
     }
     .clock {
-      font-size: 7rem;
+      font-size: 4rem;
       font-weight: bold;
-      letter-spacing: 0.1em;
+      letter-spacing: 0.05em;
     }
     .date {
-      font-size: 1.8rem;
+      font-size: 1.4rem;
       color: #00aa2a;
-      margin-top: 0.5rem;
     }
+    .sysinfo {
+      display: flex;
+      gap: 3rem;
+      font-size: 1.4rem;
+      justify-content: center;
+    }
+    .sysinfo-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.3rem;
+    }
+    .sysinfo-value {
+      color: #00ff41;
+      font-weight: bold;
+      font-size: 1.5rem;
+    }
+    .sysinfo-label {
+      color: #00551a;
+      font-size: 1rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+    .shortcuts {
+      display: grid;
+      grid-template-columns: repeat(3, auto);
+      gap: 0.6rem 2.5rem;
+      font-size: 1.3rem;
+    }
+    .shortcut-row {
+      display: flex;
+      gap: 0.5rem;
+      white-space: nowrap;
+    }
+    .shortcut-keys {
+      color: #00ff41;
+      font-weight: bold;
+      min-width: 3rem;
+    }
+    .shortcut-desc {
+      color: #00772a;
+    }
+
+    /* Charts Section */
+    .charts {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      background: rgba(0, 255, 65, 0.03);
+      border: 1px solid #00ff4122;
+      padding: 1rem 1.5rem;
+    }
+
+    /* Per-core CPU bars */
+    .cpu-cores {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+    .cpu-cores-title {
+      font-size: 1rem;
+      color: #00551a;
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+    }
+    .cores-grid {
+      display: grid;
+      grid-template-columns: repeat(8, 1fr);
+      gap: 0.5rem 1rem;
+    }
+    .core {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+    }
+    .core-label {
+      font-size: 0.8rem;
+      color: #00551a;
+    }
+    .core-bar {
+      height: 1.2rem;
+      background: #001a00;
+      border: 1px solid #00ff4133;
+      position: relative;
+      overflow: hidden;
+    }
+    .core-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #003300 0%, #00ff41 100%);
+      transition: width 0.3s ease;
+    }
+    .core-pct {
+      position: absolute;
+      right: 0.3rem;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 0.7rem;
+      color: #00aa2a;
+      text-shadow: 0 0 3px #0a0a0a;
+    }
+
+    /* Sparklines */
+    .sparklines {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 1.5rem;
+    }
+    .sparkline-container {
+      display: flex;
+      flex-direction: column;
+      gap: 0.3rem;
+    }
+    .sparkline-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+    }
+    .sparkline-label {
+      font-size: 0.9rem;
+      color: #00551a;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+    .sparkline-value {
+      font-size: 1.1rem;
+      color: #00ff41;
+      font-weight: bold;
+    }
+    .sparkline {
+      height: 2rem;
+      background: #001a00;
+      border: 1px solid #00ff4122;
+      position: relative;
+    }
+    .sparkline canvas {
+      width: 100%;
+      height: 100%;
+    }
+
+    /* Bookmarks */
     .bookmarks {
       display: flex;
       flex-direction: column;
-      gap: 1.5rem;
+      gap: 1rem;
+      flex: 1;
+      overflow: hidden;
     }
     .row {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
-      gap: 1.5rem;
+      gap: 1rem;
     }
     .group {
       background: rgba(0, 255, 65, 0.05);
       border: 1px solid #00ff4133;
-      padding: 1.5rem;
+      padding: 1rem;
     }
     .group-title {
-      font-size: 1.3rem;
+      font-size: 1.1rem;
       color: #00aa2a;
       border-bottom: 1px solid #00ff4133;
-      padding-bottom: 0.75rem;
-      margin-bottom: 1rem;
+      padding-bottom: 0.5rem;
+      margin-bottom: 0.75rem;
       text-transform: uppercase;
       letter-spacing: 0.2em;
     }
     .links {
       display: flex;
       flex-direction: column;
-      gap: 0.75rem;
+      gap: 0.5rem;
     }
     .link {
       display: flex;
       align-items: center;
-      gap: 0.75rem;
+      gap: 0.5rem;
       text-decoration: none;
       color: #00ff41;
-      padding: 0.5rem 0.75rem;
+      padding: 0.4rem 0.5rem;
       transition: all 0.15s;
     }
     .link:hover {
@@ -70,14 +225,14 @@
     .link-text {
       display: flex;
       flex-direction: column;
-      gap: 0.2rem;
+      gap: 0.1rem;
     }
     .link-name {
-      font-size: 1.1rem;
+      font-size: 1rem;
       font-weight: bold;
     }
     .link-url {
-      font-size: 1rem;
+      font-size: 0.85rem;
       color: #00772a;
     }
     .link:hover .link-url {
@@ -85,11 +240,11 @@
     }
     .key {
       display: inline-block;
-      min-width: 2rem;
+      min-width: 1.5rem;
       text-align: center;
-      padding: 0.25rem 0.5rem;
+      padding: 0.2rem 0.4rem;
       border: 1px solid #00ff41;
-      font-size: 1rem;
+      font-size: 0.9rem;
       color: #00aa2a;
       flex-shrink: 0;
     }
@@ -97,24 +252,18 @@
       border-color: #0a0a0a;
       color: #0a0a0a;
     }
+
+    /* Stats */
     .stats {
       display: grid;
-      grid-template-columns: repeat(6, 1fr);
-      width: 100%;
-      align-items: start;
+      grid-template-columns: repeat(5, 1fr);
       gap: 1.5rem 1rem;
     }
     .stat {
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 0.5rem;
-    }
-    #network {
-      width: 16ch;
-      text-align: center;
-      font-variant-numeric: tabular-nums;
-      white-space: nowrap;
+      gap: 0.4rem;
     }
     .stat-label {
       color: #00551a;
@@ -128,11 +277,11 @@
       font-weight: bold;
     }
     .stat-sub {
-      color: #00551a;
-      font-size: 0.85rem;
+      color: #00772a;
+      font-size: 0.9rem;
     }
     .stat-bar {
-      width: 150px;
+      width: 140px;
       height: 8px;
       background: #001a00;
       border-radius: 4px;
@@ -143,114 +292,108 @@
       background: #00ff41;
       transition: width 0.5s;
     }
-    .header {
-      display: grid;
-      grid-template-columns: 1fr auto 1fr;
-      align-items: center;
-      width: 100%;
-    }
-    .sysinfo {
-      display: flex;
-      flex-direction: column;
-      gap: 1.5rem;
-      font-size: 1.4rem;
-    }
-    .sysinfo-row {
-      display: flex;
-      gap: 4rem;
-    }
-    .sysinfo-item {
-      display: flex;
-      flex-direction: column;
-      gap: 0.2rem;
-    }
-    .sysinfo-value {
-      color: #00ff41;
-      font-size: 1.6rem;
-      font-weight: bold;
-    }
-    .sysinfo-label {
-      color: #00772a;
-      font-size: 1rem;
-    }
-    .clock-container {
+    #network {
+      width: 14ch;
       text-align: center;
-    }
-    .shortcuts {
-      display: grid;
-      grid-template-columns: repeat(3, auto);
-      gap: 0.75rem 3rem;
-      font-size: 1.4rem;
-      align-content: center;
-      justify-self: end;
-    }
-    .shortcut-row {
-      display: flex;
-      gap: 0.75rem;
-      white-space: nowrap;
-    }
-    .shortcut-keys {
-      color: #00ff41;
-      font-weight: bold;
-      min-width: 3.5rem;
-    }
-    .shortcut-desc {
-      color: #00772a;
+      font-variant-numeric: tabular-nums;
     }
   </style>
 </head>
 <body>
   <div class="header">
-    <div class="sysinfo">
-      <div class="sysinfo-row">
-        <div class="sysinfo-item">
-          <span class="sysinfo-value" id="hostname">--</span>
-          <span class="sysinfo-label">Hostname</span>
-        </div>
-        <div class="sysinfo-item">
-          <span class="sysinfo-value" id="distro">--</span>
-          <span class="sysinfo-label">Distro</span>
-        </div>
-      </div>
-      <div class="sysinfo-row">
-        <div class="sysinfo-item">
-          <span class="sysinfo-value" id="kernel">--</span>
-          <span class="sysinfo-label">Kernel</span>
-        </div>
-        <div class="sysinfo-item">
-          <span class="sysinfo-value" id="load-avg">--</span>
-          <span class="sysinfo-label">Load Avg</span>
-        </div>
-        <div class="sysinfo-item">
-          <span class="sysinfo-value" id="proc-count">--</span>
-          <span class="sysinfo-label">Processes</span>
-        </div>
-      </div>
-    </div>
-    <div class="clock-container">
+    <div class="clock-section">
       <div class="clock" id="clock">00:00</div>
       <div class="date" id="date"></div>
     </div>
+    <div class="sysinfo">
+      <div class="sysinfo-item">
+        <span class="sysinfo-value" id="hostname">--</span>
+        <span class="sysinfo-label">Host</span>
+      </div>
+      <div class="sysinfo-item">
+        <span class="sysinfo-value" id="distro">--</span>
+        <span class="sysinfo-label">Distro</span>
+      </div>
+      <div class="sysinfo-item">
+        <span class="sysinfo-value" id="kernel">--</span>
+        <span class="sysinfo-label">Kernel</span>
+      </div>
+      <div class="sysinfo-item">
+        <span class="sysinfo-value" id="load-avg">--</span>
+        <span class="sysinfo-label">Load</span>
+      </div>
+      <div class="sysinfo-item">
+        <span class="sysinfo-value" id="proc-count">--</span>
+        <span class="sysinfo-label">Procs</span>
+      </div>
+    </div>
     <div class="shortcuts">
-      <div class="shortcut-row"><span class="shortcut-keys">d</span><span class="shortcut-desc">close tab</span></div>
-      <div class="shortcut-row"><span class="shortcut-keys">u</span><span class="shortcut-desc">undo close</span></div>
-      <div class="shortcut-row"><span class="shortcut-keys">J / K</span><span class="shortcut-desc">prev/next tab</span></div>
-      <div class="shortcut-row"><span class="shortcut-keys">t</span><span class="shortcut-desc">new tab</span></div>
-      <div class="shortcut-row"><span class="shortcut-keys">o / O</span><span class="shortcut-desc">open URL</span></div>
-      <div class="shortcut-row"><span class="shortcut-keys">f / F</span><span class="shortcut-desc">hint links</span></div>
-      <div class="shortcut-row"><span class="shortcut-keys">yy</span><span class="shortcut-desc">copy URL</span></div>
-      <div class="shortcut-row"><span class="shortcut-keys">p / P</span><span class="shortcut-desc">paste URL</span></div>
-      <div class="shortcut-row"><span class="shortcut-keys">H / L</span><span class="shortcut-desc">back/fwd</span></div>
-      <div class="shortcut-row"><span class="shortcut-keys">b</span><span class="shortcut-desc">switch tabs</span></div>
-      <div class="shortcut-row"><span class="shortcut-keys">gi</span><span class="shortcut-desc">focus input</span></div>
-      <div class="shortcut-row"><span class="shortcut-keys">s / S</span><span class="shortcut-desc">search</span></div>
+      <div class="shortcut-row"><span class="shortcut-keys">d</span><span class="shortcut-desc">close</span></div>
+      <div class="shortcut-row"><span class="shortcut-keys">u</span><span class="shortcut-desc">undo</span></div>
+      <div class="shortcut-row"><span class="shortcut-keys">J/K</span><span class="shortcut-desc">tabs</span></div>
+      <div class="shortcut-row"><span class="shortcut-keys">t</span><span class="shortcut-desc">new</span></div>
+      <div class="shortcut-row"><span class="shortcut-keys">o/O</span><span class="shortcut-desc">open</span></div>
+      <div class="shortcut-row"><span class="shortcut-keys">f/F</span><span class="shortcut-desc">hint</span></div>
+      <div class="shortcut-row"><span class="shortcut-keys">yy</span><span class="shortcut-desc">copy</span></div>
+      <div class="shortcut-row"><span class="shortcut-keys">p/P</span><span class="shortcut-desc">paste</span></div>
+      <div class="shortcut-row"><span class="shortcut-keys">b</span><span class="shortcut-desc">switch</span></div>
+    </div>
+  </div>
+
+  <div class="charts">
+    <div class="cpu-cores">
+      <div class="cpu-cores-title">CPU Cores</div>
+      <div class="cores-grid" id="cores-grid"></div>
+    </div>
+    <div class="sparklines">
+      <div class="sparkline-container">
+        <div class="sparkline-header">
+          <span class="sparkline-label">CPU</span>
+          <span class="sparkline-value" id="spark-cpu-val">--%</span>
+        </div>
+        <div class="sparkline"><canvas id="spark-cpu"></canvas></div>
+      </div>
+      <div class="sparkline-container">
+        <div class="sparkline-header">
+          <span class="sparkline-label">Memory</span>
+          <span class="sparkline-value" id="spark-mem-val">--%</span>
+        </div>
+        <div class="sparkline"><canvas id="spark-mem"></canvas></div>
+      </div>
+      <div class="sparkline-container">
+        <div class="sparkline-header">
+          <span class="sparkline-label">Net ↓</span>
+          <span class="sparkline-value" id="spark-netdown-val">--</span>
+        </div>
+        <div class="sparkline"><canvas id="spark-netdown"></canvas></div>
+      </div>
+      <div class="sparkline-container">
+        <div class="sparkline-header">
+          <span class="sparkline-label">Net ↑</span>
+          <span class="sparkline-value" id="spark-netup-val">--</span>
+        </div>
+        <div class="sparkline"><canvas id="spark-netup"></canvas></div>
+      </div>
+      <div class="sparkline-container">
+        <div class="sparkline-header">
+          <span class="sparkline-label">CPU Temp</span>
+          <span class="sparkline-value" id="spark-cputemp-val">--°C</span>
+        </div>
+        <div class="sparkline"><canvas id="spark-cputemp"></canvas></div>
+      </div>
+      <div class="sparkline-container">
+        <div class="sparkline-header">
+          <span class="sparkline-label">GPU Temp</span>
+          <span class="sparkline-value" id="spark-gputemp-val">--°C</span>
+        </div>
+        <div class="sparkline"><canvas id="spark-gputemp"></canvas></div>
+      </div>
     </div>
   </div>
 
   <div class="bookmarks" id="bookmarks"></div>
 
   <div class="stats">
-    <!-- Compute -->
     <div class="stat">
       <span class="stat-label">CPU</span>
       <span class="stat-value" id="cpu">--%</span>
@@ -258,22 +401,11 @@
       <span class="stat-sub">Utilization</span>
     </div>
     <div class="stat">
-      <span class="stat-label">CPU Temp</span>
-      <span class="stat-value" id="cpu-temp">--°C</span>
-      <span class="stat-sub">Ryzen 9</span>
-    </div>
-    <div class="stat">
       <span class="stat-label">GPU</span>
       <span class="stat-value" id="gpu">--%</span>
       <div class="stat-bar"><div class="stat-fill" id="gpu-bar" style="width: 0%"></div></div>
-      <span class="stat-sub">VRAM Usage</span>
+      <span class="stat-sub">RTX 4080 VRAM</span>
     </div>
-    <div class="stat">
-      <span class="stat-label">GPU Temp</span>
-      <span class="stat-value" id="gpu-temp">--°C</span>
-      <span class="stat-sub">RTX 4080</span>
-    </div>
-    <!-- Memory -->
     <div class="stat">
       <span class="stat-label">RAM</span>
       <span class="stat-value" id="mem">--%</span>
@@ -286,7 +418,11 @@
       <div class="stat-bar"><div class="stat-fill" id="disk-bar" style="width: 0%"></div></div>
       <span class="stat-sub">Storage</span>
     </div>
-    <!-- Thermals -->
+    <div class="stat">
+      <span class="stat-label">Network</span>
+      <span class="stat-value" id="network">--</span>
+      <span class="stat-sub">Bandwidth</span>
+    </div>
     <div class="stat">
       <span class="stat-label">PCH</span>
       <span class="stat-value" id="pch-temp">--°C</span>
@@ -302,18 +438,11 @@
       <span class="stat-value" id="nvme-temp">--°C</span>
       <span class="stat-sub">Sabrent 1TB</span>
     </div>
-    <!-- I/O -->
-    <div class="stat">
-      <span class="stat-label">Network</span>
-      <span class="stat-value" id="network">--</span>
-      <span class="stat-sub">Bandwidth</span>
-    </div>
     <div class="stat">
       <span class="stat-label">Top Proc</span>
       <span class="stat-value" id="top-proc">--</span>
       <span class="stat-sub">Highest CPU</span>
     </div>
-    <!-- Meta -->
     <div class="stat">
       <span class="stat-label">Uptime</span>
       <span class="stat-value" id="uptime">--</span>
@@ -322,31 +451,28 @@
   </div>
 
   <script>
-    function update() {
+    // Clock update
+    function updateClock() {
       const now = new Date();
       document.getElementById('clock').textContent =
         now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
       document.getElementById('date').textContent =
         now.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
     }
-    update();
-    setInterval(update, 1000);
+    updateClock();
+    setInterval(updateClock, 1000);
 
+    // Bookmarks
     const keyMap = {};
-
-    // Load bookmarks from JSON
     async function loadBookmarks() {
       try {
         const res = await fetch('bookmarks.json?' + Date.now());
         const groups = await res.json();
         const container = document.getElementById('bookmarks');
-
-        // Split into rows of 4
         const rows = [];
         for (let i = 0; i < groups.length; i += 4) {
           rows.push(groups.slice(i, i + 4));
         }
-
         container.innerHTML = rows.map(row => `
           <div class="row">
             ${row.map(group => `
@@ -374,33 +500,158 @@
       }
     });
 
-    // Fetch system stats
+    // Sparkline history (60 data points = 5 minutes at 5s intervals)
+    const HISTORY_SIZE = 60;
+    const history = {
+      cpu: [], mem: [], netDown: [], netUp: [], cpuTemp: [], gpuTemp: []
+    };
+
+    // Initialize CPU cores grid
+    function initCoresGrid(numCores) {
+      const grid = document.getElementById('cores-grid');
+      if (grid.children.length === numCores) return;
+      grid.innerHTML = '';
+      for (let i = 0; i < numCores; i++) {
+        const core = document.createElement('div');
+        core.className = 'core';
+        core.innerHTML = `
+          <div class="core-label">Core ${i}</div>
+          <div class="core-bar">
+            <div class="core-fill" id="core-fill-${i}" style="width: 0%"></div>
+            <span class="core-pct" id="core-pct-${i}">0%</span>
+          </div>
+        `;
+        grid.appendChild(core);
+      }
+    }
+
+    // Update CPU cores
+    function updateCores(coreUsage) {
+      coreUsage.forEach((usage, i) => {
+        const fill = document.getElementById(`core-fill-${i}`);
+        const pct = document.getElementById(`core-pct-${i}`);
+        if (fill && pct) {
+          fill.style.width = usage + '%';
+          pct.textContent = usage + '%';
+        }
+      });
+    }
+
+    // Draw sparkline on canvas
+    function drawSparkline(canvasId, data, maxVal = 100, color = '#00ff41') {
+      const canvas = document.getElementById(canvasId);
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      const rect = canvas.parentElement.getBoundingClientRect();
+      canvas.width = rect.width;
+      canvas.height = rect.height;
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      if (data.length < 2) return;
+
+      const step = canvas.width / (HISTORY_SIZE - 1);
+      const scale = canvas.height / maxVal;
+
+      ctx.beginPath();
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 1.5;
+
+      data.forEach((val, i) => {
+        const x = i * step;
+        const y = canvas.height - (val * scale);
+        if (i === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      });
+      ctx.stroke();
+
+      // Fill under the line
+      ctx.lineTo((data.length - 1) * step, canvas.height);
+      ctx.lineTo(0, canvas.height);
+      ctx.closePath();
+      ctx.fillStyle = color.replace(')', ', 0.1)').replace('rgb', 'rgba');
+      ctx.fill();
+    }
+
+    // Parse network value to bytes for sparkline
+    function parseNetValue(val) {
+      if (!val || val === '--') return 0;
+      const num = parseFloat(val);
+      if (val.includes('MB')) return num * 1024;
+      if (val.includes('KB')) return num;
+      return num / 1024;
+    }
+
+    // Fetch and update stats
     async function fetchStats() {
       try {
         const res = await fetch('stats.json?' + Date.now());
         const stats = await res.json();
+
+        // Update cores
+        if (stats.numCores) {
+          initCoresGrid(stats.numCores);
+        }
+        if (stats.coreUsage) {
+          updateCores(stats.coreUsage);
+        }
+
+        // Update history
+        history.cpu.push(stats.cpu || 0);
+        history.mem.push(stats.mem || 0);
+        history.netDown.push(parseNetValue(stats.netDown));
+        history.netUp.push(parseNetValue(stats.netUp));
+        history.cpuTemp.push(parseFloat(stats.cpuTemp) || 0);
+        history.gpuTemp.push(parseFloat(stats.gpuTemp) || 0);
+
+        // Trim history
+        Object.keys(history).forEach(key => {
+          if (history[key].length > HISTORY_SIZE) {
+            history[key] = history[key].slice(-HISTORY_SIZE);
+          }
+        });
+
+        // Draw sparklines
+        drawSparkline('spark-cpu', history.cpu, 100, '#00ff41');
+        drawSparkline('spark-mem', history.mem, 100, '#00ff41');
+        const netMax = Math.max(100, ...history.netDown, ...history.netUp);
+        drawSparkline('spark-netdown', history.netDown, netMax, '#00ff41');
+        drawSparkline('spark-netup', history.netUp, netMax, '#00ff41');
+        drawSparkline('spark-cputemp', history.cpuTemp, 100, '#00ff41');
+        drawSparkline('spark-gputemp', history.gpuTemp, 100, '#00ff41');
+
+        // Update sparkline values
+        document.getElementById('spark-cpu-val').textContent = stats.cpu + '%';
+        document.getElementById('spark-mem-val').textContent = stats.mem + '%';
+        document.getElementById('spark-netdown-val').textContent = stats.netDown || '--';
+        document.getElementById('spark-netup-val').textContent = stats.netUp || '--';
+        document.getElementById('spark-cputemp-val').textContent = (stats.cpuTemp || '--') + '°C';
+        document.getElementById('spark-gputemp-val').textContent = (stats.gpuTemp || '--') + '°C';
+
+        // Update main stats
         document.getElementById('cpu').textContent = stats.cpu + '%';
         document.getElementById('cpu-bar').style.width = stats.cpu + '%';
         document.getElementById('mem').textContent = stats.memUsed + '/' + stats.memTotal;
         document.getElementById('mem-bar').style.width = stats.mem + '%';
         document.getElementById('gpu').textContent = (stats.gpuMemUsed || '--') + '/' + (stats.gpuMemTotal || '--');
         document.getElementById('gpu-bar').style.width = (stats.gpuUtil || 0) + '%';
-        document.getElementById('gpu-temp').textContent = (stats.gpuTemp || '--') + '°C';
         document.getElementById('disk').textContent = stats.diskUsed + '/' + stats.diskTotal;
         document.getElementById('disk-bar').style.width = stats.disk + '%';
         document.getElementById('network').textContent = '↓' + (stats.netDown || '--') + ' ↑' + (stats.netUp || '--');
-        document.getElementById('top-proc').textContent = stats.topProc || '--';
-        document.getElementById('uptime').textContent = stats.uptime;
-        document.getElementById('cpu-temp').textContent = (stats.cpuTemp || '--') + '°C';
         document.getElementById('pch-temp').textContent = (stats.pchTemp || '--') + '°C';
         document.getElementById('vrm-temp').textContent = (stats.vrmTemp || '--') + '°C';
         document.getElementById('nvme-temp').textContent = (stats.nvmeTemp || '--') + '°C';
+        document.getElementById('top-proc').textContent = stats.topProc || '--';
+        document.getElementById('uptime').textContent = stats.uptime;
+
+        // Update sysinfo
         document.getElementById('hostname').textContent = stats.hostname || '--';
         document.getElementById('distro').textContent = stats.distro || '--';
         document.getElementById('kernel').textContent = stats.kernel || '--';
         document.getElementById('load-avg').textContent = stats.loadAvg || '--';
         document.getElementById('proc-count').textContent = stats.procCount || '--';
-      } catch (e) {}
+      } catch (e) {
+        console.error('Stats fetch error:', e);
+      }
     }
     fetchStats();
     setInterval(fetchStats, 5000);

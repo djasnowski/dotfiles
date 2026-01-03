@@ -3,12 +3,49 @@
 
 STATS_FILE="$HOME/.config/tridactyl/newtab/stats.json"
 NET_IFACE=$(ip route | awk '/default/ {print $5; exit}')
+NUM_CORES=$(nproc)
 
-# Store previous network bytes for speed calculation
+# Store previous values for delta calculations
 PREV_RX=0
 PREV_TX=0
+declare -a PREV_CPU_TOTAL PREV_CPU_IDLE
+
+# Initialize previous CPU arrays
+for ((i=0; i<NUM_CORES; i++)); do
+  PREV_CPU_TOTAL[$i]=0
+  PREV_CPU_IDLE[$i]=0
+done
 
 while true; do
+  # Per-core CPU usage
+  CORE_USAGE=""
+  for ((i=0; i<NUM_CORES; i++)); do
+    read -r _ user nice system idle iowait irq softirq steal _ _ < <(grep "^cpu$i " /proc/stat)
+    total=$((user + nice + system + idle + iowait + irq + softirq + steal))
+    idle_time=$idle
+
+    if [ ${PREV_CPU_TOTAL[$i]} -gt 0 ]; then
+      diff_total=$((total - PREV_CPU_TOTAL[$i]))
+      diff_idle=$((idle_time - PREV_CPU_IDLE[$i]))
+      if [ $diff_total -gt 0 ]; then
+        usage=$(( (diff_total - diff_idle) * 100 / diff_total ))
+      else
+        usage=0
+      fi
+    else
+      usage=0
+    fi
+
+    PREV_CPU_TOTAL[$i]=$total
+    PREV_CPU_IDLE[$i]=$idle_time
+
+    if [ -n "$CORE_USAGE" ]; then
+      CORE_USAGE="$CORE_USAGE,$usage"
+    else
+      CORE_USAGE="$usage"
+    fi
+  done
+
   CPU=$(top -bn1 | grep "Cpu(s)" | awk '{print 100 - $8}' | cut -d. -f1)
   MEM=$(free | awk '/Mem:/ {printf "%.0f", $3/$2 * 100}')
   MEM_USED=$(free -g | awk '/Mem:/ {print $3}')GB
@@ -97,7 +134,9 @@ while true; do
   "kernel": "$KERNEL",
   "distro": "$DISTRO",
   "loadAvg": "$LOAD_AVG",
-  "procCount": "$PROC_COUNT"
+  "procCount": "$PROC_COUNT",
+  "coreUsage": [$CORE_USAGE],
+  "numCores": $NUM_CORES
 }
 EOF
 
