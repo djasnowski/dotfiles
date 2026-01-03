@@ -75,9 +75,6 @@ link_config "$DOTFILES_DIR/dunst" "$CONFIG_DIR/dunst"
 link_config "$DOTFILES_DIR/xfce4" "$CONFIG_DIR/xfce4"
 link_config "$DOTFILES_DIR/tridactyl" "$CONFIG_DIR/tridactyl"
 link_config "$DOTFILES_DIR/scripts" "$CONFIG_DIR/scripts"
-link_config "$DOTFILES_DIR/zscroll" "$CONFIG_DIR/zscroll"
-link_config "$DOTFILES_DIR/rofi-bluetooth" "$CONFIG_DIR/rofi-bluetooth"
-link_config "$DOTFILES_DIR/rofi-themes-collection" "$CONFIG_DIR/rofi-themes-collection"
 
 # Home directory dotfiles
 info "Linking home directory dotfiles..."
