@@ -2,8 +2,15 @@
 # Writes system stats to stats.json for newtab page
 
 STATS_FILE="$HOME/.config/tridactyl/newtab/stats.json"
+HISTORY_FILE="$HOME/.config/tridactyl/newtab/stats_history.json"
+HISTORY_SIZE=360  # 30 minutes at 5s intervals
 NET_IFACE=$(ip route | awk '/default/ {print $5; exit}')
 NUM_CORES=$(nproc)
+
+# Initialize history file if it doesn't exist
+if [ ! -f "$HISTORY_FILE" ]; then
+  echo '{"cpu":[],"mem":[],"netDown":[],"netUp":[],"cpuTemp":[],"gpuTemp":[]}' > "$HISTORY_FILE"
+fi
 
 # Store previous values for delta calculations
 PREV_RX=0
@@ -139,6 +146,44 @@ while true; do
   "numCores": $NUM_CORES
 }
 EOF
+
+  # Update history file with numeric values for sparklines
+  # Convert network to KB for consistent numeric storage
+  if [ "$RX_FMT" = "--" ]; then
+    NET_DOWN_KB=0
+  elif [[ "$RX_FMT" == *MB ]]; then
+    NET_DOWN_KB=$(echo "${RX_FMT%MB} * 1024" | bc | cut -d. -f1)
+  elif [[ "$RX_FMT" == *KB ]]; then
+    NET_DOWN_KB=${RX_FMT%KB}
+  else
+    NET_DOWN_KB=0
+  fi
+
+  if [ "$TX_FMT" = "--" ]; then
+    NET_UP_KB=0
+  elif [[ "$TX_FMT" == *MB ]]; then
+    NET_UP_KB=$(echo "${TX_FMT%MB} * 1024" | bc | cut -d. -f1)
+  elif [[ "$TX_FMT" == *KB ]]; then
+    NET_UP_KB=${TX_FMT%KB}
+  else
+    NET_UP_KB=0
+  fi
+
+  # Use jq to append and trim history
+  jq --argjson cpu "${CPU:-0}" \
+     --argjson mem "${MEM:-0}" \
+     --argjson netDown "${NET_DOWN_KB:-0}" \
+     --argjson netUp "${NET_UP_KB:-0}" \
+     --argjson cpuTemp "${CPU_TEMP:-0}" \
+     --argjson gpuTemp "${GPU_TEMP:-0}" \
+     --argjson size "$HISTORY_SIZE" \
+     '.cpu = (.cpu + [$cpu])[-$size:] |
+      .mem = (.mem + [$mem])[-$size:] |
+      .netDown = (.netDown + [$netDown])[-$size:] |
+      .netUp = (.netUp + [$netUp])[-$size:] |
+      .cpuTemp = (.cpuTemp + [$cpuTemp])[-$size:] |
+      .gpuTemp = (.gpuTemp + [$gpuTemp])[-$size:]' \
+     "$HISTORY_FILE" > "${HISTORY_FILE}.tmp" && mv "${HISTORY_FILE}.tmp" "$HISTORY_FILE"
 
   sleep 5
 done

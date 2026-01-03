@@ -1,5 +1,6 @@
 # Personal bookmarks (use bookmarks.example.json as template)
 tridactyl/newtab/bookmarks.json
 
-# Stats file (generated)
+# Stats files (generated)
 tridactyl/newtab/stats.json
+tridactyl/newtab/stats_history.json

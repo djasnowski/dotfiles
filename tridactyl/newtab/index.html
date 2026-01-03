@@ -81,11 +81,15 @@
       color: #00772a;
     }
 
-    /* Charts Section */
-    .charts {
-      display: flex;
-      flex-direction: column;
-      gap: 1rem;
+    /* CPU Cores Section */
+    .cpu-cores-section {
+      background: rgba(0, 255, 65, 0.03);
+      border: 1px solid #00ff4122;
+      padding: 1rem 1.5rem;
+    }
+
+    /* Sparklines Section */
+    .sparklines-section {
       background: rgba(0, 255, 65, 0.03);
       border: 1px solid #00ff4122;
       padding: 1rem 1.5rem;
@@ -346,11 +350,14 @@
     </div>
   </div>
 
-  <div class="charts">
+  <div class="cpu-cores-section">
     <div class="cpu-cores">
       <div class="cpu-cores-title">CPU Cores</div>
       <div class="cores-grid" id="cores-grid"></div>
     </div>
+  </div>
+
+  <div class="sparklines-section">
     <div class="sparklines">
       <div class="sparkline-container">
         <div class="sparkline-header">
@@ -506,11 +513,37 @@
       }
     });
 
-    // Sparkline history (60 data points = 5 minutes at 5s intervals)
-    const HISTORY_SIZE = 60;
-    const history = {
-      cpu: [], mem: [], netDown: [], netUp: [], cpuTemp: [], gpuTemp: []
-    };
+    // Sparkline history (loaded from server, 360 data points = 30 minutes)
+    const HISTORY_SIZE = 360;
+    let history = { cpu: [], mem: [], netDown: [], netUp: [], cpuTemp: [], gpuTemp: [] };
+
+    // Load history from server file
+    async function loadServerHistory() {
+      try {
+        const res = await fetch('stats_history.json?' + Date.now());
+        const data = await res.json();
+        if (data.cpu && Array.isArray(data.cpu)) {
+          history = data;
+          drawAllSparklines();
+        }
+      } catch (e) {
+        console.error('Failed to load history:', e);
+      }
+    }
+
+    // Draw all sparklines with current history
+    function drawAllSparklines() {
+      drawSparkline('spark-cpu', history.cpu, 100, '#00ff41');
+      drawSparkline('spark-mem', history.mem, 100, '#00ff41');
+      const netMax = Math.max(100, ...history.netDown, ...history.netUp);
+      drawSparkline('spark-netdown', history.netDown, netMax, '#00ff41');
+      drawSparkline('spark-netup', history.netUp, netMax, '#00ff41');
+      drawSparkline('spark-cputemp', history.cpuTemp, 100, '#00ff41');
+      drawSparkline('spark-gputemp', history.gpuTemp, 100, '#00ff41');
+    }
+
+    // Load history on page load (deferred until drawSparkline is defined)
+    setTimeout(loadServerHistory, 0);
 
     // Initialize CPU cores grid
     function initCoresGrid(numCores) {
@@ -601,29 +634,8 @@
           updateCores(stats.coreUsage);
         }
 
-        // Update history
-        history.cpu.push(stats.cpu || 0);
-        history.mem.push(stats.mem || 0);
-        history.netDown.push(parseNetValue(stats.netDown));
-        history.netUp.push(parseNetValue(stats.netUp));
-        history.cpuTemp.push(parseFloat(stats.cpuTemp) || 0);
-        history.gpuTemp.push(parseFloat(stats.gpuTemp) || 0);
-
-        // Trim history
-        Object.keys(history).forEach(key => {
-          if (history[key].length > HISTORY_SIZE) {
-            history[key] = history[key].slice(-HISTORY_SIZE);
-          }
-        });
-
-        // Draw sparklines
-        drawSparkline('spark-cpu', history.cpu, 100, '#00ff41');
-        drawSparkline('spark-mem', history.mem, 100, '#00ff41');
-        const netMax = Math.max(100, ...history.netDown, ...history.netUp);
-        drawSparkline('spark-netdown', history.netDown, netMax, '#00ff41');
-        drawSparkline('spark-netup', history.netUp, netMax, '#00ff41');
-        drawSparkline('spark-cputemp', history.cpuTemp, 100, '#00ff41');
-        drawSparkline('spark-gputemp', history.gpuTemp, 100, '#00ff41');
+        // Reload history from server and draw sparklines
+        await loadServerHistory();
 
         // Update sparkline values
         document.getElementById('spark-cpu-val').textContent = stats.cpu + '%';
