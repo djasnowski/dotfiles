@@ -166,8 +166,23 @@ while true; do
     DISK_WRITE_FMT="--"
   fi
 
-  # Docker containers (running count)
-  DOCKER_COUNT=$(docker ps -q 2>/dev/null | wc -l | tr -d '[:space:]')
+  # Docker info - use sg to run with docker group
+  DOCKER_RUNNING=$(sg docker -c "docker ps -q 2>/dev/null" 2>/dev/null | wc -l | tr -d '[:space:]')
+  DOCKER_RUNNING=${DOCKER_RUNNING:-0}
+  DOCKER_STOPPED=$(sg docker -c "docker ps -aq --filter 'status=exited' 2>/dev/null" 2>/dev/null | wc -l | tr -d '[:space:]')
+  DOCKER_STOPPED=${DOCKER_STOPPED:-0}
+  DOCKER_IMAGES=$(sg docker -c "docker images -q 2>/dev/null" 2>/dev/null | wc -l | tr -d '[:space:]')
+  DOCKER_IMAGES=${DOCKER_IMAGES:-0}
+  # Get running container details as JSON array
+  DOCKER_CONTAINERS=$(sg docker -c "docker ps --format '{{.Names}}|{{.ID}}|{{.Image}}|{{.Status}}|{{.Ports}}' 2>/dev/null" 2>/dev/null | head -6 | while IFS='|' read -r name id image status ports; do
+    # Escape quotes in values and truncate long strings
+    image=$(echo "$image" | cut -c1-30)
+    status=$(echo "$status" | sed 's/"/\\"/g')
+    # Clean up ports: remove IP prefixes, normalize whitespace, and deduplicate
+    ports=$(echo "$ports" | sed 's/0\.0\.0\.0://g; s/\[::\]://g' | tr ',' '\n' | sed 's/^ *//; s/ *$//' | sort -u | paste -sd',' | sed 's/"/\\"/g' | cut -c1-60)
+    echo "{\"name\":\"$name\",\"id\":\"${id:0:12}\",\"image\":\"$image\",\"status\":\"$status\",\"ports\":\"$ports\"}"
+  done | paste -sd',' | sed 's/^/[/; s/$/]/')
+  DOCKER_CONTAINERS=${DOCKER_CONTAINERS:-"[]"}
 
   # Package updates (cached, refresh every 10 min = 120 iterations)
   PKG_UPDATE_COUNT=$((PKG_UPDATE_COUNT + 1))
@@ -205,13 +220,12 @@ while true; do
   "procCount": "$PROC_COUNT",
   "coreUsage": [$CORE_USAGE],
   "numCores": $NUM_CORES,
-  "swap": ${SWAP_PCT:-0},
-  "swapUsed": "$SWAP_USED",
-  "swapTotal": "$SWAP_TOTAL",
-  "cpuFreq": "${CPU_FREQ:-0}",
   "diskRead": "$DISK_READ_FMT",
   "diskWrite": "$DISK_WRITE_FMT",
-  "dockerCount": ${DOCKER_COUNT:-0},
+  "dockerRunning": ${DOCKER_RUNNING:-0},
+  "dockerStopped": ${DOCKER_STOPPED:-0},
+  "dockerImages": ${DOCKER_IMAGES:-0},
+  "dockerContainers": $DOCKER_CONTAINERS,
   "pkgUpdates": ${PKG_UPDATES:-0}
 }
 EOF
