@@ -14,11 +14,17 @@ set hintdelay 100
 " Smooth scrolling
 set smoothscroll true
 
+" Custom new tab page
+set newtab http://127.0.0.1:8384/index.html
+
 " Editor command (neovim)
 set editorcmd nvim
 
 " Don't autofocus input fields
 set allowautofocus false
+
+" Blacklist newtab page so keyboard shortcuts work
+blacklistadd 127.0.0.1:8384
 
 "
 " Keybindings
@@ -44,6 +50,7 @@ bind >> tabmove +1
 " New tab
 bind t fillcmdline tabopen
 bind T fillcmdline tabopen -b
+bind gn composite tabopen http://127.0.0.1:8384/index.html | sleep 200 | hint
 
 " Duplicate tab
 bind yd tabduplicate

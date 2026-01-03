@@ -1,0 +1,33 @@
+[
+  {
+    "title": "Work",
+    "links": [
+      {"key": "a", "name": "Project Dashboard", "url": "https://example.com/dashboard", "display": "example.com/dashboard"},
+      {"key": "s", "name": "Task Manager", "url": "https://example.com/tasks", "display": "example.com/tasks"},
+      {"key": "d", "name": "Documentation", "url": "https://docs.example.com", "display": "docs.example.com"}
+    ]
+  },
+  {
+    "title": "Dev",
+    "links": [
+      {"key": "q", "name": "GitHub", "url": "https://github.com", "display": "github.com"},
+      {"key": "w", "name": "Stack Overflow", "url": "https://stackoverflow.com", "display": "stackoverflow.com"},
+      {"key": "e", "name": "MDN Web Docs", "url": "https://developer.mozilla.org", "display": "developer.mozilla.org"}
+    ]
+  },
+  {
+    "title": "Social",
+    "links": [
+      {"key": "z", "name": "Email", "url": "https://mail.google.com", "display": "mail.google.com"},
+      {"key": "x", "name": "Calendar", "url": "https://calendar.google.com", "display": "calendar.google.com"},
+      {"key": "c", "name": "Messages", "url": "https://messages.google.com", "display": "messages.google.com"}
+    ]
+  },
+  {
+    "title": "News",
+    "links": [
+      {"key": "1", "name": "Hacker News", "url": "https://news.ycombinator.com", "display": "news.ycombinator.com"},
+      {"key": "2", "name": "Reddit", "url": "https://reddit.com", "display": "reddit.com"}
+    ]
+  }
+]
