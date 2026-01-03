@@ -103,10 +103,6 @@ install_packages() {
     sudo apt install -y \
         x11-xserver-utils \
         arandr || true
-
-    info "Installing flatpak..."
-    sudo apt install -y flatpak || true
-    flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo || true
 }
 
 # Install additional dependencies (oh-my-zsh, plugins, etc.)

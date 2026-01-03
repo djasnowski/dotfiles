@@ -62,14 +62,6 @@ This is a complete desktop environment configuration optimized for:
 |-----------|---------|----------------|
 | **Tridactyl** | Firefox vim bindings | `tridactyl/tridactylrc` |
 
-### Music & Media
-
-| Component | Purpose | Config Location |
-|-----------|---------|----------------|
-| **ncspot** | Terminal-based Spotify client | Flatpak (alias: `spt`) |
-| **Spotify** | Desktop Spotify client | Flatpak (alias: `spot`) |
-| **playerctl** | Media player controller | Used for keyboard shortcuts |
-
 ### Custom Scripts
 
 | Script | Purpose | Location |
@@ -81,110 +73,23 @@ This is a complete desktop environment configuration optimized for:
 
 ## Prerequisites
 
-### Required Packages
+The install script (`./install.sh --all`) handles most dependencies automatically. You only need to install these manually:
+
+### JetBrains Mono Nerd Font
+
+Download from [nerd-fonts releases](https://github.com/ryanoasis/nerd-fonts/releases) and install.
+
+### Optional: Node.js Development Tools
 
 ```bash
-# Core window manager and desktop components
-sudo apt update
-sudo apt install -y \
-    i3 \
-    polybar \
-    rofi \
-    dunst \
-    feh \
-    xfce4-terminal \
-    flameshot \
-    playerctl \
-    jq
-
-# Fonts
-sudo apt install -y \
-    fonts-dejavu \
-    fonts-font-awesome
-
-# Install JetBrains Mono Nerd Font manually from:
-# https://github.com/ryanoasis/nerd-fonts/releases
-
-# Shell and terminal tools
-sudo apt install -y \
-    zsh \
-    tmux \
-    git \
-    curl \
-    wget
-
-# Development tools
-sudo apt install -y \
-    build-essential \
-    ripgrep \
-    bat \
-    lazygit
-
-# Optional: Display management
-sudo apt install -y \
-    xrandr \
-    arandr
-```
-
-### Additional Dependencies
-
-```bash
-# Oh-My-Zsh
-sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
-
-# Spaceship theme for Zsh
-git clone https://github.com/spaceship-prompt/spaceship-prompt.git "$ZSH_CUSTOM/themes/spaceship-prompt" --depth=1
-ln -s "$ZSH_CUSTOM/themes/spaceship-prompt/spaceship.zsh-theme" "$ZSH_CUSTOM/themes/spaceship.zsh-theme"
-
-# Zsh plugins
-git clone https://github.com/zsh-users/zsh-autosuggestions ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-autosuggestions
-git clone https://github.com/zsh-users/zsh-syntax-highlighting.git ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-syntax-highlighting
-
-# Tmux Plugin Manager
-git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm
-
 # FNM (Fast Node Manager)
 curl -fsSL https://fnm.vercel.app/install | bash
 
-# Optional: Bun
+# Bun
 curl -fsSL https://bun.sh/install | bash
 
-# Optional: pnpm
+# pnpm
 curl -fsSL https://get.pnpm.io/install.sh | sh -
-```
-
-### Flatpak Applications (Manual Install)
-
-**Important**: Make sure you follow the [Flatpak setup guide](https://flatpak.org/setup/) for your Linux distribution before installing applications.
-
-```bash
-# Install Flatpak
-sudo apt install flatpak
-
-# Add the Flathub repository
-flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
-
-# Restart your system (or log out/in) to complete Flatpak setup
-# Then install applications:
-
-# ncspot - Terminal-based Spotify client (aliased as 'spt')
-flatpak install flathub io.github.hrkfdn.ncspot
-
-# Spotify Desktop Client (aliased as 'spot')
-flatpak install flathub com.spotify.Client
-```
-
-**Running Flatpak applications:**
-```bash
-# ncspot (terminal Spotify client)
-flatpak run io.github.hrkfdn.ncspot
-# Or use the alias:
-spt
-
-# Spotify Desktop
-flatpak run com.spotify.Client
-# Or use the alias:
-spot
 ```
 
 ## Installation
