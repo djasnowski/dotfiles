@@ -1,0 +1,13 @@
+[Unit]
+Description=New Tab HTTP Server
+After=default.target
+
+[Service]
+Type=simple
+WorkingDirectory=/home/dan/.config/tridactyl/newtab
+ExecStart=/usr/bin/python3 -m http.server 8384 --bind 127.0.0.1
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=default.target
