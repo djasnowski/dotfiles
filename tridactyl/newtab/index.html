@@ -5,6 +5,8 @@
   <title>New Tab</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
+    *:focus { outline: none; }
+    *:focus-visible { outline: 1px solid #00ff41; }
     body {
       background: #0a0a0a;
       color: #00ff41;
@@ -195,6 +197,13 @@
       background: rgba(0, 255, 65, 0.05);
       border: 1px solid #00ff4133;
       padding: 1rem;
+      transition: border-color 0.15s ease;
+      outline: none;
+    }
+    .group.highlight {
+      border-color: #00ff41;
+      outline: 1px solid #00ff41;
+      outline-offset: 2px;
     }
     .group-title {
       font-size: 1.1rem;
@@ -611,6 +620,20 @@
     // Two-key sequence handler for bookmarks (e.g., 1q, 2w)
     let keyBuffer = '';
     let keyTimeout = null;
+
+    function clearHighlight() {
+      document.querySelectorAll('.group.highlight').forEach(g => g.classList.remove('highlight'));
+    }
+
+    function highlightGroup(num) {
+      clearHighlight();
+      const groups = document.querySelectorAll('.group');
+      const index = parseInt(num) - 1;
+      if (groups[index]) {
+        groups[index].classList.add('highlight');
+      }
+    }
+
     document.addEventListener('keydown', e => {
       // Ignore if typing in an input
       if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
@@ -621,8 +644,14 @@
       // Build key sequence
       keyBuffer += e.key;
 
+      // Highlight group when first key is 1-4
+      if (keyBuffer.length === 1 && /^[1-4]$/.test(keyBuffer)) {
+        highlightGroup(keyBuffer);
+      }
+
       // Check for match
       if (keyMap[keyBuffer]) {
+        clearHighlight();
         window.location.href = keyMap[keyBuffer];
         keyBuffer = '';
         return;
@@ -630,16 +659,24 @@
 
       // If buffer is 2+ chars and no match, reset and try current key
       if (keyBuffer.length >= 2) {
+        clearHighlight();
         keyBuffer = e.key;
+        if (/^[1-4]$/.test(keyBuffer)) {
+          highlightGroup(keyBuffer);
+        }
         if (keyMap[keyBuffer]) {
+          clearHighlight();
           window.location.href = keyMap[keyBuffer];
           keyBuffer = '';
           return;
         }
       }
 
-      // Clear buffer after 500ms of no input
-      keyTimeout = setTimeout(() => { keyBuffer = ''; }, 500);
+      // Clear buffer after 20s of no input
+      keyTimeout = setTimeout(() => {
+        keyBuffer = '';
+        clearHighlight();
+      }, 20000);
     });
 
     // Sparkline history (loaded from server, 360 data points = 30 minutes)
