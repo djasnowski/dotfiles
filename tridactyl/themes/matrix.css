@@ -1,0 +1,21 @@
+:root {
+    --tridactyl-fg: #00ff41;
+    --tridactyl-bg: #0d0d0d;
+    --tridactyl-cmdl-fg: #00ff41;
+    --tridactyl-cmdl-bg: #0a0a0a;
+    --tridactyl-highlight-box-bg: #003b00;
+    --tridactyl-highlight-box-fg: #00ff41;
+    --tridactyl-url-fg: #00cc33;
+    --tridactyl-url-bg: #0d0d0d;
+    --tridactyl-hint-bg: #001a00;
+    --tridactyl-hint-fg: #00ff41;
+    --tridactyl-hint-active-bg: #003b00;
+    --tridactyl-hint-active-fg: #00ff41;
+    --tridactyl-cmplt-fg: #00ff41;
+    --tridactyl-cmplt-bg: #0d0d0d;
+    --tridactyl-cmplt-option-focused-bg: #002200;
+    --tridactyl-cmplt-option-focused-fg: #00ff41;
+    --tridactyl-header-bg: #001a00;
+    --tridactyl-header-fg: #00cc33;
+    --tridactyl-border: #003b00;
+}
