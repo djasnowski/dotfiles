@@ -23,8 +23,7 @@ set editorcmd nvim
 " Don't autofocus input fields
 set allowautofocus false
 
-" Blacklist newtab page so keyboard shortcuts work
-blacklistadd 127.0.0.1:8384
+" Note: newtab page handles its own keyboard shortcuts via JS
 
 "
 " Keybindings

@@ -611,10 +611,38 @@
     }
     loadBookmarks();
 
+    // Two-key sequence handler for bookmarks (e.g., 1q, 2w)
+    let keyBuffer = '';
+    let keyTimeout = null;
     document.addEventListener('keydown', e => {
-      if (keyMap[e.key]) {
-        window.location.href = keyMap[e.key];
+      // Ignore if typing in an input
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+
+      // Clear timeout on new keypress
+      if (keyTimeout) clearTimeout(keyTimeout);
+
+      // Build key sequence
+      keyBuffer += e.key;
+
+      // Check for match
+      if (keyMap[keyBuffer]) {
+        window.location.href = keyMap[keyBuffer];
+        keyBuffer = '';
+        return;
       }
+
+      // If buffer is 2+ chars and no match, reset and try current key
+      if (keyBuffer.length >= 2) {
+        keyBuffer = e.key;
+        if (keyMap[keyBuffer]) {
+          window.location.href = keyMap[keyBuffer];
+          keyBuffer = '';
+          return;
+        }
+      }
+
+      // Clear buffer after 500ms of no input
+      keyTimeout = setTimeout(() => { keyBuffer = ''; }, 500);
     });
 
     // Sparkline history (loaded from server, 360 data points = 30 minutes)
