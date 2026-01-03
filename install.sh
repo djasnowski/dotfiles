@@ -324,5 +324,5 @@ fi
 echo ""
 info "Installation complete!"
 echo ""
-echo "Note: Reload Tridactyl in Firefox with :source"
+echo "Final step: Open Firefox and type  :source  to reload Tridactyl config"
 echo ""
