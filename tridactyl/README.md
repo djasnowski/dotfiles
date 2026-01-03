@@ -13,6 +13,65 @@ Vim-style keyboard navigation for Firefox using [Tridactyl](https://github.com/t
 
 Custom **Matrix** theme - bright green (#00ff41) on near-black background.
 
+## Custom New Tab Page
+
+A Matrix-themed new tab page with live system stats, bookmarks, and keyboard shortcuts.
+
+### Features
+- **Clock/Date** - Centered time display
+- **System Info** - Hostname, distro, kernel, load avg, process count
+- **Bookmarks** - Keyboard-accessible links loaded from JSON
+- **Keyboard Shortcuts** - Quick reference panel
+- **Live Stats** - CPU, GPU, RAM, disk, temps, network, uptime (updates every 5s)
+
+### Setup
+
+1. **Start the services** (auto-start on login):
+   ```bash
+   # Enable systemd user services
+   systemctl --user enable --now newtab-stats.service
+   systemctl --user enable --now newtab-server.service
+   ```
+
+2. **Create your bookmarks**:
+   ```bash
+   cp ~/.config/tridactyl/newtab/bookmarks.example.json ~/.config/tridactyl/newtab/bookmarks.json
+   # Edit bookmarks.json with your links
+   ```
+
+3. **Install VCR OSD Mono font** (optional, for retro look):
+   ```bash
+   # Download from https://www.dafont.com/vcr-osd-mono.font
+   ```
+
+### Bookmark Format
+
+```json
+[
+  {
+    "title": "Work",
+    "links": [
+      {"key": "a", "name": "Dashboard", "url": "https://example.com", "display": "example.com"}
+    ]
+  }
+]
+```
+
+### Services
+
+| Service | Description | Port |
+|---------|-------------|------|
+| `newtab-server` | HTTP server for new tab | 8384 |
+| `newtab-stats` | Stats collector (JSON) | - |
+
+```bash
+# Check status
+systemctl --user status newtab-stats newtab-server
+
+# View logs
+journalctl --user -u newtab-stats -f
+```
+
 ## Keybindings
 
 ### Navigation
