@@ -9,10 +9,9 @@
       background: #0a0a0a;
       color: #00ff41;
       font-family: 'VCR OSD Mono', monospace;
-      height: 100vh;
+      min-height: 100vh;
       display: flex;
       flex-direction: column;
-      justify-content: space-between;
       padding: 1rem 2rem;
       gap: 1rem;
     }
@@ -186,8 +185,6 @@
       display: flex;
       flex-direction: column;
       gap: 1rem;
-      flex: 1;
-      overflow: hidden;
     }
     .row {
       display: grid;
@@ -262,8 +259,17 @@
       color: #0a0a0a;
     }
 
+    /* Bottom Section - Stats + Docker side by side */
+    .bottom-section {
+      display: flex;
+      gap: 2rem;
+      align-items: flex-start;
+    }
+
     /* Docker Section */
     .docker-section {
+      flex: 1;
+      height: auto;
       background: rgba(0, 255, 65, 0.03);
       border: 1px solid #00ff4122;
       padding: 0.75rem 1.5rem;
@@ -346,8 +352,8 @@
     /* Stats */
     .stats {
       display: grid;
-      grid-template-columns: repeat(5, 1fr);
-      gap: 1.5rem 1rem;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 2rem 1.5rem;
     }
     .stat {
       display: flex;
@@ -492,71 +498,68 @@
 
   <div class="bookmarks" id="bookmarks"></div>
 
-  <div class="docker-section">
-    <div class="docker-header">
-      <span class="docker-title">Docker</span>
-      <span class="docker-summary">
-        <span class="docker-stat"><span id="docker-running">0</span> running</span>
-        <span class="docker-stat"><span id="docker-stopped">0</span> stopped</span>
-        <span class="docker-stat"><span id="docker-images">0</span> images</span>
-      </span>
+  <div class="bottom-section">
+    <div class="stats">
+      <div class="stat">
+        <span class="stat-label">CPU</span>
+        <span class="stat-value" id="cpu">--%</span>
+        <div class="stat-bar"><div class="stat-fill" id="cpu-bar" style="width: 0%"></div></div>
+        <span class="stat-sub">Utilization</span>
+      </div>
+      <div class="stat">
+        <span class="stat-label">RAM</span>
+        <span class="stat-value" id="mem">--%</span>
+        <div class="stat-bar"><div class="stat-fill" id="mem-bar" style="width: 0%"></div></div>
+        <span class="stat-sub">Memory</span>
+      </div>
+      <div class="stat">
+        <span class="stat-label">Disk</span>
+        <span class="stat-value" id="disk">--%</span>
+        <div class="stat-bar"><div class="stat-fill" id="disk-bar" style="width: 0%"></div></div>
+        <span class="stat-sub">Storage</span>
+      </div>
+      <div class="stat">
+        <span class="stat-label">Disk I/O</span>
+        <span class="stat-value" id="disk-io">--</span>
+        <span class="stat-sub">Read/Write</span>
+      </div>
+      <div class="stat">
+        <span class="stat-label">Network</span>
+        <span class="stat-value" id="network">--</span>
+        <span class="stat-sub">Bandwidth</span>
+      </div>
+      <div class="stat">
+        <span class="stat-label">Uptime</span>
+        <span class="stat-value" id="uptime">--</span>
+        <span class="stat-sub">System</span>
+      </div>
+      <div class="stat">
+        <span class="stat-label">PCH</span>
+        <span class="stat-value" id="pch-temp">--°C</span>
+        <span class="stat-sub">B650 Chipset</span>
+      </div>
+      <div class="stat">
+        <span class="stat-label">VRM</span>
+        <span class="stat-value" id="vrm-temp">--°C</span>
+        <span class="stat-sub">Power Delivery</span>
+      </div>
+      <div class="stat">
+        <span class="stat-label">NVMe</span>
+        <span class="stat-value" id="nvme-temp">--°C</span>
+        <span class="stat-sub">Sabrent 1TB</span>
+      </div>
     </div>
-    <div class="docker-containers" id="docker-containers"></div>
-  </div>
 
-  <div class="stats">
-    <div class="stat">
-      <span class="stat-label">CPU</span>
-      <span class="stat-value" id="cpu">--%</span>
-      <div class="stat-bar"><div class="stat-fill" id="cpu-bar" style="width: 0%"></div></div>
-      <span class="stat-sub">Utilization</span>
-    </div>
-    <div class="stat">
-      <span class="stat-label">RAM</span>
-      <span class="stat-value" id="mem">--%</span>
-      <div class="stat-bar"><div class="stat-fill" id="mem-bar" style="width: 0%"></div></div>
-      <span class="stat-sub">Memory</span>
-    </div>
-    <div class="stat">
-      <span class="stat-label">Disk</span>
-      <span class="stat-value" id="disk">--%</span>
-      <div class="stat-bar"><div class="stat-fill" id="disk-bar" style="width: 0%"></div></div>
-      <span class="stat-sub">Storage</span>
-    </div>
-    <div class="stat">
-      <span class="stat-label">Disk I/O</span>
-      <span class="stat-value" id="disk-io">--</span>
-      <span class="stat-sub">Read/Write</span>
-    </div>
-    <div class="stat">
-      <span class="stat-label">Network</span>
-      <span class="stat-value" id="network">--</span>
-      <span class="stat-sub">Bandwidth</span>
-    </div>
-    <div class="stat">
-      <span class="stat-label">PCH</span>
-      <span class="stat-value" id="pch-temp">--°C</span>
-      <span class="stat-sub">B650 Chipset</span>
-    </div>
-    <div class="stat">
-      <span class="stat-label">VRM</span>
-      <span class="stat-value" id="vrm-temp">--°C</span>
-      <span class="stat-sub">Power Delivery</span>
-    </div>
-    <div class="stat">
-      <span class="stat-label">NVMe</span>
-      <span class="stat-value" id="nvme-temp">--°C</span>
-      <span class="stat-sub">Sabrent 1TB</span>
-    </div>
-    <div class="stat">
-      <span class="stat-label">Updates</span>
-      <span class="stat-value" id="pkg-updates">--</span>
-      <span class="stat-sub">Packages</span>
-    </div>
-    <div class="stat">
-      <span class="stat-label">Uptime</span>
-      <span class="stat-value" id="uptime">--</span>
-      <span class="stat-sub">System</span>
+    <div class="docker-section">
+      <div class="docker-header">
+        <span class="docker-title">Docker</span>
+        <span class="docker-summary">
+          <span class="docker-stat"><span id="docker-running">0</span> running</span>
+          <span class="docker-stat"><span id="docker-stopped">0</span> stopped</span>
+          <span class="docker-stat"><span id="docker-images">0</span> images</span>
+        </span>
+      </div>
+      <div class="docker-containers" id="docker-containers"></div>
     </div>
   </div>
 
@@ -861,7 +864,6 @@
       document.getElementById('pch-temp').textContent = (stats.pchTemp || '--') + '°C';
       document.getElementById('vrm-temp').textContent = (stats.vrmTemp || '--') + '°C';
       document.getElementById('nvme-temp').textContent = (stats.nvmeTemp || '--') + '°C';
-      document.getElementById('pkg-updates').textContent = stats.pkgUpdates || '0';
       document.getElementById('uptime').textContent = stats.uptime;
 
       // Update sysinfo
