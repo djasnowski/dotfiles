@@ -346,7 +346,7 @@
     /* Stats */
     .stats {
       display: grid;
-      grid-template-columns: repeat(6, 1fr);
+      grid-template-columns: repeat(5, 1fr);
       gap: 1.5rem 1rem;
     }
     .stat {
@@ -482,10 +482,10 @@
       </div>
       <div class="sparkline-container">
         <div class="sparkline-header">
-          <span class="sparkline-label">GPU Temp</span>
-          <span class="sparkline-value" id="spark-gputemp-val">--°C</span>
+          <span class="sparkline-label">Disk I/O</span>
+          <span class="sparkline-value" id="spark-diskio-val">--</span>
         </div>
-        <div class="sparkline"><canvas id="spark-gputemp"></canvas></div>
+        <div class="sparkline"><canvas id="spark-diskio"></canvas></div>
       </div>
     </div>
   </div>
@@ -510,18 +510,6 @@
       <span class="stat-value" id="cpu">--%</span>
       <div class="stat-bar"><div class="stat-fill" id="cpu-bar" style="width: 0%"></div></div>
       <span class="stat-sub">Utilization</span>
-    </div>
-    <div class="stat">
-      <span class="stat-label">GPU</span>
-      <span class="stat-value" id="gpu-util">--%</span>
-      <div class="stat-bar"><div class="stat-fill" id="gpu-util-bar" style="width: 0%"></div></div>
-      <span class="stat-sub">RTX 4080</span>
-    </div>
-    <div class="stat">
-      <span class="stat-label">VRAM</span>
-      <span class="stat-value" id="gpu">--</span>
-      <div class="stat-bar"><div class="stat-fill" id="gpu-bar" style="width: 0%"></div></div>
-      <span class="stat-sub">GPU Memory</span>
     </div>
     <div class="stat">
       <span class="stat-label">RAM</span>
@@ -653,7 +641,7 @@
 
     // Sparkline history (loaded from server, 360 data points = 30 minutes)
     const HISTORY_SIZE = 360;
-    let history = { cpu: [], mem: [], netDown: [], netUp: [], cpuTemp: [], gpuTemp: [] };
+    let history = { cpu: [], mem: [], netDown: [], netUp: [], cpuTemp: [], gpuTemp: [], diskIO: [] };
 
     // Load history from server file
     async function loadServerHistory() {
@@ -677,7 +665,8 @@
       drawSparkline('spark-netdown', history.netDown, netMax, '#00ff41');
       drawSparkline('spark-netup', history.netUp, netMax, '#00ff41');
       drawSparkline('spark-cputemp', history.cpuTemp, 100, '#00ff41');
-      drawSparkline('spark-gputemp', history.gpuTemp, 100, '#00ff41');
+      const diskMax = Math.max(100, ...history.diskIO);
+      drawSparkline('spark-diskio', history.diskIO, diskMax, '#00ff41');
     }
 
     // Load history on page load (deferred until drawSparkline is defined)
@@ -808,15 +797,10 @@
       document.getElementById('spark-netdown-val').textContent = stats.netDown || '--';
       document.getElementById('spark-netup-val').textContent = stats.netUp || '--';
       document.getElementById('spark-cputemp-val').textContent = (stats.cpuTemp || '--') + '°C';
-      document.getElementById('spark-gputemp-val').textContent = (stats.gpuTemp || '--') + '°C';
 
       // Update main stats
       document.getElementById('cpu').textContent = stats.cpu + '%';
       document.getElementById('cpu-bar').style.width = stats.cpu + '%';
-      document.getElementById('gpu-util').textContent = (stats.gpuUtil || 0) + '%';
-      document.getElementById('gpu-util-bar').style.width = (stats.gpuUtil || 0) + '%';
-      document.getElementById('gpu').textContent = (stats.gpuMemUsed || '--') + '/' + (stats.gpuMemTotal || '--');
-      document.getElementById('gpu-bar').style.width = stats.gpuUtil ? (parseFloat(stats.gpuMemUsed) / parseFloat(stats.gpuMemTotal) * 100) : 0 + '%';
       document.getElementById('mem').textContent = stats.memUsed + '/' + stats.memTotal;
       document.getElementById('mem-bar').style.width = stats.mem + '%';
       document.getElementById('disk').textContent = stats.diskUsed + '/' + stats.diskTotal;
@@ -825,6 +809,7 @@
       const diskRead = stats.diskRead === '0B' || stats.diskRead === '--' ? '0' : stats.diskRead;
       const diskWrite = stats.diskWrite === '0B' || stats.diskWrite === '--' ? '0' : stats.diskWrite;
       document.getElementById('disk-io').textContent = '↓' + diskRead + ' ↑' + diskWrite;
+      document.getElementById('spark-diskio-val').textContent = diskRead + '/' + diskWrite;
       document.getElementById('network').textContent = '↓' + (stats.netDown || '--') + ' ↑' + (stats.netUp || '--');
       // Docker section
       document.getElementById('docker-running').textContent = stats.dockerRunning || 0;

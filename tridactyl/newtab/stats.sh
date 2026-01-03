@@ -9,7 +9,7 @@ NUM_CORES=$(nproc)
 
 # Initialize history file if it doesn't exist
 if [ ! -f "$HISTORY_FILE" ]; then
-  echo '{"cpu":[],"mem":[],"netDown":[],"netUp":[],"cpuTemp":[],"gpuTemp":[]}' > "$HISTORY_FILE"
+  echo '{"cpu":[],"mem":[],"netDown":[],"netUp":[],"cpuTemp":[],"gpuTemp":[],"diskIO":[]}' > "$HISTORY_FILE"
 fi
 
 # Store previous values for delta calculations
@@ -252,6 +252,9 @@ EOF
     NET_UP_KB=0
   fi
 
+  # Convert disk I/O to KB for history (combined read+write)
+  DISK_IO_KB=$(( (${READ_SPEED:-0} + ${WRITE_SPEED:-0}) / 1024 ))
+
   # Use jq to append and trim history
   jq --argjson cpu "${CPU:-0}" \
      --argjson mem "${MEM:-0}" \
@@ -259,13 +262,15 @@ EOF
      --argjson netUp "${NET_UP_KB:-0}" \
      --argjson cpuTemp "${CPU_TEMP:-0}" \
      --argjson gpuTemp "${GPU_TEMP:-0}" \
+     --argjson diskIO "${DISK_IO_KB:-0}" \
      --argjson size "$HISTORY_SIZE" \
      '.cpu = (.cpu + [$cpu])[-$size:] |
       .mem = (.mem + [$mem])[-$size:] |
       .netDown = (.netDown + [$netDown])[-$size:] |
       .netUp = (.netUp + [$netUp])[-$size:] |
       .cpuTemp = (.cpuTemp + [$cpuTemp])[-$size:] |
-      .gpuTemp = (.gpuTemp + [$gpuTemp])[-$size:]' \
+      .gpuTemp = (.gpuTemp + [$gpuTemp])[-$size:] |
+      .diskIO = (.diskIO + [$diskIO])[-$size:]' \
      "$HISTORY_FILE" > "${HISTORY_FILE}.tmp" && mv "${HISTORY_FILE}.tmp" "$HISTORY_FILE"
 
   sleep 5
