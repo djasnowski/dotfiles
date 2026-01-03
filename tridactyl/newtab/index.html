@@ -415,9 +415,15 @@
     </div>
     <div class="stat">
       <span class="stat-label">GPU</span>
-      <span class="stat-value" id="gpu">--%</span>
+      <span class="stat-value" id="gpu-util">--%</span>
+      <div class="stat-bar"><div class="stat-fill" id="gpu-util-bar" style="width: 0%"></div></div>
+      <span class="stat-sub">RTX 4080</span>
+    </div>
+    <div class="stat">
+      <span class="stat-label">VRAM</span>
+      <span class="stat-value" id="gpu">--</span>
       <div class="stat-bar"><div class="stat-fill" id="gpu-bar" style="width: 0%"></div></div>
-      <span class="stat-sub">RTX 4080 VRAM</span>
+      <span class="stat-sub">GPU Memory</span>
     </div>
     <div class="stat">
       <span class="stat-label">RAM</span>
@@ -426,15 +432,36 @@
       <span class="stat-sub">Memory</span>
     </div>
     <div class="stat">
+      <span class="stat-label">Swap</span>
+      <span class="stat-value" id="swap">--</span>
+      <div class="stat-bar"><div class="stat-fill" id="swap-bar" style="width: 0%"></div></div>
+      <span class="stat-sub">Virtual Mem</span>
+    </div>
+    <div class="stat">
       <span class="stat-label">Disk</span>
       <span class="stat-value" id="disk">--%</span>
       <div class="stat-bar"><div class="stat-fill" id="disk-bar" style="width: 0%"></div></div>
       <span class="stat-sub">Storage</span>
     </div>
     <div class="stat">
+      <span class="stat-label">Disk I/O</span>
+      <span class="stat-value" id="disk-io">--</span>
+      <span class="stat-sub">Read/Write</span>
+    </div>
+    <div class="stat">
       <span class="stat-label">Network</span>
       <span class="stat-value" id="network">--</span>
       <span class="stat-sub">Bandwidth</span>
+    </div>
+    <div class="stat">
+      <span class="stat-label">CPU Freq</span>
+      <span class="stat-value" id="cpu-freq">--</span>
+      <span class="stat-sub">Clock Speed</span>
+    </div>
+    <div class="stat">
+      <span class="stat-label">Docker</span>
+      <span class="stat-value" id="docker">--</span>
+      <span class="stat-sub">Containers</span>
     </div>
     <div class="stat">
       <span class="stat-label">PCH</span>
@@ -452,9 +479,9 @@
       <span class="stat-sub">Sabrent 1TB</span>
     </div>
     <div class="stat">
-      <span class="stat-label">Top Proc</span>
-      <span class="stat-value" id="top-proc">--</span>
-      <span class="stat-sub">Highest CPU</span>
+      <span class="stat-label">Updates</span>
+      <span class="stat-value" id="pkg-updates">--</span>
+      <span class="stat-sub">Packages</span>
     </div>
     <div class="stat">
       <span class="stat-label">Uptime</span>
@@ -648,17 +675,24 @@
         // Update main stats
         document.getElementById('cpu').textContent = stats.cpu + '%';
         document.getElementById('cpu-bar').style.width = stats.cpu + '%';
+        document.getElementById('gpu-util').textContent = (stats.gpuUtil || 0) + '%';
+        document.getElementById('gpu-util-bar').style.width = (stats.gpuUtil || 0) + '%';
+        document.getElementById('gpu').textContent = (stats.gpuMemUsed || '--') + '/' + (stats.gpuMemTotal || '--');
+        document.getElementById('gpu-bar').style.width = stats.gpuUtil ? (parseFloat(stats.gpuMemUsed) / parseFloat(stats.gpuMemTotal) * 100) : 0 + '%';
         document.getElementById('mem').textContent = stats.memUsed + '/' + stats.memTotal;
         document.getElementById('mem-bar').style.width = stats.mem + '%';
-        document.getElementById('gpu').textContent = (stats.gpuMemUsed || '--') + '/' + (stats.gpuMemTotal || '--');
-        document.getElementById('gpu-bar').style.width = (stats.gpuUtil || 0) + '%';
+        document.getElementById('swap').textContent = stats.swapUsed + '/' + stats.swapTotal;
+        document.getElementById('swap-bar').style.width = (stats.swap || 0) + '%';
         document.getElementById('disk').textContent = stats.diskUsed + '/' + stats.diskTotal;
         document.getElementById('disk-bar').style.width = stats.disk + '%';
+        document.getElementById('disk-io').textContent = '↓' + (stats.diskRead || '--') + ' ↑' + (stats.diskWrite || '--');
         document.getElementById('network').textContent = '↓' + (stats.netDown || '--') + ' ↑' + (stats.netUp || '--');
+        document.getElementById('cpu-freq').textContent = (stats.cpuFreq || '--') + 'GHz';
+        document.getElementById('docker').textContent = stats.dockerCount || '0';
         document.getElementById('pch-temp').textContent = (stats.pchTemp || '--') + '°C';
         document.getElementById('vrm-temp').textContent = (stats.vrmTemp || '--') + '°C';
         document.getElementById('nvme-temp').textContent = (stats.nvmeTemp || '--') + '°C';
-        document.getElementById('top-proc').textContent = stats.topProc || '--';
+        document.getElementById('pkg-updates').textContent = stats.pkgUpdates || '0';
         document.getElementById('uptime').textContent = stats.uptime;
 
         // Update sysinfo

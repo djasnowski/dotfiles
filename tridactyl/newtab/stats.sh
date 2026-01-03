@@ -15,7 +15,13 @@ fi
 # Store previous values for delta calculations
 PREV_RX=0
 PREV_TX=0
+PREV_DISK_READ=0
+PREV_DISK_WRITE=0
 declare -a PREV_CPU_TOTAL PREV_CPU_IDLE
+
+# Package updates (cached, updated every 10 minutes)
+PKG_UPDATES=0
+PKG_UPDATE_COUNT=0
 
 # Initialize previous CPU arrays
 for ((i=0; i<NUM_CORES; i++)); do
@@ -116,6 +122,61 @@ while true; do
   VRM2_TEMP=$(sensors gigabyte_wmi-virtual-0 2>/dev/null | awk '/temp6:/ {gsub(/[+°C]/,"",$2); print $2}')
   NVME_TEMP=$(sensors nvme-pci-1000 2>/dev/null | awk '/Composite:/ {gsub(/[+°C]/,"",$2); print $2}')
 
+  # Swap usage
+  SWAP_DATA=$(free | awk '/Swap:/ {if ($2 > 0) printf "%.0f %d %d", $3/$2*100, $3/1024/1024, $2/1024/1024; else print "0 0 0"}')
+  SWAP_PCT=$(echo "$SWAP_DATA" | awk '{print $1}')
+  SWAP_USED=$(echo "$SWAP_DATA" | awk '{print $2}')GB
+  SWAP_TOTAL=$(echo "$SWAP_DATA" | awk '{print $3}')GB
+
+  # CPU frequency (average across cores, in GHz)
+  CPU_FREQ=$(awk '/cpu MHz/ {sum+=$4; count++} END {if(count>0) printf "%.2f", sum/count/1000}' /proc/cpuinfo)
+
+  # Disk I/O (bytes per 5 sec interval) - using primary disk
+  DISK_DEV=$(lsblk -d -o NAME,TYPE | awk '$2=="disk" {print $1; exit}')
+  if [ -n "$DISK_DEV" ] && [ -f "/sys/block/$DISK_DEV/stat" ]; then
+    read -r _ _ CURR_READ _ _ _ _ CURR_WRITE _ < /sys/block/$DISK_DEV/stat
+    CURR_READ=$((CURR_READ * 512))  # Convert sectors to bytes
+    CURR_WRITE=$((CURR_WRITE * 512))
+    if [ $PREV_DISK_READ -gt 0 ]; then
+      READ_SPEED=$(( (CURR_READ - PREV_DISK_READ) / 5 ))
+      WRITE_SPEED=$(( (CURR_WRITE - PREV_DISK_WRITE) / 5 ))
+      # Format to human readable
+      if [ $READ_SPEED -gt 1048576 ]; then
+        DISK_READ_FMT="$(echo "scale=1; $READ_SPEED/1048576" | bc)MB"
+      elif [ $READ_SPEED -gt 1024 ]; then
+        DISK_READ_FMT="$(echo "scale=0; $READ_SPEED/1024" | bc)KB"
+      else
+        DISK_READ_FMT="${READ_SPEED}B"
+      fi
+      if [ $WRITE_SPEED -gt 1048576 ]; then
+        DISK_WRITE_FMT="$(echo "scale=1; $WRITE_SPEED/1048576" | bc)MB"
+      elif [ $WRITE_SPEED -gt 1024 ]; then
+        DISK_WRITE_FMT="$(echo "scale=0; $WRITE_SPEED/1024" | bc)KB"
+      else
+        DISK_WRITE_FMT="${WRITE_SPEED}B"
+      fi
+    else
+      DISK_READ_FMT="--"
+      DISK_WRITE_FMT="--"
+    fi
+    PREV_DISK_READ=$CURR_READ
+    PREV_DISK_WRITE=$CURR_WRITE
+  else
+    DISK_READ_FMT="--"
+    DISK_WRITE_FMT="--"
+  fi
+
+  # Docker containers (running count)
+  DOCKER_COUNT=$(docker ps -q 2>/dev/null | wc -l | tr -d '[:space:]')
+
+  # Package updates (cached, refresh every 10 min = 120 iterations)
+  PKG_UPDATE_COUNT=$((PKG_UPDATE_COUNT + 1))
+  if [ $PKG_UPDATE_COUNT -ge 120 ] || [ $PKG_UPDATE_COUNT -eq 1 ]; then
+    PKG_UPDATES=$(apt list --upgradable 2>/dev/null | grep -c "upgradable" | tr -d '[:space:]')
+    PKG_UPDATES=${PKG_UPDATES:-0}
+    PKG_UPDATE_COUNT=1
+  fi
+
   cat > "$STATS_FILE" << EOF
 {
   "cpu": $CPU,
@@ -143,7 +204,15 @@ while true; do
   "loadAvg": "$LOAD_AVG",
   "procCount": "$PROC_COUNT",
   "coreUsage": [$CORE_USAGE],
-  "numCores": $NUM_CORES
+  "numCores": $NUM_CORES,
+  "swap": ${SWAP_PCT:-0},
+  "swapUsed": "$SWAP_USED",
+  "swapTotal": "$SWAP_TOTAL",
+  "cpuFreq": "${CPU_FREQ:-0}",
+  "diskRead": "$DISK_READ_FMT",
+  "diskWrite": "$DISK_WRITE_FMT",
+  "dockerCount": ${DOCKER_COUNT:-0},
+  "pkgUpdates": ${PKG_UPDATES:-0}
 }
 EOF
 
