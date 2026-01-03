@@ -1,1 +1,119 @@
+" Matrix theme
 colorscheme matrix
+
+"
+" General settings
+"
+
+" Use vim-like hinting mode
+set hintfiltermode vimperator-reflow
+set hintnames numeric
+set hintdelay 100
+
+" Smooth scrolling
+set smoothscroll true
+
+" Editor command (neovim)
+set editorcmd nvim
+
+" Don't autofocus input fields
+set allowautofocus false
+
+"
+" Keybindings
+"
+
+" Use Shift+Insert to paste
+bind <S-Insert> composite getclip selection | fillcmdline_notrail
+
+" Close tab and move left (less confusing)
+bind d composite tabprev; tabclose #
+bind D tabclose
+
+" Tab navigation
+bind J tabprev
+bind K tabnext
+bind gT tabprev
+bind gt tabnext
+
+" Move tabs
+bind << tabmove -1
+bind >> tabmove +1
+
+" New tab
+bind t fillcmdline tabopen
+bind T fillcmdline tabopen -b
+
+" Duplicate tab
+bind yd tabduplicate
+
+" Detach tab to new window
+bind gd tabdetach
+
+" Pin tab
+bind gp pin
+
+" Mute tab
+bind gm mute toggle
+
+" Reader mode
+bind gr reader
+
+" Copy current URL
+bind yy clipboard yank
+bind Y hint -p
+
+" Open clipboard URL in new tab
+bind p clipboard tabopen
+bind P clipboard open
+
+" Search
+bind / fillcmdline find
+bind n findnext
+bind N findnext --reverse
+
+" Quick access
+bind ;g composite js "git clone " + document.location.href.replace(/https?:\/\//,"git@").replace("/",":").replace(/$/,".git") | clipboard yank
+
+" Comment toggler for Reddit/HN/Lobsters
+bind ;c hint -Jc [class*="expand"],[class*="togg"],[class="comment_folder"]
+
+" Only hint search results on Google
+bindurl www.google.com f hint -Jc #search a
+bindurl www.google.com F hint -Jbc #search a
+
+" GitHub search box
+bindurl ^https://github.com gi hint -Vc .AppHeader-searchButton
+
+" Make gu go up 4 levels on Reddit (to subreddit)
+bindurl reddit.com gu urlparent 4
+
+" Allow Ctrl-a and Ctrl-c in command line
+unbind --mode=ex <C-a>
+unbind --mode=ex <C-c>
+
+"
+" Search engines
+"
+
+set searchurls.g https://www.google.com/search?q=
+set searchurls.ddg https://duckduckgo.com/?q=
+set searchurls.gh https://github.com/search?q=
+set searchurls.yt https://www.youtube.com/results?search_query=
+set searchurls.wiki https://en.wikipedia.org/wiki/Special:Search?search=
+set searchurls.mdn https://developer.mozilla.org/en-US/search?q=
+set searchurls.npm https://www.npmjs.com/search?q=
+set searchurls.rs https://doc.rust-lang.org/std/?search=
+set searchurls.py https://docs.python.org/3/search.html?q=
+
+"
+" Quickmarks
+"
+
+quickmark g https://github.com
+quickmark m https://mail.google.com
+quickmark y https://youtube.com
+quickmark r https://reddit.com
+quickmark h https://news.ycombinator.com
+
+" vim: set filetype=tridactyl
