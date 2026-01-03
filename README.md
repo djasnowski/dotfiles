@@ -198,19 +198,30 @@ cd ~/dotfiles
 
 ### 2. Run the Install Script
 
-The install script will:
-- Backup any existing configs to `~/.config/backup-YYYYMMDD-HHMMSS/`
-- Create symbolic links from `~/.config/*` to `~/dotfiles/*`
-- Make all scripts executable
-
 ```bash
-./install.sh
+# Full install (recommended for new systems)
+# Installs apt packages, oh-my-zsh, plugins, and creates symlinks
+./install.sh --all
+
+# Or install in stages:
+./install.sh --deps    # Install apt packages + symlinks
+./install.sh           # Only create symlinks (if deps already installed)
 ```
 
-### 3. Set Zsh as Default Shell
+The script will:
+- Install required apt packages (with `--deps` or `--all`)
+- Install oh-my-zsh, spaceship theme, zsh plugins, tpm (with `--all`)
+- Backup any existing configs to `~/.config/backup-YYYYMMDD-HHMMSS/`
+- Create symbolic links from `~/.config/*` to `~/dotfiles/*`
+
+### 3. Post-Install
 
 ```bash
+# Set zsh as default shell
 chsh -s $(which zsh)
+
+# Install tmux plugins (inside tmux)
+# Press: prefix + I
 ```
 
 ### 4. Install Rofi Themes
