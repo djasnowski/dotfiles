@@ -1,0 +1,8 @@
+configuration {
+    modi: "drun,run";
+    show-icons: true;
+    display-drun: ">";
+    display-run: ">";
+    drun-display-format: "{name}";
+}
+@theme "/home/dan/.local/share/rofi/themes/matrix.rasi"

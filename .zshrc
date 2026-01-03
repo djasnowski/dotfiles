@@ -135,3 +135,11 @@ export PATH="$BUN_INSTALL/bin:$PATH"
 fpath=($fpath "$HOME/.zfunctions")
 export PATH="$HOME/.local/bin:$PATH"
 export PATH="$HOME/.local/bin:$PATH"
+
+# fnm
+FNM_PATH="/home/dan/.local/share/fnm"
+if [ -d "$FNM_PATH" ]; then
+  export PATH="$FNM_PATH:$PATH"
+  eval "`fnm env`"
+fi
+export DBUS_SESSION_BUS_ADDRESS="unix:path=/run/user/$(id -u)/bus"

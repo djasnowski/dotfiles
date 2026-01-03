@@ -196,62 +196,24 @@ git clone https://github.com/yourusername/dotfiles.git ~/dotfiles
 cd ~/dotfiles
 ```
 
-### 2. Backup Existing Configurations
+### 2. Run the Install Script
+
+The install script will:
+- Backup any existing configs to `~/.config/backup-YYYYMMDD-HHMMSS/`
+- Create symbolic links from `~/.config/*` to `~/dotfiles/*`
+- Make all scripts executable
 
 ```bash
-# Backup existing configs
-mkdir -p ~/.config/backup
-cp -r ~/.config/i3 ~/.config/backup/ 2>/dev/null || true
-cp -r ~/.config/polybar ~/.config/backup/ 2>/dev/null || true
-cp -r ~/.config/rofi ~/.config/backup/ 2>/dev/null || true
-cp -r ~/.config/dunst ~/.config/backup/ 2>/dev/null || true
-cp ~/.zshrc ~/.zshrc.backup 2>/dev/null || true
-cp ~/.tmux.conf ~/.tmux.conf.backup 2>/dev/null || true
+./install.sh
 ```
 
-### 3. Create Symbolic Links
-
-```bash
-# i3
-mkdir -p ~/.config/i3
-ln -sf ~/dotfiles/i3/config ~/.config/i3/config
-ln -sf ~/dotfiles/i3/auto-display.sh ~/.config/i3/auto-display.sh
-chmod +x ~/.config/i3/auto-display.sh
-
-# Polybar
-ln -sf ~/dotfiles/polybar ~/.config/polybar
-chmod +x ~/.config/polybar/launch.sh
-chmod +x ~/.config/polybar/scripts/*.sh
-
-# Rofi
-ln -sf ~/dotfiles/rofi ~/.config/rofi
-chmod +x ~/.config/rofi/*.sh
-
-# Dunst
-ln -sf ~/dotfiles/dunst ~/.config/dunst
-
-# XFCE4 Terminal
-ln -sf ~/dotfiles/xfce4 ~/.config/xfce4
-
-# Tridactyl
-ln -sf ~/dotfiles/tridactyl ~/.config/tridactyl
-
-# Shell configs
-ln -sf ~/dotfiles/.zshrc ~/.zshrc
-ln -sf ~/dotfiles/.tmux.conf ~/.tmux.conf
-
-# Scripts
-mkdir -p ~/.config/scripts
-ln -sf ~/dotfiles/scripts ~/.config/scripts
-```
-
-### 4. Set Zsh as Default Shell
+### 3. Set Zsh as Default Shell
 
 ```bash
 chsh -s $(which zsh)
 ```
 
-### 5. Install Rofi Themes
+### 4. Install Rofi Themes
 
 ```bash
 # The Matrix theme is referenced in rofi config
@@ -260,7 +222,7 @@ chsh -s $(which zsh)
 # Or update the path in rofi/config.rasi
 ```
 
-### 6. Set Up Wallpaper
+### 5. Set Up Wallpaper
 
 ```bash
 # Place your Matrix wallpaper at:
@@ -269,7 +231,7 @@ mkdir -p ~/Documents
 # Or update the path in i3/config line 200
 ```
 
-### 7. Reload Configurations
+### 6. Reload Configurations
 
 ```bash
 # Reload i3
@@ -406,10 +368,12 @@ Extensive aliases for:
 
 **Location**: `tridactyl/tridactylrc`
 
-- **Theme**: Catppuccin Mocha
+- **Theme**: Matrix
 - **Smooth scrolling enabled**
-- **Tab navigation**: Alt+h/l for prev/next, Alt+j to close
-- **Vim-style**: [t and ]t for tab navigation
+- **Hints**: Letter-based (asdfgqwertzxcv) for easy left-hand access
+- **Tab navigation**: J/K or gT/gt for prev/next
+- **Tab management**: d closes tab and moves left, D just closes
+- **Quickmarks**: g=GitHub, m=Gmail, y=YouTube, r=Reddit, h=HN, c=ChatGPT
 
 ## Keybindings
 
@@ -497,11 +461,16 @@ Extensive aliases for:
 
 | Keybinding | Action |
 |------------|--------|
-| `Alt+h` | Previous tab |
-| `Alt+l` | Next tab |
-| `Alt+j` | Close tab |
-| `[t` | Previous tab (vim-style) |
-| `]t` | Next tab (vim-style) |
+| `f` | Hint mode (links) |
+| `J` / `gT` | Previous tab |
+| `K` / `gt` | Next tab |
+| `d` | Close tab (move left) |
+| `D` | Close tab |
+| `<<` / `>>` | Move tab left/right |
+| `go<key>` | Open quickmark in current tab |
+| `gn<key>` | Open quickmark in new tab |
+| `yy` | Copy URL |
+| `p` / `P` | Open clipboard URL (new/current tab) |
 
 ## Customization
 

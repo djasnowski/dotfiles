@@ -1,0 +1,15 @@
+/**
+ *
+ * Matrix Theme
+ * 
+ * Colors
+ **/
+
+* {
+    background:     #000000FF; /* Pure black background */
+    background-alt: #0a0a0aFF; /* Slightly lighter black for contrast */
+    foreground:     #00ff00FF; /* Neon green text */
+    selected:       #33ff33FF; /* Bright green for selected items */
+    active:         #66ff66FF; /* Softer green for active state */
+    urgent:         #ff0000FF; /* Red for urgency (optional) */
+}

@@ -7,11 +7,20 @@ set $mod Mod4
 # Auto-detect and configure displays
 exec_always --no-startup-id /home/dan/.config/i3/auto-display.sh
 
+# Export environment to systemd user session (for dunst, flatpak apps, etc)
+exec --no-startup-id dbus-update-activation-environment --systemd DISPLAY XAUTHORITY XDG_CURRENT_DESKTOP DBUS_SESSION_BUS_ADDRESS
+
+# Start dunst notification daemon
+exec --no-startup-id dunst
+
 # Font for window titles and bar
 font pango:DejaVu Sans Mono 10
 
 # Default split orientation (horizontal = side by side)
 default_orientation horizontal
+
+# Always split horizontally (side by side) for new windows
+for_window [class=".*"] split horizontal
 
 # Remove all window borders and title bars
 default_border none
@@ -197,7 +206,7 @@ focus_follows_mouse yes
 workspace_auto_back_and_forth yes
 
 # Matrix wallpaper
-exec_always --no-startup-id feh --bg-scale ~/Documents/matrix-wallpaper.png
+exec_always --no-startup-id feh --bg-scale ~/Pictures/matrix-wallpaper.png
 
 # Spotify controls
 bindsym Control+Mod1+z exec --no-startup-id playerctl play-pause

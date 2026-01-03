@@ -7,7 +7,8 @@ colorscheme matrix
 
 " Use vim-like hinting mode
 set hintfiltermode vimperator-reflow
-set hintnames numeric
+set hintnames short
+set hintchars asdfgqwertzxcv
 set hintdelay 100
 
 " Smooth scrolling
@@ -115,5 +116,6 @@ quickmark m https://mail.google.com
 quickmark y https://youtube.com
 quickmark r https://reddit.com
 quickmark h https://news.ycombinator.com
+quickmark c https://chatgpt.com
 
 " vim: set filetype=tridactyl
