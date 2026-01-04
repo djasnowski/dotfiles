@@ -563,11 +563,11 @@
       height: 6px;
       border-radius: 50%;
       background: #00ff41;
+      margin-left: auto;
     }
     .health-chip-latency {
       color: #00772a;
       font-size: 0.8rem;
-      margin-left: auto;
     }
     .health-chip-indicator.warning {
       background: #ffaa00;
@@ -1794,8 +1794,8 @@
         html += `
           <div class="health-chip ${statusClass}">
             <span class="health-chip-name">${check.name}</span>
-            <span class="health-chip-indicator ${statusClass}"></span>
             ${latencyDisplay ? `<span class="health-chip-latency">${latencyDisplay}</span>` : ''}
+            <span class="health-chip-indicator ${statusClass}"></span>
           </div>
         `;
       }
@@ -1804,8 +1804,8 @@
         html += `
           <div class="health-chip">
             <span class="health-chip-name">App</span>
-            <span class="health-chip-indicator"></span>
             <span class="health-chip-latency">${latencies.app.toFixed(1)}ms</span>
+            <span class="health-chip-indicator"></span>
           </div>
         `;
       }
@@ -1814,8 +1814,8 @@
         html += `
           <div class="health-chip">
             <span class="health-chip-name">Anthropic</span>
-            <span class="health-chip-indicator"></span>
             <span class="health-chip-latency">${latencies.anthropic.toFixed(1)}ms</span>
+            <span class="health-chip-indicator"></span>
           </div>
         `;
       }
