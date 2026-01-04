@@ -630,11 +630,15 @@
     }
     .job-queue-item {
       display: flex;
-      align-items: center;
-      gap: 0.75rem;
+      flex-direction: column;
       padding: 0.5rem 1rem;
       background: rgba(0, 255, 65, 0.03);
       border: 1px solid #00ff4122;
+    }
+    .job-queue-item-top {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
     }
     .job-queue-name {
       color: #00ff41;
@@ -653,10 +657,11 @@
     .job-queue-time-axis {
       display: flex;
       justify-content: space-between;
-      font-size: 0.75rem;
+      font-size: 0.7rem;
       color: #00551a;
-      margin-top: 0.5rem;
-      padding: 0 0.25rem;
+      margin-top: 0.25rem;
+      margin-left: 58px;
+      width: 100px;
     }
 
     /* Abstracts Section */
@@ -1177,7 +1182,9 @@
                   keyMap[link.key] = url;
                   const displayKey = link.key.length > 1 ? link.key.slice(1) : link.key;
                   const hasToggle = link.prod && link.local;
-                  return `<a class="link${hasToggle ? ' toggleable' : ''}" href="${url}"><span class="key">${displayKey}</span><span class="link-text"><span class="link-name">${link.name}</span><span class="link-url">${link.display}</span></span></a>`;
+                  // For toggleable links, show the current URL; otherwise use static display
+                  const displayUrl = hasToggle ? url.replace(/^https?:\/\//, '') : link.display;
+                  return `<a class="link${hasToggle ? ' toggleable' : ''}" href="${url}"><span class="key">${displayKey}</span><span class="link-text"><span class="link-name">${link.name}</span><span class="link-url">${displayUrl}</span></span></a>`;
                 }).join('')}
               </div>
             </div>
@@ -1728,10 +1735,6 @@
     let healthLoaded = false;
     async function checkHealth() {
       const listEl = document.getElementById('services-list');
-      const modeEl = document.getElementById('services-mode');
-
-      modeEl.textContent = servicesMode.toUpperCase();
-      modeEl.className = 'services-mode' + (servicesMode === 'local' ? ' local' : '');
 
       // Show loading state only on first load
       if (!healthLoaded) {
@@ -1805,26 +1808,26 @@
         `;
 
         // Render inline sparklines for each queue
+        const periodHours = Math.round((meta.period_minutes || 60) / 60);
         for (const [qName, stats] of Object.entries(queueStats)) {
           const historyData = JSON.stringify(stats.history);
           html += `
             <div class="job-queue-item">
-              <span class="job-queue-name">${qName}</span>
-              <canvas class="queue-spark-canvas" data-history='${historyData}' width="100" height="32"></canvas>
-              <span class="job-queue-count">${stats.processed}</span>
+              <div class="job-queue-item-top">
+                <span class="job-queue-name">${qName}</span>
+                <canvas class="queue-spark-canvas" data-history='${historyData}' width="100" height="32"></canvas>
+                <span class="job-queue-count">${stats.processed}</span>
+              </div>
+              <div class="job-queue-time-axis">
+                <span>${periodHours}hr</span>
+                <span>${Math.round(periodHours / 2)}hr</span>
+                <span>now</span>
+              </div>
             </div>
           `;
         }
 
-        // Add time axis
-        const periodHours = Math.round((meta.period_minutes || 60) / 60);
-        html += `</div>
-          <div class="job-queue-time-axis">
-            <span>${periodHours}hr ago</span>
-            <span>${Math.round(periodHours / 2)}hr</span>
-            <span>now</span>
-          </div>
-        </div>`;
+        html += `</div></div>`;
       }
       html += '</div>';
 
@@ -1853,7 +1856,7 @@
       if (latencies.app) {
         html += `
           <div class="health-chip">
-            <span class="health-chip-name">App</span>
+            <span class="health-chip-name">TitleTrackr</span>
             <span class="health-chip-right">
               <span class="health-chip-latency">${latencies.app >= 1 ? Math.round(latencies.app) : latencies.app.toFixed(2)}ms</span>
               <span class="health-chip-indicator"></span>
