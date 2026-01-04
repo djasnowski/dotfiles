@@ -574,8 +574,22 @@
       color: #00772a;
       font-size: 0.8rem;
     }
+    .health-grid {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 2rem;
+      align-items: start;
+    }
+    .health-left {
+    }
+    .health-right {
+    }
+    .health-chips-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
     .job-queue-section {
-      margin-top: 0.75rem;
     }
     .job-queue-header {
       display: flex;
@@ -1706,38 +1720,12 @@
       const coreChecks = checks.filter(c => ['Database', 'Redis', 'Cache', 'Horizon'].includes(c.name));
       const pulseCheck = checks.find(c => c.name === 'Pulse Queue Metrics');
       const pingCheck = checks.find(c => c.name === 'Service Ping');
-
-      let html = '';
-
-      // Combined status + latency row
       const latencies = pingCheck?.meta?.latency_ms || {};
-      html += '<div class="health-row">';
-      for (const check of coreChecks) {
-        const statusClass = check.status === 'ok' ? '' : (check.status === 'warning' ? 'warning' : 'down');
-        const nameKey = check.name.toLowerCase();
-        const latency = latencies[nameKey];
-        const latencyDisplay = typeof latency === 'number' ? `${latency.toFixed(1)}ms` : '';
-        html += `
-          <div class="health-chip ${statusClass}">
-            <span class="health-chip-name">${check.name}</span>
-            ${latencyDisplay ? `<span class="health-chip-latency">${latencyDisplay}</span>` : ''}
-            <span class="health-chip-indicator ${statusClass}"></span>
-          </div>
-        `;
-      }
-      // Add Anthropic latency if present
-      if (latencies.anthropic) {
-        html += `
-          <div class="health-chip">
-            <span class="health-chip-name">Anthropic</span>
-            <span class="health-chip-latency">${latencies.anthropic.toFixed(0)}ms</span>
-            <span class="health-chip-indicator"></span>
-          </div>
-        `;
-      }
-      html += '</div>';
 
-      // Job Queue with inline sparklines
+      let html = '<div class="health-grid">';
+
+      // LEFT: Job Queue with inline sparklines
+      html += '<div class="health-left">';
       if (pulseCheck) {
         const meta = pulseCheck.meta || {};
         const totals = meta.totals || {};
@@ -1785,6 +1773,36 @@
 
         html += '</div></div>';
       }
+      html += '</div>';
+
+      // RIGHT: Health status chips
+      html += '<div class="health-right">';
+      html += '<div class="health-chips-grid">';
+      for (const check of coreChecks) {
+        const statusClass = check.status === 'ok' ? '' : (check.status === 'warning' ? 'warning' : 'down');
+        const nameKey = check.name.toLowerCase();
+        const latency = latencies[nameKey];
+        const latencyDisplay = typeof latency === 'number' ? `${latency.toFixed(1)}ms` : '';
+        html += `
+          <div class="health-chip ${statusClass}">
+            <span class="health-chip-name">${check.name}</span>
+            ${latencyDisplay ? `<span class="health-chip-latency">${latencyDisplay}</span>` : ''}
+            <span class="health-chip-indicator ${statusClass}"></span>
+          </div>
+        `;
+      }
+      // Add Anthropic latency if present
+      if (latencies.anthropic) {
+        html += `
+          <div class="health-chip">
+            <span class="health-chip-name">Anthropic</span>
+            <span class="health-chip-latency">${latencies.anthropic.toFixed(0)}ms</span>
+            <span class="health-chip-indicator"></span>
+          </div>
+        `;
+      }
+      html += '</div></div>';
+      html += '</div>';
 
       listEl.innerHTML = html;
 
