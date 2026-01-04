@@ -257,7 +257,7 @@
       margin-left: auto;
       letter-spacing: 0.05em;
     }
-    .bookmarks-mode.local {
+    .bookmarks-mode.prod {
       color: #ffaa00;
       border-color: #ffaa0044;
       background: rgba(255, 170, 0, 0.1);
@@ -433,32 +433,65 @@
       color: #00551a;
       padding: 0.5rem 0;
     }
-    /* GPU Processes Section */
-    .gpu-processes-section {
+    /* Btop Network Panel */
+    .net-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
     }
-    .gpu-processes-title {
+    .net-header {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+    .net-title {
       font-size: 1rem;
       color: #00551a;
       text-transform: uppercase;
       letter-spacing: 0.15em;
-      margin-bottom: 0.5rem;
     }
-    .gpu-proc-item {
-      display: flex;
-      justify-content: space-between;
-      padding: 0.25rem 0;
-      font-size: 0.95rem;
-    }
-    .gpu-proc-name {
+    .net-iface {
       color: #00ff41;
       font-weight: bold;
     }
-    .gpu-proc-mem {
+    .net-ip {
       color: #00772a;
-    }
-    .gpu-processes-empty {
-      color: #00551a;
       font-size: 0.9rem;
+    }
+    .net-chart-container {
+      position: relative;
+      height: 120px;
+      background: #001a00;
+      border: 1px solid #00ff4122;
+    }
+    .net-chart-container canvas {
+      width: 100%;
+      height: 100%;
+    }
+    .net-stats {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 1rem;
+    }
+    .net-stat-box {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .net-stat-label {
+      color: #00551a;
+      font-size: 1.2rem;
+    }
+    .net-stat-value {
+      color: #00ff41;
+      font-weight: bold;
+      font-size: 1.8rem;
+      font-variant-numeric: tabular-nums;
+    }
+    .net-stat-value.dim {
+      color: #00772a;
+      font-weight: normal;
     }
 
     /* Search Agent Details (under job queue) */
@@ -521,7 +554,7 @@
       border: 1px solid #00ff4144;
       background: rgba(0, 255, 65, 0.1);
     }
-    .services-mode.local {
+    .services-mode.prod {
       color: #ffaa00;
       border-color: #ffaa0044;
       background: rgba(255, 170, 0, 0.1);
@@ -745,7 +778,7 @@
       border: 1px solid #00ff4144;
       background: rgba(0, 255, 65, 0.1);
     }
-    .abstracts-mode.local {
+    .abstracts-mode.prod {
       color: #ffaa00;
       border-color: #ffaa0044;
       background: rgba(255, 170, 0, 0.1);
@@ -1274,9 +1307,41 @@
         <div id="processes-table"></div>
       </div>
 
-      <div class="gpu-processes-section">
-        <div class="gpu-processes-title">GPU Processes</div>
-        <div class="gpu-processes-list" id="gpu-processes"></div>
+      <div class="net-panel">
+        <div class="net-header">
+          <span class="net-title">Network</span>
+          <span class="net-iface" id="net-iface">--</span>
+          <span class="net-ip" id="net-ip">--</span>
+        </div>
+        <div class="net-chart-container">
+          <canvas id="net-chart"></canvas>
+        </div>
+        <div class="net-stats">
+          <div class="net-stat-box">
+            <span class="net-stat-label">▼ Down</span>
+            <span class="net-stat-value" id="net-rx-rate">--</span>
+          </div>
+          <div class="net-stat-box">
+            <span class="net-stat-label">▲ Up</span>
+            <span class="net-stat-value" id="net-tx-rate">--</span>
+          </div>
+          <div class="net-stat-box">
+            <span class="net-stat-label">Peak ▼</span>
+            <span class="net-stat-value dim" id="net-rx-peak">--</span>
+          </div>
+          <div class="net-stat-box">
+            <span class="net-stat-label">Peak ▲</span>
+            <span class="net-stat-value dim" id="net-tx-peak">--</span>
+          </div>
+          <div class="net-stat-box">
+            <span class="net-stat-label">Total ▼</span>
+            <span class="net-stat-value dim" id="net-rx-total">--</span>
+          </div>
+          <div class="net-stat-box">
+            <span class="net-stat-label">Total ▲</span>
+            <span class="net-stat-value dim" id="net-tx-total">--</span>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -1318,7 +1383,7 @@
         rows.push(bookmarksData.slice(i, i + 4).map((g, j) => ({ ...g, index: i + j + 1 })));
       }
 
-      const modeClass = bookmarksMode === 'local' ? 'local' : '';
+      const modeClass = bookmarksMode === 'prod' ? 'prod' : '';
       container.innerHTML = rows.map(row => `
         <div class="row">
           ${row.map(group => {
@@ -1446,22 +1511,58 @@
       }
     }
 
+    // Apply light smoothing (3-sample moving average)
+    function smoothData(data) {
+      if (data.length < 3) return data;
+      const smoothed = [];
+      for (let i = 0; i < data.length; i++) {
+        if (i === 0) {
+          smoothed.push((data[0] + data[1]) / 2);
+        } else if (i === data.length - 1) {
+          smoothed.push((data[i - 1] + data[i]) / 2);
+        } else {
+          smoothed.push((data[i - 1] + data[i] + data[i + 1]) / 3);
+        }
+      }
+      return smoothed;
+    }
+
+    // Get visible window max (last N samples) with headroom
+    function getVisibleMax(data, minVal = 100) {
+      if (data.length === 0) return minVal;
+      // Use recent samples (last ~60 for network to match btop behavior)
+      const recentWindow = Math.min(60, data.length);
+      const recent = data.slice(-recentWindow);
+      const max = Math.max(...recent);
+      // Add 15% headroom like btop
+      return Math.max(minVal, max * 1.15);
+    }
+
     // Draw all sparklines with current history
     function drawAllSparklines() {
       // System sparklines
       drawSparkline('spark-cpu', history.cpu, 100, '#00ff41');
       drawSparkline('spark-mem', history.mem, 100, '#00ff41');
-      const netMax = Math.max(100, ...history.netDown, ...history.netUp);
-      drawSparkline('spark-netdown', history.netDown, netMax, '#00ff41');
-      drawSparkline('spark-netup', history.netUp, netMax, '#00ff41');
+
+      // Network: smooth data and scale to visible window max
+      const netDownSmooth = smoothData(history.netDown);
+      const netUpSmooth = smoothData(history.netUp);
+      const netDownMax = getVisibleMax(netDownSmooth, 10); // 10 KB/s minimum
+      const netUpMax = getVisibleMax(netUpSmooth, 10);
+      drawSparkline('spark-netdown', netDownSmooth, netDownMax, '#00ff41');
+      drawSparkline('spark-netup', netUpSmooth, netUpMax, '#00ff41');
+
       drawSparkline('spark-cputemp', history.cpuTemp, 100, '#00ff41');
-      const diskMax = Math.max(100, ...history.diskIO);
-      drawSparkline('spark-diskio', history.diskIO, diskMax, '#00ff41');
+
+      // Disk I/O: also use visible window scaling
+      const diskSmooth = smoothData(history.diskIO);
+      const diskMax = getVisibleMax(diskSmooth, 100);
+      drawSparkline('spark-diskio', diskSmooth, diskMax, '#00ff41');
 
       // GPU sparklines
       drawSparkline('spark-gpu-util', history.gpuUtil, 100, '#00ff41');
       drawSparkline('spark-gpu-temp', history.gpuTemp, 100, '#00ff41');
-      const powerMax = Math.max(100, ...history.gpuPower);
+      const powerMax = getVisibleMax(history.gpuPower, 100);
       drawSparkline('spark-gpu-power', history.gpuPower, powerMax, '#00ff41');
       drawSparkline('spark-gpu-fan', history.gpuFan, 100, '#00ff41');
       drawSparkline('spark-gpu-vram', history.gpuVram, 100, '#00ff41');
@@ -1889,18 +1990,6 @@
         dockerContainersEl.innerHTML = '<div class="docker-empty">No containers running</div>';
       }
 
-      // GPU Processes
-      const gpuProcsEl = document.getElementById('gpu-processes');
-      if (stats.gpuProcesses && stats.gpuProcesses.length > 0) {
-        gpuProcsEl.innerHTML = stats.gpuProcesses.map(p => `
-          <div class="gpu-proc-item">
-            <span class="gpu-proc-name">${p.name}</span>
-            <span class="gpu-proc-mem">${p.gpu_mem_mb > 0 ? p.gpu_mem_mb + 'MB' : 'active'}</span>
-          </div>
-        `).join('');
-      } else {
-        gpuProcsEl.innerHTML = '<div class="gpu-processes-empty">No GPU processes</div>';
-      }
     }
 
     // Load cached stats immediately for instant display
@@ -1908,6 +1997,126 @@
 
     fetchStats();
     setInterval(fetchStats, 5000);
+
+    // ==========================================================================
+    // Btop-style Network Panel
+    // ==========================================================================
+
+    // Human-readable byte formatting (IEC units)
+    function humanBytes(n) {
+      const u = ["B", "KiB", "MiB", "GiB", "TiB"];
+      let i = 0, v = n;
+      while (v >= 1024 && i < u.length - 1) { v /= 1024; i++; }
+      return `${v.toFixed(v >= 10 ? 0 : 1)} ${u[i]}`;
+    }
+
+    function humanBps(Bps) {
+      return humanBytes(Bps) + "/s";
+    }
+
+    // Draw btop-style mirrored network chart
+    function drawNetMirrored(canvas, rxHist, txHist) {
+      const ctx = canvas.getContext('2d');
+      const rect = canvas.parentElement.getBoundingClientRect();
+      canvas.width = rect.width;
+      canvas.height = rect.height;
+
+      const w = canvas.width;
+      const h = canvas.height;
+      const mid = Math.floor(h / 2);
+
+      ctx.clearRect(0, 0, w, h);
+
+      // Draw zero line (dim green)
+      ctx.strokeStyle = '#00ff41';
+      ctx.globalAlpha = 0.3;
+      ctx.beginPath();
+      ctx.moveTo(0, mid + 0.5);
+      ctx.lineTo(w, mid + 0.5);
+      ctx.stroke();
+      ctx.globalAlpha = 1;
+
+      const n = Math.min(rxHist.length, txHist.length);
+      if (n < 2) return;
+
+      const barW = w / n;
+
+      // Autoscale to recent max (with headroom like btop)
+      let maxV = 1;
+      for (let i = 0; i < n; i++) {
+        if (rxHist[i] > maxV) maxV = rxHist[i];
+        if (txHist[i] > maxV) maxV = txHist[i];
+      }
+      maxV *= 1.15;
+
+      ctx.fillStyle = '#00ff41';
+
+      for (let i = 0; i < n; i++) {
+        const x = Math.floor(i * barW);
+        const bw = Math.max(1, Math.floor(barW));
+
+        const tx = txHist[i] || 0;
+        const rx = rxHist[i] || 0;
+
+        const txH = Math.round((tx / maxV) * (mid - 2));
+        const rxH = Math.round((rx / maxV) * (mid - 2));
+
+        // Vary alpha based on intensity
+        const txAlpha = Math.min(1, 0.15 + (tx / maxV) * 0.85);
+        const rxAlpha = Math.min(1, 0.15 + (rx / maxV) * 0.85);
+
+        // Upload (top half, growing upward from middle)
+        ctx.globalAlpha = txAlpha;
+        ctx.fillRect(x, mid - txH, bw, txH);
+
+        // Download (bottom half, growing downward from middle)
+        ctx.globalAlpha = rxAlpha;
+        ctx.fillRect(x, mid + 1, bw, rxH);
+      }
+
+      ctx.globalAlpha = 1;
+    }
+
+    // Fetch and update network panel
+    async function fetchNetStats() {
+      try {
+        const res = await fetch(`${API_BASE}/api/v1/net`);
+        const net = await res.json();
+
+        if (net.err) {
+          console.error('Net error:', net.err);
+          return;
+        }
+
+        // Update header
+        document.getElementById('net-iface').textContent = net.iface || '--';
+        document.getElementById('net-ip').textContent = net.ip || '--';
+
+        // Update rates
+        document.getElementById('net-rx-rate').textContent = humanBps(net.rx_Bps);
+        document.getElementById('net-tx-rate').textContent = humanBps(net.tx_Bps);
+
+        // Update peaks
+        document.getElementById('net-rx-peak').textContent = humanBps(net.rx_peak_Bps);
+        document.getElementById('net-tx-peak').textContent = humanBps(net.tx_peak_Bps);
+
+        // Update totals
+        document.getElementById('net-rx-total').textContent = humanBytes(net.rx_total_bytes);
+        document.getElementById('net-tx-total').textContent = humanBytes(net.tx_total_bytes);
+
+        // Draw mirrored chart
+        const canvas = document.getElementById('net-chart');
+        if (canvas && net.rx_hist_Bps && net.tx_hist_Bps) {
+          drawNetMirrored(canvas, net.rx_hist_Bps, net.tx_hist_Bps);
+        }
+      } catch (e) {
+        console.error('Net fetch error:', e);
+      }
+    }
+
+    // Fetch network stats every second (matches backend collection rate)
+    fetchNetStats();
+    setInterval(fetchNetStats, 1000);
 
     // Services health check
     let servicesMode = 'local'; // 'prod' or 'local'
@@ -2009,7 +2218,7 @@
 
       // RIGHT: Health status chips
       const modeLabel = servicesMode === 'local' ? 'localhost' : 'app.titletrackr.com';
-      const modeClass = servicesMode === 'local' ? 'local' : '';
+      const modeClass = servicesMode === 'prod' ? 'prod' : '';
       html += '<div class="health-right">';
       html += `<div class="health-chips-header">
         <span class="search-agents-stats" id="search-agents-stats">Search Agents</span>
@@ -2220,7 +2429,7 @@
       const modeEl = document.getElementById('abstracts-mode');
       const modeLabel = servicesMode === 'local' ? 'localhost' : 'app.titletrackr.com';
       modeEl.textContent = modeLabel;
-      modeEl.className = 'abstracts-mode' + (servicesMode === 'local' ? ' local' : '');
+      modeEl.className = 'abstracts-mode' + (servicesMode === 'prod' ? ' prod' : '');
       try {
         const res = await fetch(`${API_BASE}/api/v1/app-abstracts?mode=${servicesMode}`);
         const data = await res.json();

@@ -1,13 +1,17 @@
 from fastapi import FastAPI, Query
 from fastapi.middleware.cors import CORSMiddleware
+from contextlib import asynccontextmanager
 import psutil
 import subprocess
 import socket
 import platform
 import time
+import asyncio
 import threading
 import httpx
 from collections import deque
+from dataclasses import dataclass, field
+from typing import Optional, Dict, Any, List
 from pynvml import (
     nvmlInit, nvmlDeviceGetHandleByIndex, nvmlDeviceGetName,
     nvmlDeviceGetTemperature, NVML_TEMPERATURE_GPU,
@@ -15,7 +19,181 @@ from pynvml import (
     nvmlDeviceGetPowerUsage, nvmlDeviceGetFanSpeed
 )
 
-app = FastAPI(title="System Stats API")
+
+# =============================================================================
+# Network Collector (btop-style with 1s resolution)
+# =============================================================================
+
+def get_ipv4_for_iface(iface: str) -> Optional[str]:
+    """Get IPv4 address for a network interface"""
+    addrs = psutil.net_if_addrs().get(iface, [])
+    for a in addrs:
+        if a.family == socket.AF_INET:
+            return a.address
+    return None
+
+
+def get_default_interface() -> str:
+    """Get the default network interface (the one with most traffic)"""
+    try:
+        counters = psutil.net_io_counters(pernic=True)
+        # Filter out loopback and virtual interfaces
+        candidates = {k: v for k, v in counters.items()
+                      if not k.startswith(('lo', 'docker', 'br-', 'veth', 'virbr'))}
+        if candidates:
+            # Return interface with most bytes transferred
+            return max(candidates.keys(), key=lambda k: counters[k].bytes_recv + counters[k].bytes_sent)
+    except Exception:
+        pass
+    return "enp8s0"  # fallback
+
+
+@dataclass
+class NetState:
+    iface: str
+    dt_s: float
+    rx_Bps: float = 0.0
+    tx_Bps: float = 0.0
+    rx_peak_Bps: float = 0.0
+    tx_peak_Bps: float = 0.0
+    rx_total_bytes: int = 0
+    tx_total_bytes: int = 0
+    ip: Optional[str] = None
+    ok: bool = False
+    err: Optional[str] = None
+    # Internal counters (not exposed)
+    _last_rx: int = 0
+    _last_tx: int = 0
+    _last_ts: float = 0.0
+
+
+class NetCollector:
+    """Collects network statistics at high frequency for btop-style display"""
+
+    def __init__(self, iface: str = None, dt_s: float = 1.0, history_len: int = 180):
+        if iface is None:
+            iface = get_default_interface()
+        self.state = NetState(iface=iface, dt_s=dt_s, ip=get_ipv4_for_iface(iface))
+        self.rx_hist_Bps: deque = deque([0.0] * history_len, maxlen=history_len)
+        self.tx_hist_Bps: deque = deque([0.0] * history_len, maxlen=history_len)
+        self.history_len = history_len
+        self._lock = threading.Lock()
+
+    def _read_iface_counters(self) -> tuple:
+        """Read current byte counters for the interface"""
+        pernic = psutil.net_io_counters(pernic=True)
+        if self.state.iface not in pernic:
+            # Try to find a new default interface
+            new_iface = get_default_interface()
+            if new_iface in pernic:
+                self.state.iface = new_iface
+                self.state.ip = get_ipv4_for_iface(new_iface)
+            else:
+                raise RuntimeError(f"Interface not found: {self.state.iface}")
+        c = pernic[self.state.iface]
+        return int(c.bytes_recv), int(c.bytes_sent)
+
+    def tick(self) -> None:
+        """Update network statistics (call every dt_s seconds)"""
+        now = time.time()
+        with self._lock:
+            try:
+                rx, tx = self._read_iface_counters()
+
+                # Initialize on first run
+                if not self.state.ok:
+                    self.state._last_rx = rx
+                    self.state._last_tx = tx
+                    self.state._last_ts = now
+                    self.state.ok = True
+                    self.state.err = None
+                    self.rx_hist_Bps.append(0.0)
+                    self.tx_hist_Bps.append(0.0)
+                    return
+
+                dt = max(0.001, now - self.state._last_ts)
+
+                drx = rx - self.state._last_rx
+                dtx = tx - self.state._last_tx
+
+                # Handle counter reset/wrap
+                if drx < 0:
+                    drx = 0
+                if dtx < 0:
+                    dtx = 0
+
+                self.state.rx_total_bytes += drx
+                self.state.tx_total_bytes += dtx
+
+                self.state.rx_Bps = drx / dt
+                self.state.tx_Bps = dtx / dt
+
+                # Track peaks
+                if self.state.rx_Bps > self.state.rx_peak_Bps:
+                    self.state.rx_peak_Bps = self.state.rx_Bps
+                if self.state.tx_Bps > self.state.tx_peak_Bps:
+                    self.state.tx_peak_Bps = self.state.tx_Bps
+
+                self.rx_hist_Bps.append(self.state.rx_Bps)
+                self.tx_hist_Bps.append(self.state.tx_Bps)
+
+                self.state._last_rx = rx
+                self.state._last_tx = tx
+                self.state._last_ts = now
+                self.state.ip = get_ipv4_for_iface(self.state.iface)
+                self.state.err = None
+
+            except Exception as e:
+                self.state.err = str(e)
+                self.rx_hist_Bps.append(0.0)
+                self.tx_hist_Bps.append(0.0)
+                self.state._last_ts = now
+
+    def payload(self) -> Dict[str, Any]:
+        """Get current state as a dictionary for API response"""
+        with self._lock:
+            return {
+                "iface": self.state.iface,
+                "ip": self.state.ip,
+                "dt_s": self.state.dt_s,
+                "rx_Bps": round(self.state.rx_Bps, 2),
+                "tx_Bps": round(self.state.tx_Bps, 2),
+                "rx_peak_Bps": round(self.state.rx_peak_Bps, 2),
+                "tx_peak_Bps": round(self.state.tx_peak_Bps, 2),
+                "rx_total_bytes": self.state.rx_total_bytes,
+                "tx_total_bytes": self.state.tx_total_bytes,
+                "rx_hist_Bps": list(self.rx_hist_Bps),
+                "tx_hist_Bps": list(self.tx_hist_Bps),
+                "ok": self.state.ok,
+                "err": self.state.err,
+            }
+
+
+# Global network collector (1s interval, 180 samples = 3 minutes)
+net_collector = NetCollector(dt_s=1.0, history_len=180)
+
+
+async def net_collector_loop():
+    """Background task to collect network stats every second"""
+    while True:
+        net_collector.tick()
+        await asyncio.sleep(net_collector.state.dt_s)
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Startup/shutdown lifecycle manager"""
+    # Start background task
+    task = asyncio.create_task(net_collector_loop())
+    yield
+    # Cleanup
+    task.cancel()
+    try:
+        await task
+    except asyncio.CancelledError:
+        pass
+
+app = FastAPI(title="System Stats API", lifespan=lifespan)
 
 # CORS for newtab page
 app.add_middleware(
@@ -622,6 +800,12 @@ def history():
     return get_history_snapshot()
 
 
+@app.get("/api/v1/net")
+def net_stats():
+    """Get btop-style network statistics with 1s resolution history"""
+    return net_collector.payload()
+
+
 @app.get("/api/v1/top")
 def top(
     sort: str = Query("cpu", regex="^(cpu|mem|gpu_mem)$"),
@@ -686,7 +870,7 @@ async def app_abstracts(mode: str = Query("local", regex="^(local|prod)$")):
 @app.get("/api/v1/search-agent-health")
 async def search_agent_health(mode: str = Query("local", regex="^(local|prod)$")):
     """Proxy to Search Agent health endpoint"""
-    base_url = "http://search-agent.titletrackr.com:8080" if mode == "prod" else "http://localhost:3001"
+    base_url = "http://search-agents.titletrackr.com:8080" if mode == "prod" else "http://localhost:3001"
     try:
         async with httpx.AsyncClient(timeout=5.0) as client:
             resp = await client.get(f"{base_url}/health")
