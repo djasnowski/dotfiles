@@ -37,8 +37,8 @@ bind d composite tabprev; tabclose #
 bind D tabclose
 
 " Tab navigation
-bind J tabprev
-bind K tabnext
+bind J composite tabprev; unfocus
+bind K composite tabnext; unfocus
 bind gT tabprev
 bind gt tabnext
 
