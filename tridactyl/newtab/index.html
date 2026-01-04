@@ -679,6 +679,18 @@
       text-transform: uppercase;
       letter-spacing: 0.15em;
     }
+    .abstracts-mode {
+      font-size: 0.8rem;
+      color: #00772a;
+      padding: 0.15rem 0.5rem;
+      border: 1px solid #00ff4144;
+      background: rgba(0, 255, 65, 0.1);
+    }
+    .abstracts-mode.local {
+      color: #ffaa00;
+      border-color: #ffaa0044;
+      background: rgba(255, 170, 0, 0.1);
+    }
     .abstracts-list {
       border: 1px solid #00ff4122;
     }
@@ -686,7 +698,7 @@
       display: flex;
       align-items: center;
       gap: 1.5rem;
-      padding: 0.75rem 1rem;
+      padding: 0.75rem 1.5rem 0.75rem 1rem;
       font-size: 0.95rem;
       text-align: left;
     }
@@ -697,7 +709,13 @@
       color: #00772a;
       font-size: 0.85rem;
       white-space: nowrap;
+      width: 70px;
       flex-shrink: 0;
+      text-decoration: none;
+    }
+    .abstract-slug:hover {
+      color: #00ff41;
+      text-decoration: underline;
     }
     .abstract-location {
       color: #00ff41;
@@ -710,12 +728,15 @@
     .abstract-tenant {
       color: #00aa2a;
       white-space: nowrap;
-      width: 90px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      width: 120px;
       flex-shrink: 0;
     }
     .abstract-user {
       color: #00772a;
       white-space: nowrap;
+      width: 60px;
       flex-shrink: 0;
     }
     .abstract-stat {
@@ -727,6 +748,7 @@
     .abstract-time {
       color: #00551a;
       white-space: nowrap;
+      min-width: 80px;
       flex-shrink: 0;
       text-align: right;
       margin-left: auto;
@@ -768,12 +790,39 @@
     /* Processes Section */
     .processes-section {
     }
+    .processes-header {
+      display: flex;
+      align-items: baseline;
+      gap: 0.75rem;
+      margin-bottom: 0.5rem;
+    }
     .processes-title {
       font-size: 1rem;
       color: #00551a;
       text-transform: uppercase;
       letter-spacing: 0.15em;
-      margin-bottom: 0.5rem;
+    }
+    .processes-count {
+      font-size: 2rem;
+      font-weight: bold;
+      color: #00ff41;
+    }
+    .processes-states {
+      font-size: 1.5rem;
+      font-weight: bold;
+      color: #00aa2a;
+      margin-left: 1.5rem;
+      letter-spacing: 0.1em;
+    }
+    .processes-states .state-r, .processes-legend .state-r { color: #00ff41; }
+    .processes-states .state-s, .processes-legend .state-s { color: #00772a; }
+    .processes-states .state-i, .processes-legend .state-i { color: #00551a; }
+    .processes-states .state-z, .processes-legend .state-z { color: #ff4141; }
+    .processes-states .state-t, .processes-legend .state-t { color: #ffaa00; }
+    .processes-legend {
+      font-size: 0.85rem;
+      color: #00551a;
+      margin-left: auto;
     }
     .processes-table {
       width: 100%;
@@ -800,6 +849,14 @@
     .processes-table td.right {
       text-align: right;
       font-variant-numeric: tabular-nums;
+    }
+    .processes-table td.proc-pid {
+      color: #00551a;
+      font-size: 0.85rem;
+    }
+    .processes-table td.proc-state {
+      color: #00aa2a;
+      font-weight: bold;
     }
     .processes-table td.proc-name {
       color: #00ff41;
@@ -902,16 +959,8 @@
         <span class="sysinfo-label">Kernel</span>
       </div>
       <div class="sysinfo-item">
-        <span class="sysinfo-value" id="cpu-cores">--</span>
-        <span class="sysinfo-label">Cores</span>
-      </div>
-      <div class="sysinfo-item">
         <span class="sysinfo-value" id="load-avg">--</span>
         <span class="sysinfo-label">Load 1/5/15</span>
-      </div>
-      <div class="sysinfo-item">
-        <span class="sysinfo-value" id="proc-count">--</span>
-        <span class="sysinfo-label">Procs</span>
       </div>
     </div>
     <div class="shortcuts">
@@ -1110,6 +1159,7 @@
       <div class="abstracts-section">
         <div class="abstracts-header">
           <span class="abstracts-title">Recent Abstracts</span>
+          <span class="abstracts-mode" id="abstracts-mode">localhost</span>
         </div>
         <div class="abstracts-list" id="abstracts-list"></div>
       </div>
@@ -1117,7 +1167,18 @@
 
     <div class="right-column">
       <div class="processes-section">
-        <div class="processes-title">Top Processes</div>
+        <div class="processes-header">
+          <span class="processes-count" id="proc-count-big">--</span>
+          <span class="processes-title">Procs</span>
+          <span class="processes-states" id="proc-states"></span>
+          <span class="processes-legend">
+            <span class="state-r">R</span>=run
+            <span class="state-s">S</span>=sleep
+            <span class="state-i">I</span>=idle
+            <span class="state-z">Z</span>=zombie
+            <span class="state-t">T</span>=stop
+          </span>
+        </div>
         <div id="processes-table"></div>
       </div>
 
@@ -1517,6 +1578,7 @@
         uptime: api.system?.uptime || '--',
         bootTime: api.system?.boot_time || '--',
         procCount: api.system?.proc_count || '--',
+        procStates: api.system?.proc_states || {},
 
         // Connections
         connsTotal: api.connections?.total || 0,
@@ -1579,9 +1641,18 @@
       document.getElementById('hostname').textContent = stats.hostname || '--';
       document.getElementById('distro').textContent = stats.distro || '--';
       document.getElementById('kernel').textContent = stats.kernel || '--';
-      document.getElementById('cpu-cores').textContent = `${stats.numCoresPhysical}c/${stats.numCores}t`;
       document.getElementById('load-avg').textContent = stats.loadAvg || '--';
-      document.getElementById('proc-count').textContent = stats.procCount || '--';
+      document.getElementById('proc-count-big').textContent = stats.procCount || '--';
+      const ps = stats.procStates;
+      if (ps) {
+        const parts = [];
+        if (ps.running) parts.push(`<span class="state-r">${ps.running}R</span>`);
+        if (ps.sleeping) parts.push(`<span class="state-s">${ps.sleeping}S</span>`);
+        if (ps.idle) parts.push(`<span class="state-i">${ps.idle}I</span>`);
+        if (ps.zombie) parts.push(`<span class="state-z">${ps.zombie}Z</span>`);
+        if (ps.stopped) parts.push(`<span class="state-t">${ps.stopped}T</span>`);
+        document.getElementById('proc-states').innerHTML = parts.join(' ');
+      }
 
       // GPU section
       document.getElementById('gpu-name').textContent = stats.gpuName || '--';
@@ -1636,6 +1707,8 @@
           <table class="processes-table">
             <thead>
               <tr>
+                <th>PID</th>
+                <th>S</th>
                 <th>Name</th>
                 <th>User</th>
                 <th class="right">CPU%</th>
@@ -1646,6 +1719,8 @@
             <tbody>
               ${top15.map(p => `
                 <tr>
+                  <td class="proc-pid">${p.pid || '--'}</td>
+                  <td class="proc-state">${p.state || '?'}</td>
                   <td class="proc-name" title="${p.name}">${p.name}</td>
                   <td class="proc-user">${p.user || '--'}</td>
                   <td class="right">${(p.cpu_pct || 0).toFixed(1)}</td>
@@ -1928,6 +2003,10 @@
     // Abstracts fetching
     async function fetchAbstracts() {
       const listEl = document.getElementById('abstracts-list');
+      const modeEl = document.getElementById('abstracts-mode');
+      const modeLabel = servicesMode === 'local' ? 'localhost' : 'app.titletrackr.com';
+      modeEl.textContent = modeLabel;
+      modeEl.className = 'abstracts-mode' + (servicesMode === 'local' ? ' local' : '');
       try {
         const res = await fetch(`${API_BASE}/api/v1/app-abstracts?mode=${servicesMode}`);
         const data = await res.json();
@@ -1954,15 +2033,16 @@
         return;
       }
 
+      const baseUrl = servicesMode === 'local' ? 'http://localhost' : 'https://app.titletrackr.com';
       listEl.innerHTML = abstracts.map(a => `
         <div class="abstract-item">
-          <span class="abstract-slug">${a.slug || '-'}</span>
+          <a href="${baseUrl}/abstracts/${a.slug}" class="abstract-slug" target="_blank">${a.slug || '-'}</a>
           <span class="abstract-location">${a.location || 'Untitled'}</span>
           <span class="abstract-tenant">${a.tenant || 'Unknown'}</span>
-          <span class="abstract-user">${a.created_by || '-'}</span>
+          <span class="abstract-user">${(a.created_by || '-').split(' ')[0]}</span>
           <span class="abstract-stat">${a.rows} rows</span>
           <span class="abstract-stat">${a.pages} pg</span>
-          <span class="abstract-stat">$${a.cost}</span>
+          <span class="abstract-stat">$${parseFloat(a.cost).toFixed(2)}</span>
           <span class="abstract-stat">${(a.tokens / 1000).toFixed(1)}k</span>
           <span class="abstract-stat">${formatBytes(a.file_size)}</span>
           <span class="abstract-time">${a.created_at}</span>

@@ -244,15 +244,41 @@ def format_elapsed(secs):
         return f"{days}d {hours}h" if hours else f"{days}d"
 
 
+def get_process_states():
+    """Get count of processes by state"""
+    states = {"running": 0, "sleeping": 0, "idle": 0, "zombie": 0, "stopped": 0, "other": 0}
+    for p in psutil.process_iter(["status"]):
+        try:
+            status = p.info.get("status", "")
+            if status == psutil.STATUS_RUNNING:
+                states["running"] += 1
+            elif status in (psutil.STATUS_SLEEPING, psutil.STATUS_DISK_SLEEP):
+                states["sleeping"] += 1
+            elif status == psutil.STATUS_IDLE:
+                states["idle"] += 1
+            elif status == psutil.STATUS_ZOMBIE:
+                states["zombie"] += 1
+            elif status == psutil.STATUS_STOPPED:
+                states["stopped"] += 1
+            else:
+                states["other"] += 1
+        except (psutil.NoSuchProcess, psutil.AccessDenied):
+            pass
+    return states
+
+
 def get_top_processes(limit=30, sort_by="cpu"):
     procs = []
     now = time.time()
-    for p in psutil.process_iter(["pid", "username", "name", "cpu_percent", "memory_info", "create_time"]):
+    for p in psutil.process_iter(["pid", "username", "name", "cpu_percent", "memory_info", "create_time", "status"]):
         try:
             info = p.info
             rss = info["memory_info"].rss if info.get("memory_info") else 0
             create_time = info.get("create_time", now)
             elapsed_secs = now - create_time
+            # Map status to short code
+            status = info.get("status", "")
+            state = {"running": "R", "sleeping": "S", "disk-sleep": "D", "idle": "I", "zombie": "Z", "stopped": "T"}.get(status, "?")
             procs.append({
                 "pid": info["pid"],
                 "user": info.get("username"),
@@ -260,6 +286,7 @@ def get_top_processes(limit=30, sort_by="cpu"):
                 "cpu_pct": info.get("cpu_percent", 0.0),
                 "rss_mb": int(rss / (1024 * 1024)),
                 "elapsed": format_elapsed(elapsed_secs),
+                "state": state,
             })
         except (psutil.NoSuchProcess, psutil.AccessDenied):
             pass
@@ -529,6 +556,7 @@ def snapshot():
             "uptime": get_uptime()[0],
             "boot_time": get_uptime()[1],
             "proc_count": get_process_count(),
+            "proc_states": get_process_states(),
         },
         "cpu": {
             "util_pct": cpu_pct,

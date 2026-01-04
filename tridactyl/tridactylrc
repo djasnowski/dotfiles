@@ -15,7 +15,13 @@ set hintdelay 100
 set smoothscroll true
 
 " Custom new tab page
-set newtab http://127.0.0.1:8384/index.html
+set newtab http://localhost:8384/index.html
+seturl localhost superignore false
+seturl 127.0.0.1 superignore false
+
+" Let newtab page handle l/p for local/prod mode switching
+unbindurl localhost:8384 l
+unbindurl localhost:8384 p
 
 " Editor command (neovim)
 set editorcmd nvim
