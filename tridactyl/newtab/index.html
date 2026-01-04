@@ -595,6 +595,31 @@
       background: rgba(0, 255, 65, 0.05);
       border: 1px solid #00ff4122;
     }
+    .queue-sparklines {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+      margin-top: 0.3rem;
+      padding-left: 0.5rem;
+    }
+    .queue-sparkline-row {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.8rem;
+    }
+    .queue-spark-name {
+      color: #00772a;
+      min-width: 50px;
+    }
+    .queue-spark-count {
+      color: #00ff41;
+      min-width: 20px;
+      text-align: right;
+    }
+    .queue-spark-canvas {
+      background: rgba(0, 255, 65, 0.03);
+    }
     .port-chip {
       display: inline-block;
       padding: 0.1rem 0.4rem;
@@ -1652,11 +1677,27 @@
         }
       }
 
-      // Pulse metrics
+      // Pulse metrics with per-queue sparklines
       if (pulseCheck) {
         const meta = pulseCheck.meta || {};
         const totals = meta.totals || {};
+        const history = meta.history || [];
         const statusClass = pulseCheck.status === 'ok' ? '' : (pulseCheck.status === 'warning' ? 'warning' : 'down');
+
+        // Build per-queue totals and history from the data
+        const queueStats = {};
+        for (const entry of history) {
+          const byQueue = entry.by_queue || {};
+          for (const [qName, qData] of Object.entries(byQueue)) {
+            if (!queueStats[qName]) {
+              queueStats[qName] = { processed: 0, failed: 0, history: [] };
+            }
+            queueStats[qName].processed += qData.processed || 0;
+            queueStats[qName].failed += qData.failed || 0;
+            queueStats[qName].history.push(qData.processed || 0);
+          }
+        }
+
         html += `
           <div class="service-item">
             <span class="service-name">Pulse (1hr)</span>
@@ -1666,6 +1707,25 @@
             </span>
           </div>
         `;
+
+        // Render per-queue sparklines
+        if (Object.keys(queueStats).length > 0) {
+          html += '<div class="queue-sparklines">';
+          for (const [qName, stats] of Object.entries(queueStats)) {
+            const total = stats.processed + stats.failed;
+            if (total > 0) {
+              const historyData = JSON.stringify(stats.history);
+              html += `
+                <div class="queue-sparkline-row">
+                  <span class="queue-spark-name">${qName}</span>
+                  <span class="queue-spark-count">${stats.processed}</span>
+                  <canvas class="queue-spark-canvas" data-history='${historyData}' width="60" height="16"></canvas>
+                </div>
+              `;
+            }
+          }
+          html += '</div>';
+        }
       }
 
       // Service pings with latencies
@@ -1681,6 +1741,49 @@
       }
 
       listEl.innerHTML = html;
+
+      // Render queue sparklines
+      const sparkCanvases = listEl.querySelectorAll('.queue-spark-canvas');
+      for (const canvas of sparkCanvases) {
+        const history = JSON.parse(canvas.dataset.history || '[]');
+        if (history.length > 0) {
+          drawQueueSparkline(canvas, history);
+        }
+      }
+    }
+
+    function drawQueueSparkline(canvas, data) {
+      const ctx = canvas.getContext('2d');
+      const width = canvas.width;
+      const height = canvas.height;
+      const max = Math.max(...data, 1);
+      const step = width / Math.max(data.length - 1, 1);
+
+      ctx.clearRect(0, 0, width, height);
+
+      // Draw line
+      ctx.beginPath();
+      ctx.strokeStyle = '#00ff41';
+      ctx.lineWidth = 1.5;
+      for (let i = 0; i < data.length; i++) {
+        const x = i * step;
+        const y = height - (data[i] / max) * (height - 2) - 1;
+        if (i === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      }
+      ctx.stroke();
+
+      // Draw dots at data points
+      ctx.fillStyle = '#00ff41';
+      for (let i = 0; i < data.length; i++) {
+        if (data[i] > 0) {
+          const x = i * step;
+          const y = height - (data[i] / max) * (height - 2) - 1;
+          ctx.beginPath();
+          ctx.arc(x, y, 2, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
     }
 
     // Toggle modes with 'l' (services) and 'p' (bookmarks) keys
