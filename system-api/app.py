@@ -177,39 +177,51 @@ def get_gpu():
 
 
 def get_gpu_processes():
-    """Get processes using GPU via nvidia-smi"""
+    """Get processes using GPU via nvidia-smi (both compute and graphics)"""
     try:
+        # Use pmon to get all GPU processes (compute + graphics)
         result = subprocess.run(
-            ["nvidia-smi", "--query-compute-apps=pid,process_name,used_gpu_memory",
-             "--format=csv,noheader,nounits"],
+            ["nvidia-smi", "pmon", "-c", "1", "-s", "m"],
             capture_output=True, text=True, timeout=5
         )
         if result.returncode != 0:
             return []
 
         gpu_procs = []
+        seen_pids = set()
         for line in result.stdout.strip().split("\n"):
-            if not line.strip():
+            if line.startswith("#") or not line.strip():
                 continue
-            parts = [p.strip() for p in line.split(",")]
-            if len(parts) >= 3:
-                pid = int(parts[0])
+            parts = line.split()
+            if len(parts) >= 4:
                 try:
+                    pid = int(parts[1])
+                    if pid in seen_pids or pid == 0:
+                        continue
+                    seen_pids.add(pid)
+                    # Get memory usage from nvidia-smi for this PID
+                    mem_result = subprocess.run(
+                        ["nvidia-smi", "--query-compute-apps=pid,used_gpu_memory",
+                         "--format=csv,noheader,nounits"],
+                        capture_output=True, text=True, timeout=2
+                    )
+                    gpu_mem = 0
+                    for mem_line in mem_result.stdout.strip().split("\n"):
+                        if mem_line.strip():
+                            mem_parts = [p.strip() for p in mem_line.split(",")]
+                            if len(mem_parts) >= 2 and int(mem_parts[0]) == pid:
+                                gpu_mem = int(mem_parts[1])
+                                break
+
                     p = psutil.Process(pid)
                     gpu_procs.append({
                         "pid": pid,
-                        "name": parts[1],
-                        "gpu_mem_mb": int(parts[2]),
+                        "name": p.name(),
+                        "gpu_mem_mb": gpu_mem,
                         "user": p.username(),
-                        "cpu_pct": p.cpu_percent(),
-                        "rss_mb": int(p.memory_info().rss / (1024 * 1024)),
                     })
-                except (psutil.NoSuchProcess, psutil.AccessDenied):
-                    gpu_procs.append({
-                        "pid": pid,
-                        "name": parts[1],
-                        "gpu_mem_mb": int(parts[2]),
-                    })
+                except (psutil.NoSuchProcess, psutil.AccessDenied, ValueError):
+                    pass
         return gpu_procs
     except Exception:
         return []

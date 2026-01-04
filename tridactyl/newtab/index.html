@@ -284,12 +284,17 @@
       color: #0a0a0a;
     }
 
-    /* Bottom Section - Docker + Processes */
+    /* Bottom Section - Docker/GPU + Processes */
     .bottom-section {
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 1.5rem;
       align-items: start;
+    }
+    .left-column {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
     }
 
     /* Docker Section */
@@ -373,22 +378,23 @@
       color: #00551a;
       padding: 0.5rem 0;
     }
-    .gpu-processes {
-      margin-top: 0.75rem;
-      border-top: 1px solid #00ff4122;
-      padding-top: 0.5rem;
+    /* GPU Processes Section */
+    .gpu-processes-section {
+      background: rgba(0, 255, 65, 0.03);
+      border: 1px solid #00ff4122;
+      padding: 0.75rem 1.5rem;
     }
     .gpu-processes-title {
-      font-size: 0.9rem;
+      font-size: 1rem;
       color: #00551a;
       text-transform: uppercase;
-      letter-spacing: 0.1em;
-      margin-bottom: 0.25rem;
+      letter-spacing: 0.15em;
+      margin-bottom: 0.5rem;
     }
     .gpu-proc-item {
       display: flex;
       justify-content: space-between;
-      padding: 0.2rem 0;
+      padding: 0.25rem 0;
       font-size: 0.95rem;
     }
     .gpu-proc-name {
@@ -397,6 +403,10 @@
     }
     .gpu-proc-mem {
       color: #00772a;
+    }
+    .gpu-processes-empty {
+      color: #00551a;
+      font-size: 0.9rem;
     }
     .port-chip {
       display: inline-block;
@@ -768,17 +778,23 @@
   </div>
 
   <div class="bottom-section">
-    <div class="docker-section">
-      <div class="docker-header">
-        <span class="docker-title">Docker</span>
-        <span class="docker-summary">
-          <span class="docker-stat"><span id="docker-running">0</span> running</span>
-          <span class="docker-stat"><span id="docker-stopped">0</span> stopped</span>
-          <span class="docker-stat"><span id="docker-images">0</span> images</span>
-        </span>
+    <div class="left-column">
+      <div class="docker-section">
+        <div class="docker-header">
+          <span class="docker-title">Docker</span>
+          <span class="docker-summary">
+            <span class="docker-stat"><span id="docker-running">0</span> running</span>
+            <span class="docker-stat"><span id="docker-stopped">0</span> stopped</span>
+            <span class="docker-stat"><span id="docker-images">0</span> images</span>
+          </span>
+        </div>
+        <div class="docker-containers" id="docker-containers"></div>
       </div>
-      <div class="docker-containers" id="docker-containers"></div>
-      <div class="gpu-processes" id="gpu-processes"></div>
+
+      <div class="gpu-processes-section">
+        <div class="gpu-processes-title">GPU Processes</div>
+        <div class="gpu-processes-list" id="gpu-processes"></div>
+      </div>
     </div>
 
     <div class="processes-section">
@@ -1330,17 +1346,14 @@
       // GPU Processes
       const gpuProcsEl = document.getElementById('gpu-processes');
       if (stats.gpuProcesses && stats.gpuProcesses.length > 0) {
-        gpuProcsEl.innerHTML = `
-          <div class="gpu-processes-title">GPU Processes</div>
-          ${stats.gpuProcesses.map(p => `
-            <div class="gpu-proc-item">
-              <span class="gpu-proc-name">${p.name}</span>
-              <span class="gpu-proc-mem">${p.gpu_mem_mb}MB VRAM</span>
-            </div>
-          `).join('')}
-        `;
+        gpuProcsEl.innerHTML = stats.gpuProcesses.map(p => `
+          <div class="gpu-proc-item">
+            <span class="gpu-proc-name">${p.name}</span>
+            <span class="gpu-proc-mem">${p.gpu_mem_mb > 0 ? p.gpu_mem_mb + 'MB' : 'active'}</span>
+          </div>
+        `).join('');
       } else {
-        gpuProcsEl.innerHTML = '';
+        gpuProcsEl.innerHTML = '<div class="gpu-processes-empty">No GPU processes</div>';
       }
     }
 
