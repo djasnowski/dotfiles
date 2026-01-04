@@ -601,3 +601,17 @@ async def health_check(url: str):
         return {"url": url, "status": "timeout", "code": None, "time_ms": None}
     except Exception as e:
         return {"url": url, "status": "down", "code": None, "time_ms": None, "error": str(e)}
+
+
+@app.get("/api/v1/app-health")
+async def app_health(mode: str = Query("local", regex="^(local|prod)$")):
+    """Proxy to TitleTrackr health.json endpoint (bypasses CORS)"""
+    base_url = "https://app.titletrackr.com" if mode == "prod" else "http://localhost"
+    try:
+        async with httpx.AsyncClient(timeout=5.0) as client:
+            resp = await client.get(f"{base_url}/health.json")
+            return resp.json()
+    except httpx.TimeoutException:
+        return {"error": "timeout", "checkResults": []}
+    except Exception as e:
+        return {"error": str(e), "checkResults": []}

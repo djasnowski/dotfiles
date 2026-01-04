@@ -1568,7 +1568,7 @@
     setInterval(fetchStats, 5000);
 
     // Services health check
-    let servicesMode = 'local'; // 'prod' or 'local' - default to local for dev
+    let servicesMode = 'local'; // 'prod' or 'local'
 
     async function checkHealth() {
       const listEl = document.getElementById('services-list');
@@ -1577,21 +1577,23 @@
       modeEl.textContent = servicesMode.toUpperCase();
       modeEl.className = 'services-mode' + (servicesMode === 'local' ? ' local' : '');
 
-      const baseUrl = servicesMode === 'prod' ? 'https://app.titletrackr.com' : 'http://localhost';
-
       // Show loading state
       listEl.innerHTML = '<div class="service-item"><span class="service-name">Loading...</span></div>';
 
       try {
-        const res = await fetch(`${baseUrl}/health.json`);
+        // Use system-api proxy to bypass CORS
+        const res = await fetch(`${API_BASE}/api/v1/app-health?mode=${servicesMode}`);
         const data = await res.json();
+        if (data.error) {
+          throw new Error(data.error);
+        }
         renderHealthChecks(data);
       } catch (e) {
         listEl.innerHTML = `
           <div class="service-item">
             <span class="service-name">Health Check</span>
             <span class="service-status">
-              <span class="service-time">unreachable</span>
+              <span class="service-time">${e.message || 'unreachable'}</span>
               <span class="service-indicator down"></span>
             </span>
           </div>
