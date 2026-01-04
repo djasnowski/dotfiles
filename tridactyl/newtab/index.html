@@ -664,6 +664,12 @@
     .abstract-item:not(:last-child) {
       border-bottom: 1px solid #00ff4122;
     }
+    .abstract-slug {
+      color: #00772a;
+      font-size: 0.85rem;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
     .abstract-location {
       color: #00ff41;
       white-space: nowrap;
@@ -1878,6 +1884,7 @@
 
       listEl.innerHTML = abstracts.map(a => `
         <div class="abstract-item">
+          <span class="abstract-slug">${a.slug || '-'}</span>
           <span class="abstract-location">${a.location || 'Untitled'}</span>
           <span class="abstract-tenant">${a.tenant || 'Unknown'}</span>
           <span class="abstract-user">${a.created_by || '-'}</span>
