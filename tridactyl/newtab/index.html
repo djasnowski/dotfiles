@@ -645,6 +645,14 @@
     .queue-spark-canvas {
       background: transparent;
     }
+    .job-queue-time-axis {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.75rem;
+      color: #00551a;
+      margin-top: 0.5rem;
+      padding: 0 0.25rem;
+    }
 
     /* Abstracts Section */
     .abstracts-section {
@@ -1086,10 +1094,6 @@
       </div>
 
       <div class="services-section">
-        <div class="services-header">
-          <span class="services-title">Health</span>
-          <span class="services-mode" id="services-mode">PROD</span>
-        </div>
         <div class="services-list" id="services-list"></div>
       </div>
 
@@ -1807,7 +1811,15 @@
           `;
         }
 
-        html += '</div></div>';
+        // Add time axis
+        const periodHours = Math.round((meta.period_minutes || 60) / 60);
+        html += `</div>
+          <div class="job-queue-time-axis">
+            <span>${periodHours}hr ago</span>
+            <span>${Math.round(periodHours / 2)}hr</span>
+            <span>now</span>
+          </div>
+        </div>`;
       }
       html += '</div>';
 
