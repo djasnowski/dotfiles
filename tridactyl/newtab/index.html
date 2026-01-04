@@ -535,11 +535,17 @@
     .health-chip {
       display: flex;
       align-items: center;
+      justify-content: space-between;
       gap: 0.5rem;
       padding: 0.4rem 0.75rem;
       background: rgba(0, 255, 65, 0.1);
       border: 1px solid #00ff4133;
       font-size: 0.9rem;
+    }
+    .health-chip-right {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
     }
     .health-chip.warning {
       background: rgba(255, 170, 0, 0.1);
@@ -563,7 +569,6 @@
       height: 6px;
       border-radius: 50%;
       background: #00ff41;
-      margin-left: auto;
     }
     .health-chip-latency {
       color: #00772a;
@@ -1790,12 +1795,14 @@
         const statusClass = check.status === 'ok' ? '' : (check.status === 'warning' ? 'warning' : 'down');
         const nameKey = check.name.toLowerCase();
         const latency = latencies[nameKey];
-        const latencyDisplay = typeof latency === 'number' ? `${latency.toFixed(1)}ms` : '';
+        const latencyDisplay = typeof latency === 'number' ? `${latency >= 1 ? Math.round(latency) : latency.toFixed(2)}ms` : '';
         html += `
           <div class="health-chip ${statusClass}">
             <span class="health-chip-name">${check.name}</span>
-            ${latencyDisplay ? `<span class="health-chip-latency">${latencyDisplay}</span>` : ''}
-            <span class="health-chip-indicator ${statusClass}"></span>
+            <span class="health-chip-right">
+              ${latencyDisplay ? `<span class="health-chip-latency">${latencyDisplay}</span>` : ''}
+              <span class="health-chip-indicator ${statusClass}"></span>
+            </span>
           </div>
         `;
       }
@@ -1804,8 +1811,10 @@
         html += `
           <div class="health-chip">
             <span class="health-chip-name">App</span>
-            <span class="health-chip-latency">${latencies.app.toFixed(1)}ms</span>
-            <span class="health-chip-indicator"></span>
+            <span class="health-chip-right">
+              <span class="health-chip-latency">${latencies.app >= 1 ? Math.round(latencies.app) : latencies.app.toFixed(2)}ms</span>
+              <span class="health-chip-indicator"></span>
+            </span>
           </div>
         `;
       }
@@ -1814,8 +1823,10 @@
         html += `
           <div class="health-chip">
             <span class="health-chip-name">Anthropic</span>
-            <span class="health-chip-latency">${latencies.anthropic.toFixed(1)}ms</span>
-            <span class="health-chip-indicator"></span>
+            <span class="health-chip-right">
+              <span class="health-chip-latency">${latencies.anthropic >= 1 ? Math.round(latencies.anthropic) : latencies.anthropic.toFixed(2)}ms</span>
+              <span class="health-chip-indicator"></span>
+            </span>
           </div>
         `;
       }
