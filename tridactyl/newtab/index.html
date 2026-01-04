@@ -1685,6 +1685,7 @@
     // Services health check
     let servicesMode = 'local'; // 'prod' or 'local'
 
+    let healthLoaded = false;
     async function checkHealth() {
       const listEl = document.getElementById('services-list');
       const modeEl = document.getElementById('services-mode');
@@ -1692,8 +1693,10 @@
       modeEl.textContent = servicesMode.toUpperCase();
       modeEl.className = 'services-mode' + (servicesMode === 'local' ? ' local' : '');
 
-      // Show loading state
-      listEl.innerHTML = '<div class="service-item"><span class="service-name">Loading...</span></div>';
+      // Show loading state only on first load
+      if (!healthLoaded) {
+        listEl.innerHTML = '<div class="service-item"><span class="service-name">Loading...</span></div>';
+      }
 
       try {
         // Use system-api proxy to bypass CORS
@@ -1703,6 +1706,7 @@
           throw new Error(data.error);
         }
         renderHealthChecks(data);
+        healthLoaded = true;
       } catch (e) {
         listEl.innerHTML = `
           <div class="service-item">
