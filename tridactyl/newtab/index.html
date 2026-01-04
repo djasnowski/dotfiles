@@ -1725,7 +1725,7 @@
       const checks = data.checkResults || [];
 
       // Group checks: core services, pulse, pings
-      const coreChecks = checks.filter(c => ['Database', 'Redis', 'Cache', 'Horizon'].includes(c.name));
+      const coreChecks = checks.filter(c => ['Database', 'Redis', 'Horizon'].includes(c.name));
       const pulseCheck = checks.find(c => c.name === 'Pulse Queue Metrics');
       const pingCheck = checks.find(c => c.name === 'Service Ping');
       const latencies = pingCheck?.meta?.latency_ms || {};
