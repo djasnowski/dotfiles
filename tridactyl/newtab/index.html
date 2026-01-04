@@ -1156,7 +1156,8 @@
         <div class="row">
           ${row.map(group => {
             const hasToggleLinks = group.links.some(l => l.prod && l.local);
-            const modeIndicator = hasToggleLinks ? `<span class="bookmarks-mode ${modeClass}">${bookmarksMode.toUpperCase()}</span>` : '';
+            const domainLabel = bookmarksMode === 'local' ? 'localhost' : 'app.titletrackr.com';
+            const modeIndicator = hasToggleLinks ? `<span class="bookmarks-mode ${modeClass}">${domainLabel}</span>` : '';
             return `
             <div class="group">
               <div class="group-title"><span class="group-num">${group.index}</span>${group.title}${modeIndicator}</div>
