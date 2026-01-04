@@ -1725,7 +1725,7 @@
       const checks = data.checkResults || [];
 
       // Group checks: core services, pulse, pings
-      const coreChecks = checks.filter(c => ['Database', 'Redis', 'App', 'Horizon'].includes(c.name));
+      const coreChecks = checks.filter(c => ['Database', 'Redis', 'Cache', 'Horizon'].includes(c.name));
       const pulseCheck = checks.find(c => c.name === 'Pulse Queue Metrics');
       const pingCheck = checks.find(c => c.name === 'Service Ping');
       const latencies = pingCheck?.meta?.latency_ms || {};
@@ -1796,6 +1796,16 @@
             <span class="health-chip-name">${check.name}</span>
             ${latencyDisplay ? `<span class="health-chip-latency">${latencyDisplay}</span>` : ''}
             <span class="health-chip-indicator ${statusClass}"></span>
+          </div>
+        `;
+      }
+      // Add App latency if present
+      if (latencies.app) {
+        html += `
+          <div class="health-chip">
+            <span class="health-chip-name">App</span>
+            <span class="health-chip-latency">${latencies.app.toFixed(0)}ms</span>
+            <span class="health-chip-indicator"></span>
           </div>
         `;
       }
