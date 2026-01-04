@@ -1,0 +1,27 @@
+[
+  {
+    "name": "Pulse",
+    "prod": "https://app.titletrackr.com/pulse",
+    "local": "http://localhost/pulse"
+  },
+  {
+    "name": "Log Viewer",
+    "prod": "https://app.titletrackr.com/log-viewer",
+    "local": "http://localhost/log-viewer"
+  },
+  {
+    "name": "Horizon",
+    "prod": "https://app.titletrackr.com/horizon",
+    "local": "http://localhost/horizon"
+  },
+  {
+    "name": "TitleTrackr App",
+    "prod": "https://app.titletrackr.com",
+    "local": "http://localhost"
+  },
+  {
+    "name": "Plausible",
+    "prod": "https://plausible.io/app.titletrackr.com",
+    "local": null
+  }
+]

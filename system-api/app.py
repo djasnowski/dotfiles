@@ -6,6 +6,7 @@ import socket
 import platform
 import time
 import threading
+import httpx
 from collections import deque
 from pynvml import (
     nvmlInit, nvmlDeviceGetHandleByIndex, nvmlDeviceGetName,
@@ -580,3 +581,23 @@ def top(
         procs.sort(key=lambda x: x.get("gpu_mem_mb", 0), reverse=True)
         return {"processes": procs[:limit]}
     return {"processes": get_top_processes(limit=limit, sort_by=sort)}
+
+
+@app.get("/api/v1/health")
+async def health_check(url: str):
+    """Check if a URL is reachable and return response time"""
+    try:
+        async with httpx.AsyncClient(timeout=5.0, follow_redirects=True) as client:
+            start = time.time()
+            resp = await client.get(url)
+            elapsed_ms = int((time.time() - start) * 1000)
+            return {
+                "url": url,
+                "status": "up",
+                "code": resp.status_code,
+                "time_ms": elapsed_ms,
+            }
+    except httpx.TimeoutException:
+        return {"url": url, "status": "timeout", "code": None, "time_ms": None}
+    except Exception as e:
+        return {"url": url, "status": "down", "code": None, "time_ms": None, "error": str(e)}

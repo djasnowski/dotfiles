@@ -291,7 +291,7 @@
       gap: 1.5rem;
       align-items: start;
     }
-    .left-column {
+    .left-column, .right-column {
       display: flex;
       flex-direction: column;
       gap: 1rem;
@@ -407,6 +407,71 @@
     .gpu-processes-empty {
       color: #00551a;
       font-size: 0.9rem;
+    }
+
+    /* Services Section */
+    .services-section {
+      background: rgba(0, 255, 65, 0.03);
+      border: 1px solid #00ff4122;
+      padding: 0.75rem 1.5rem;
+    }
+    .services-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.5rem;
+    }
+    .services-title {
+      font-size: 1rem;
+      color: #00551a;
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+    }
+    .services-mode {
+      font-size: 0.8rem;
+      color: #00772a;
+      padding: 0.15rem 0.5rem;
+      border: 1px solid #00ff4144;
+      background: rgba(0, 255, 65, 0.1);
+    }
+    .services-mode.local {
+      color: #ffaa00;
+      border-color: #ffaa0044;
+      background: rgba(255, 170, 0, 0.1);
+    }
+    .service-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.3rem 0;
+      font-size: 0.95rem;
+    }
+    .service-name {
+      color: #00ff41;
+    }
+    .service-status {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .service-time {
+      color: #00772a;
+      font-size: 0.85rem;
+    }
+    .service-indicator {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #00ff41;
+    }
+    .service-indicator.down {
+      background: #ff4141;
+    }
+    .service-indicator.timeout {
+      background: #ffaa00;
+    }
+    .service-indicator.checking {
+      background: #00551a;
     }
     .port-chip {
       display: inline-block;
@@ -622,7 +687,6 @@
 
   <div class="cpu-cores-section">
     <div class="cpu-cores">
-      <div class="cpu-cores-title">CPU Cores</div>
       <div class="cores-grid" id="cores-grid"></div>
     </div>
   </div>
@@ -791,15 +855,25 @@
         <div class="docker-containers" id="docker-containers"></div>
       </div>
 
+      <div class="services-section">
+        <div class="services-header">
+          <span class="services-title">Services</span>
+          <span class="services-mode" id="services-mode">PROD</span>
+        </div>
+        <div class="services-list" id="services-list"></div>
+      </div>
+    </div>
+
+    <div class="right-column">
+      <div class="processes-section">
+        <div class="processes-title">Top Processes</div>
+        <div id="processes-table"></div>
+      </div>
+
       <div class="gpu-processes-section">
         <div class="gpu-processes-title">GPU Processes</div>
         <div class="gpu-processes-list" id="gpu-processes"></div>
       </div>
-    </div>
-
-    <div class="processes-section">
-      <div class="processes-title">Top Processes</div>
-      <div id="processes-table"></div>
     </div>
   </div>
 
@@ -1362,6 +1436,92 @@
 
     fetchStats();
     setInterval(fetchStats, 5000);
+
+    // Services health check
+    let services = [];
+    let servicesMode = 'prod'; // 'prod' or 'local'
+
+    async function loadServices() {
+      try {
+        const res = await fetch('services.json?' + Date.now());
+        services = await res.json();
+        checkServices();
+      } catch (e) {
+        console.error('Failed to load services:', e);
+      }
+    }
+
+    async function checkServices() {
+      const listEl = document.getElementById('services-list');
+      const modeEl = document.getElementById('services-mode');
+
+      modeEl.textContent = servicesMode.toUpperCase();
+      modeEl.className = 'services-mode' + (servicesMode === 'local' ? ' local' : '');
+
+      // Show checking state
+      listEl.innerHTML = services.map(s => {
+        const url = servicesMode === 'prod' ? s.prod : s.local;
+        if (!url) return '';
+        return `
+          <div class="service-item">
+            <span class="service-name">${s.name}</span>
+            <span class="service-status">
+              <span class="service-time">...</span>
+              <span class="service-indicator checking"></span>
+            </span>
+          </div>
+        `;
+      }).join('');
+
+      // Check each service
+      for (const s of services) {
+        const url = servicesMode === 'prod' ? s.prod : s.local;
+        if (!url) continue;
+
+        try {
+          const res = await fetch(`${API_BASE}/api/v1/health?url=${encodeURIComponent(url)}`);
+          const data = await res.json();
+          updateServiceStatus(s.name, data);
+        } catch (e) {
+          updateServiceStatus(s.name, { status: 'down', time_ms: null });
+        }
+      }
+    }
+
+    function updateServiceStatus(name, data) {
+      const items = document.querySelectorAll('.service-item');
+      for (const item of items) {
+        const nameEl = item.querySelector('.service-name');
+        if (nameEl && nameEl.textContent === name) {
+          const timeEl = item.querySelector('.service-time');
+          const indicator = item.querySelector('.service-indicator');
+
+          if (data.status === 'up') {
+            timeEl.textContent = data.time_ms + 'ms';
+            indicator.className = 'service-indicator';
+          } else if (data.status === 'timeout') {
+            timeEl.textContent = 'timeout';
+            indicator.className = 'service-indicator timeout';
+          } else {
+            timeEl.textContent = 'down';
+            indicator.className = 'service-indicator down';
+          }
+          break;
+        }
+      }
+    }
+
+    // Toggle services mode with 'l' key
+    document.addEventListener('keydown', e => {
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+      if (e.key === 'l' && keyBuffer === '') {
+        servicesMode = servicesMode === 'prod' ? 'local' : 'prod';
+        checkServices();
+      }
+    });
+
+    loadServices();
+    setInterval(checkServices, 30000); // Refresh every 30s
   </script>
 </body>
 </html>
