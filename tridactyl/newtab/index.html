@@ -1199,18 +1199,22 @@
       // Ignore if typing in an input
       if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
 
-      // Toggle modes with 'l' (services) and 'p' (bookmarks) - check before buffer logic
+      // Mode shortcuts: 'l' = local, 'p' = production
       if (e.key === 'l' && keyBuffer === '') {
-        servicesMode = servicesMode === 'prod' ? 'local' : 'prod';
-        bookmarksMode = servicesMode; // sync bookmarks mode too
-        healthLoaded = false; // show loading on mode switch
+        servicesMode = 'local';
+        bookmarksMode = 'local';
+        healthLoaded = false;
         checkHealth();
         fetchAbstracts();
         renderBookmarks();
         return;
       }
       if (e.key === 'p' && keyBuffer === '') {
-        bookmarksMode = bookmarksMode === 'prod' ? 'local' : 'prod';
+        servicesMode = 'prod';
+        bookmarksMode = 'prod';
+        healthLoaded = false;
+        checkHealth();
+        fetchAbstracts();
         renderBookmarks();
         return;
       }
