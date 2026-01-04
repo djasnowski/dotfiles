@@ -463,8 +463,10 @@
 
     /* Search Agent Details (under job queue) */
     .search-agent-details {
-      margin-top: 1rem;
       font-size: 0.85rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
     }
     .search-agent-row {
       display: flex;
@@ -480,15 +482,22 @@
       color: #00ff41;
     }
     .search-agent-job {
-      margin-top: 0.5rem;
-      padding: 0.4rem 0.5rem;
+      padding: 0.5rem 0.75rem;
       border: 1px solid #ffaa0033;
       background: rgba(255, 170, 0, 0.05);
+      width: 100%;
     }
     .search-agent-job-title {
       color: #ffaa00;
       font-weight: bold;
       margin-bottom: 0.2rem;
+    }
+    .search-agent-row-pair {
+      display: flex;
+      gap: 1.5rem;
+    }
+    .search-agent-row-pair .search-agent-row {
+      flex: 1;
     }
 
     /* Services Section */
@@ -594,6 +603,12 @@
     .health-chip.down .health-chip-name {
       color: #ff4141;
     }
+    .health-chip.down .health-chip-latency {
+      color: #aa2020;
+    }
+    .health-chip.warning .health-chip-latency {
+      color: #aa7700;
+    }
     .health-chip-indicator {
       width: 6px;
       height: 6px;
@@ -613,22 +628,36 @@
     .health-grid {
       display: grid;
       grid-template-columns: 1fr auto;
-      gap: 2rem;
-      align-items: start;
+      gap: 0;
+      align-items: stretch;
     }
     .health-left {
+      display: flex;
+      flex-direction: column;
+      padding-right: 1.5rem;
+    }
+    .health-left > * {
+      padding: 0.75rem 0;
     }
     .health-right {
+      min-width: 340px;
+      padding-left: 1.5rem;
     }
     .health-chips-header {
       display: flex;
-      justify-content: flex-end;
-      margin-bottom: 0.5rem;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.75rem 0;
+    }
+    .search-agents-stats {
+      font-size: 0.8rem;
+      color: #00772a;
     }
     .health-chips-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 0;
+      padding-top: 0.75rem;
     }
     .health-chips-grid .health-chip {
       margin-right: -1px;
@@ -640,7 +669,6 @@
       display: flex;
       align-items: center;
       gap: 1rem;
-      margin-bottom: 0.75rem;
     }
     .job-queue-title {
       font-size: 1.1rem;
@@ -654,15 +682,16 @@
     }
     .job-queue-sparklines {
       display: flex;
-      flex-wrap: wrap;
-      gap: 1.25rem;
+      gap: 1rem;
+      align-items: center;
     }
     .job-queue-item {
       display: flex;
       flex-direction: column;
-      padding: 0.5rem 1rem;
+      padding: 0.5rem 0.75rem;
       background: rgba(0, 255, 65, 0.03);
       border: 1px solid #00ff4122;
+      flex: 1;
     }
     .job-queue-item-top {
       display: flex;
@@ -819,6 +848,10 @@
     .gpu-name {
       color: #00ff41;
       font-weight: bold;
+    }
+    .gpu-board {
+      color: #00aa30;
+      font-size: 0.9rem;
     }
     .gpu-sparklines {
       display: grid;
@@ -1165,6 +1198,7 @@
         <div class="gpu-header">
           <span class="gpu-title">GPU</span>
           <span class="gpu-name" id="gpu-name">--</span>
+          <span class="gpu-board" id="gpu-board">--</span>
           <span class="gpu-fan-label">Fan <span id="gpu-fan">--%</span></span>
         </div>
         <div class="gpu-sparklines">
@@ -1637,6 +1671,8 @@
         hostname: api.system?.hostname || '--',
         kernel: api.system?.kernel || '--',
         distro: api.system?.distro || '--',
+        boardVendor: api.system?.board_vendor || '',
+        boardName: api.system?.board_name || '',
         uptime: api.system?.uptime || '--',
         bootTime: api.system?.boot_time || '--',
         procCount: api.system?.proc_count || '--',
@@ -1719,6 +1755,8 @@
 
       // GPU section
       document.getElementById('gpu-name').textContent = stats.gpuName || '--';
+      const boardText = stats.boardVendor ? `${stats.boardVendor.replace(' Technology Co., Ltd.', '')} ${stats.boardName}` : '--';
+      document.getElementById('gpu-board').textContent = boardText;
       document.getElementById('gpu-util').textContent = stats.gpuUtil + '%';
       document.getElementById('gpu-temp').textContent = stats.gpuTemp + '°C';
       document.getElementById('gpu-power').textContent = stats.gpuPower + 'W';
@@ -1941,13 +1979,12 @@
         }
 
         html += `
-          <div class="job-queue-section">
-            <div class="job-queue-header">
-              <span class="job-queue-title">Job Queue</span>
-              <span class="job-queue-summary">${totals.processed || 0} processed / ${totals.failed || 0} failed (${Math.round((meta.period_minutes || 60) / 60)}hr)</span>
-              <span class="service-indicator ${statusClass}"></span>
-            </div>
-            <div class="job-queue-sparklines">
+          <div class="job-queue-header">
+            <span class="job-queue-title">Job Queue</span>
+            <span class="job-queue-summary">${totals.processed || 0} processed / ${totals.failed || 0} failed (${Math.round((meta.period_minutes || 60) / 60)}hr)</span>
+            <span class="service-indicator ${statusClass}"></span>
+          </div>
+          <div class="job-queue-sparklines">
         `;
 
         // Render inline sparklines for each queue
@@ -1965,7 +2002,7 @@
           `;
         }
 
-        html += `</div></div>`;
+        html += `</div>`;
       }
       // Search Agent details under job queue
       html += '<div class="search-agent-details" id="search-agent-content"></div>';
@@ -1975,7 +2012,10 @@
       const modeLabel = servicesMode === 'local' ? 'localhost' : 'app.titletrackr.com';
       const modeClass = servicesMode === 'local' ? 'local' : '';
       html += '<div class="health-right">';
-      html += `<div class="health-chips-header"><span class="services-mode ${modeClass}">${modeLabel}</span></div>`;
+      html += `<div class="health-chips-header">
+        <span class="search-agents-stats" id="search-agents-stats">Search Agents</span>
+        <span class="services-mode ${modeClass}">${modeLabel}</span>
+      </div>`;
       html += '<div class="health-chips-grid">';
       for (const check of coreChecks) {
         const statusClass = check.status === 'ok' ? '' : (check.status === 'warning' ? 'warning' : 'down');
@@ -2021,7 +2061,7 @@
         <div class="health-chip" id="search-agent-chip">
           <span class="health-chip-name">Search Agent</span>
           <span class="health-chip-right">
-            <span class="health-chip-latency" id="search-agent-info">--</span>
+            <span class="health-chip-latency" id="search-agent-uptime">--</span>
             <span class="health-chip-indicator" id="search-agent-indicator"></span>
           </span>
         </div>
@@ -2082,8 +2122,9 @@
     // Search Agent health
     async function fetchSearchAgent() {
       const chipEl = document.getElementById('search-agent-chip');
-      const infoEl = document.getElementById('search-agent-info');
       const indicatorEl = document.getElementById('search-agent-indicator');
+      const uptimeEl = document.getElementById('search-agent-uptime');
+      const statsEl = document.getElementById('search-agents-stats');
       const contentEl = document.getElementById('search-agent-content');
 
       try {
@@ -2093,11 +2134,12 @@
         if (data.error) {
           if (chipEl) {
             chipEl.className = 'health-chip down';
-            infoEl.textContent = 'error';
             indicatorEl.className = 'health-chip-indicator down';
+            if (uptimeEl) uptimeEl.textContent = '--';
           }
+          if (statsEl) statsEl.textContent = 'Search Agents';
           if (contentEl) {
-            contentEl.innerHTML = `<span style="color:#ff4141">${data.error}</span>`;
+            <!-- contentEl.innerHTML = `<span style="color:#ff4141">${data.error}</span>`; -->
           }
           return;
         }
@@ -2105,49 +2147,55 @@
         const worker = data.worker || {};
         const workerStatus = worker.status || 'unknown';
         const isProcessing = workerStatus === 'processing';
-        const statusClass = isProcessing ? 'warning' : '';
+        const isUnknown = workerStatus === 'unknown';
+        const statusClass = isUnknown ? 'down' : (isProcessing ? 'warning' : '');
 
         // Update chip
         if (chipEl) {
           chipEl.className = 'health-chip ' + statusClass;
           indicatorEl.className = 'health-chip-indicator ' + statusClass;
-          if (isProcessing && data.current_job) {
-            infoEl.textContent = data.current_job.name || 'working...';
-          } else {
-            infoEl.textContent = workerStatus;
-          }
+          if (uptimeEl) uptimeEl.textContent = worker.uptime_human || '--';
+        }
+
+        // Update stats header above health chips
+        if (statsEl) {
+          statsEl.textContent = `Search Agents - ${worker.jobs_completed || 0} done / ${worker.jobs_failed || 0} failed`;
         }
 
         // Update content section
         if (contentEl) {
-          let html = `
-            <div class="search-agent-row">
-              <span class="search-agent-label">Status</span>
-              <span class="search-agent-value" style="color: ${isProcessing ? '#ffaa00' : '#00ff41'}">${workerStatus}</span>
-            </div>
-            <div class="search-agent-row">
-              <span class="search-agent-label">Uptime</span>
-              <span class="search-agent-value">${worker.uptime_human || '--'}</span>
-            </div>
-            <div class="search-agent-row">
-              <span class="search-agent-label">Jobs</span>
-              <span class="search-agent-value">${worker.jobs_completed || 0} done / ${worker.jobs_failed || 0} failed</span>
-            </div>
-          `;
+          // Helper to format seconds as Xm Ys
+          const formatRunning = (secs) => {
+            if (!secs || secs < 60) return `${secs || 0}s`;
+            const m = Math.floor(secs / 60);
+            const s = secs % 60;
+            return `${m}m ${s}s`;
+          };
+
+          let html = '';
 
           if (data.current_job) {
             const job = data.current_job;
             html += `
-              <div class="search-agent-job">
-                <div class="search-agent-job-title">▶ ${job.name || 'Unknown'}</div>
-                <div class="search-agent-row">
-                  <span class="search-agent-label">County</span>
-                  <span class="search-agent-value">${job.county || '--'}</span>
-                </div>
-                <div class="search-agent-row">
-                  <span class="search-agent-label">Running</span>
-                  <span class="search-agent-value">${job.running_for_seconds || 0}s</span>
-                </div>
+              <div class="search-agent-job" style="display: flex; gap: 1rem; align-items: center;">
+                <span style="color: #aa7700; font-weight: bold;">▶ ${job.name || 'Unknown'}</span>
+                <span style="color: #886600;">${job.county || '--'}</span>
+                <span style="color: #aa7700;">${formatRunning(job.running_for_seconds)}</span>
+              </div>
+            `;
+          }
+
+          // Show previous job if available
+          if (data.previous_jobs && data.previous_jobs.length > 0) {
+            const prev = data.previous_jobs[0];
+            const statusColor = prev.status === 'completed' ? '#00aa30' : '#aa2020';
+            const textColor = prev.status === 'completed' ? '#00772a' : '#772020';
+            const statusIcon = prev.status === 'completed' ? '✓' : '✗';
+            html += `
+              <div class="search-agent-job" style="display: flex; gap: 1rem; align-items: center; border-color: ${statusColor}33; background: ${statusColor}08;">
+                <span style="color: ${statusColor}; font-weight: bold;">${statusIcon} ${prev.name || 'Unknown'}</span>
+                <span style="color: ${textColor};">${prev.county || '--'}</span>
+                <span style="color: ${textColor};">${formatRunning(prev.duration_seconds)}</span>
               </div>
             `;
           }
@@ -2157,9 +2205,10 @@
       } catch (e) {
         if (chipEl) {
           chipEl.className = 'health-chip down';
-          infoEl.textContent = 'offline';
           indicatorEl.className = 'health-chip-indicator down';
+          if (uptimeEl) uptimeEl.textContent = '--';
         }
+        if (statsEl) statsEl.textContent = 'Search Agents';
         if (contentEl) {
           contentEl.innerHTML = '<span style="color:#ff4141">Failed to connect</span>';
         }

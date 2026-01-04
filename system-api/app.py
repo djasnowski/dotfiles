@@ -69,10 +69,23 @@ def get_system_info():
 
     kernel = platform.release().split("-")[0]
 
+    # Motherboard info
+    board_vendor = ""
+    board_name = ""
+    try:
+        with open("/sys/devices/virtual/dmi/id/board_vendor") as f:
+            board_vendor = f.read().strip()
+        with open("/sys/devices/virtual/dmi/id/board_name") as f:
+            board_name = f.read().strip()
+    except Exception:
+        pass
+
     _system_info_cache = {
         "hostname": socket.gethostname(),
         "distro": distro,
         "kernel": kernel,
+        "board_vendor": board_vendor,
+        "board_name": board_name,
     }
     return _system_info_cache
 
