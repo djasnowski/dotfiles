@@ -523,6 +523,78 @@
     .service-indicator.checking {
       background: #00551a;
     }
+    .service-indicator.warning {
+      background: #ffaa00;
+    }
+    .health-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.4rem;
+      margin-bottom: 0.5rem;
+    }
+    .health-row.latencies {
+      margin-top: 0.5rem;
+      margin-bottom: 0;
+    }
+    .health-chip {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.2rem 0.5rem;
+      background: rgba(0, 255, 65, 0.1);
+      border: 1px solid #00ff4133;
+      font-size: 0.85rem;
+    }
+    .health-chip.warning {
+      background: rgba(255, 170, 0, 0.1);
+      border-color: #ffaa0033;
+    }
+    .health-chip.down {
+      background: rgba(255, 65, 65, 0.1);
+      border-color: #ff414133;
+    }
+    .health-chip-name {
+      color: #00ff41;
+    }
+    .health-chip.warning .health-chip-name {
+      color: #ffaa00;
+    }
+    .health-chip.down .health-chip-name {
+      color: #ff4141;
+    }
+    .health-chip-indicator {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #00ff41;
+    }
+    .health-chip-indicator.warning {
+      background: #ffaa00;
+    }
+    .health-chip-indicator.down {
+      background: #ff4141;
+    }
+    .queue-breakdown {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.3rem;
+      margin-bottom: 0.3rem;
+      padding-left: 0.5rem;
+    }
+    .queue-chip {
+      font-size: 0.8rem;
+      color: #00772a;
+      padding: 0.1rem 0.4rem;
+      background: rgba(0, 255, 65, 0.05);
+      border: 1px solid #00ff4122;
+    }
+    .latency-chip {
+      font-size: 0.8rem;
+      color: #00772a;
+      padding: 0.15rem 0.4rem;
+      background: rgba(0, 255, 65, 0.05);
+      border: 1px solid #00ff4122;
+    }
     .port-chip {
       display: inline-block;
       padding: 0.1rem 0.4rem;
@@ -897,7 +969,7 @@
 
       <div class="services-section">
         <div class="services-header">
-          <span class="services-title">Services</span>
+          <span class="services-title">Health</span>
           <span class="services-mode" id="services-mode">PROD</span>
         </div>
         <div class="services-list" id="services-list"></div>
@@ -1496,77 +1568,117 @@
     setInterval(fetchStats, 5000);
 
     // Services health check
-    let services = [];
-    let servicesMode = 'prod'; // 'prod' or 'local'
+    let servicesMode = 'local'; // 'prod' or 'local' - default to local for dev
 
-    async function loadServices() {
-      try {
-        const res = await fetch('services.json?' + Date.now());
-        services = await res.json();
-        checkServices();
-      } catch (e) {
-        console.error('Failed to load services:', e);
-      }
-    }
-
-    async function checkServices() {
+    async function checkHealth() {
       const listEl = document.getElementById('services-list');
       const modeEl = document.getElementById('services-mode');
 
       modeEl.textContent = servicesMode.toUpperCase();
       modeEl.className = 'services-mode' + (servicesMode === 'local' ? ' local' : '');
 
-      // Show checking state
-      listEl.innerHTML = services.map(s => {
-        const url = servicesMode === 'prod' ? s.prod : s.local;
-        if (!url) return '';
-        return `
+      const baseUrl = servicesMode === 'prod' ? 'https://app.titletrackr.com' : 'http://localhost';
+
+      // Show loading state
+      listEl.innerHTML = '<div class="service-item"><span class="service-name">Loading...</span></div>';
+
+      try {
+        const res = await fetch(`${baseUrl}/health.json`);
+        const data = await res.json();
+        renderHealthChecks(data);
+      } catch (e) {
+        listEl.innerHTML = `
           <div class="service-item">
-            <span class="service-name">${s.name}</span>
+            <span class="service-name">Health Check</span>
             <span class="service-status">
-              <span class="service-time">...</span>
-              <span class="service-indicator checking"></span>
+              <span class="service-time">unreachable</span>
+              <span class="service-indicator down"></span>
             </span>
           </div>
         `;
-      }).join('');
-
-      // Check each service
-      for (const s of services) {
-        const url = servicesMode === 'prod' ? s.prod : s.local;
-        if (!url) continue;
-
-        try {
-          const res = await fetch(`${API_BASE}/api/v1/health?url=${encodeURIComponent(url)}`);
-          const data = await res.json();
-          updateServiceStatus(s.name, data);
-        } catch (e) {
-          updateServiceStatus(s.name, { status: 'down', time_ms: null });
-        }
       }
     }
 
-    function updateServiceStatus(name, data) {
-      const items = document.querySelectorAll('.service-item');
-      for (const item of items) {
-        const nameEl = item.querySelector('.service-name');
-        if (nameEl && nameEl.textContent === name) {
-          const timeEl = item.querySelector('.service-time');
-          const indicator = item.querySelector('.service-indicator');
+    function renderHealthChecks(data) {
+      const listEl = document.getElementById('services-list');
+      const checks = data.checkResults || [];
 
-          if (data.status === 'up') {
-            timeEl.textContent = data.time_ms + 'ms';
-            indicator.className = 'service-indicator';
-          } else if (data.status === 'timeout') {
-            timeEl.textContent = 'timeout';
-            indicator.className = 'service-indicator timeout';
-          } else {
-            timeEl.textContent = 'down';
-            indicator.className = 'service-indicator down';
+      // Group checks: core services, queues, pings
+      const coreChecks = checks.filter(c => ['Database', 'Redis', 'Cache', 'Horizon'].includes(c.name));
+      const queueCheck = checks.find(c => c.name === 'Queue Backlog');
+      const pulseCheck = checks.find(c => c.name === 'Pulse Queue Metrics');
+      const pingCheck = checks.find(c => c.name === 'Service Ping');
+
+      let html = '';
+
+      // Core services row
+      html += '<div class="health-row">';
+      for (const check of coreChecks) {
+        const statusClass = check.status === 'ok' ? '' : (check.status === 'warning' ? 'warning' : 'down');
+        html += `
+          <div class="health-chip ${statusClass}">
+            <span class="health-chip-name">${check.name}</span>
+            <span class="health-chip-indicator ${statusClass}"></span>
+          </div>
+        `;
+      }
+      html += '</div>';
+
+      // Queue backlog
+      if (queueCheck) {
+        const meta = queueCheck.meta || {};
+        const queues = meta.queues || {};
+        const total = meta.total_jobs || 0;
+        const statusClass = queueCheck.status === 'ok' ? '' : (queueCheck.status === 'warning' ? 'warning' : 'down');
+        html += `
+          <div class="service-item">
+            <span class="service-name">Queues</span>
+            <span class="service-status">
+              <span class="service-time">${total} jobs</span>
+              <span class="service-indicator ${statusClass}"></span>
+            </span>
+          </div>
+        `;
+        if (total > 0) {
+          html += '<div class="queue-breakdown">';
+          for (const [name, count] of Object.entries(queues)) {
+            if (count > 0) {
+              html += `<span class="queue-chip">${name}: ${count}</span>`;
+            }
           }
-          break;
+          html += '</div>';
         }
       }
+
+      // Pulse metrics
+      if (pulseCheck) {
+        const meta = pulseCheck.meta || {};
+        const totals = meta.totals || {};
+        const statusClass = pulseCheck.status === 'ok' ? '' : (pulseCheck.status === 'warning' ? 'warning' : 'down');
+        html += `
+          <div class="service-item">
+            <span class="service-name">Pulse (1hr)</span>
+            <span class="service-status">
+              <span class="service-time">${totals.processed || 0} ok / ${totals.failed || 0} fail</span>
+              <span class="service-indicator ${statusClass}"></span>
+            </span>
+          </div>
+        `;
+      }
+
+      // Service pings with latencies
+      if (pingCheck && pingCheck.meta && pingCheck.meta.latency_ms) {
+        const latencies = pingCheck.meta.latency_ms;
+        html += '<div class="health-row latencies">';
+        for (const [name, ms] of Object.entries(latencies)) {
+          const displayName = name.charAt(0).toUpperCase() + name.slice(1);
+          const msDisplay = typeof ms === 'number' ? ms.toFixed(1) + 'ms' : '--';
+          html += `<span class="latency-chip">${displayName}: ${msDisplay}</span>`;
+        }
+        html += '</div>';
+      }
+
+      listEl.innerHTML = html;
     }
 
     // Toggle modes with 'l' (services) and 'p' (bookmarks) keys
@@ -1574,7 +1686,7 @@
       if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
       if (e.key === 'l' && keyBuffer === '') {
         servicesMode = servicesMode === 'prod' ? 'local' : 'prod';
-        checkServices();
+        checkHealth();
       }
       if (e.key === 'p' && keyBuffer === '') {
         bookmarksMode = bookmarksMode === 'prod' ? 'local' : 'prod';
@@ -1582,8 +1694,8 @@
       }
     });
 
-    loadServices();
-    setInterval(checkServices, 30000); // Refresh every 30s
+    checkHealth();
+    setInterval(checkHealth, 30000); // Refresh every 30s
   </script>
 </body>
 </html>
