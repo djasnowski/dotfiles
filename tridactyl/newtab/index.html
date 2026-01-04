@@ -800,12 +800,15 @@
 
     /* GPU Section */
     .gpu-section {
+      margin-bottom: 1rem;
+      padding-bottom: 1rem;
+      border-bottom: 1px solid #00ff4122;
     }
     .gpu-header {
       display: flex;
       align-items: center;
-      gap: 1.5rem;
-      margin-bottom: 0.5rem;
+      gap: 1rem;
+      padding-bottom: 0.5rem;
     }
     .gpu-title {
       font-size: 1rem;
@@ -819,8 +822,33 @@
     }
     .gpu-sparklines {
       display: grid;
-      grid-template-columns: repeat(5, 1fr);
-      gap: 1.5rem;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.5rem 1.5rem;
+    }
+    .sparkline-container-sm {
+      display: flex;
+      flex-direction: column;
+      gap: 0.2rem;
+      flex: 1;
+    }
+    .sparkline-sm {
+      height: 1.5rem;
+      background: #001a00;
+      border: 1px solid #00ff4122;
+    }
+    .sparkline-sm canvas {
+      width: 100%;
+      height: 100%;
+    }
+    .gpu-fan-label {
+      color: #00551a;
+      font-size: 0.9rem;
+      white-space: nowrap;
+      margin-left: auto;
+    }
+    .gpu-fan-label span {
+      color: #00ff41;
+      font-weight: bold;
     }
 
     /* Processes Section */
@@ -915,12 +943,16 @@
     .stats {
       display: grid;
       grid-template-columns: repeat(5, 1fr);
-      gap: 1rem 1.5rem;
-      align-content: start;
+      grid-template-rows: 1fr 1fr;
+      height: 100%;
+      justify-items: center;
+      align-items: center;
     }
     .stats-section {
+      height: 100%;
     }
     .stats-sidebar {
+      height: 100%;
     }
     .stat {
       display: flex;
@@ -1127,52 +1159,46 @@
     </div>
     </div>
 
-    <div class="gpu-section">
-    <div class="gpu-header">
-      <span class="gpu-title">GPU</span>
-      <span class="gpu-name" id="gpu-name">--</span>
-    </div>
-    <div class="gpu-sparklines">
-      <div class="sparkline-container">
-        <div class="sparkline-header">
-          <span class="sparkline-label">Util</span>
-          <span class="sparkline-value" id="gpu-util">--%</span>
-        </div>
-        <div class="sparkline"><canvas id="spark-gpu-util"></canvas></div>
-      </div>
-      <div class="sparkline-container">
-        <div class="sparkline-header">
-          <span class="sparkline-label">Temp</span>
-          <span class="sparkline-value" id="gpu-temp">--°C</span>
-        </div>
-        <div class="sparkline"><canvas id="spark-gpu-temp"></canvas></div>
-      </div>
-      <div class="sparkline-container">
-        <div class="sparkline-header">
-          <span class="sparkline-label">Power</span>
-          <span class="sparkline-value" id="gpu-power">--W</span>
-        </div>
-        <div class="sparkline"><canvas id="spark-gpu-power"></canvas></div>
-      </div>
-      <div class="sparkline-container">
-        <div class="sparkline-header">
-          <span class="sparkline-label">Fan</span>
-          <span class="sparkline-value" id="gpu-fan">--%</span>
-        </div>
-        <div class="sparkline"><canvas id="spark-gpu-fan"></canvas></div>
-      </div>
-      <div class="sparkline-container">
-        <div class="sparkline-header">
-          <span class="sparkline-label">VRAM</span>
-          <span class="sparkline-value" id="gpu-vram">--</span>
-        </div>
-        <div class="sparkline"><canvas id="spark-gpu-vram"></canvas></div>
-      </div>
-    </div>
-    </div>
-
     <div class="bottom-section">
     <div class="left-column">
+      <div class="gpu-section">
+        <div class="gpu-header">
+          <span class="gpu-title">GPU</span>
+          <span class="gpu-name" id="gpu-name">--</span>
+          <span class="gpu-fan-label">Fan <span id="gpu-fan">--%</span></span>
+        </div>
+        <div class="gpu-sparklines">
+          <div class="sparkline-container-sm">
+            <div class="sparkline-header">
+              <span class="sparkline-label">Util</span>
+              <span class="sparkline-value" id="gpu-util">--%</span>
+            </div>
+            <div class="sparkline-sm"><canvas id="spark-gpu-util"></canvas></div>
+          </div>
+          <div class="sparkline-container-sm">
+            <div class="sparkline-header">
+              <span class="sparkline-label">Temp</span>
+              <span class="sparkline-value" id="gpu-temp">--°C</span>
+            </div>
+            <div class="sparkline-sm"><canvas id="spark-gpu-temp"></canvas></div>
+          </div>
+          <div class="sparkline-container-sm">
+            <div class="sparkline-header">
+              <span class="sparkline-label">Power</span>
+              <span class="sparkline-value" id="gpu-power">--W</span>
+            </div>
+            <div class="sparkline-sm"><canvas id="spark-gpu-power"></canvas></div>
+          </div>
+          <div class="sparkline-container-sm">
+            <div class="sparkline-header">
+              <span class="sparkline-label">VRAM</span>
+              <span class="sparkline-value" id="gpu-vram">--</span>
+            </div>
+            <div class="sparkline-sm"><canvas id="spark-gpu-vram"></canvas></div>
+          </div>
+        </div>
+      </div>
+
       <div class="docker-section">
         <div class="docker-header">
           <span class="docker-title">Docker</span>
