@@ -267,6 +267,16 @@ def get_process_states():
     return states
 
 
+def get_open_files_count():
+    """Get system-wide count of open file descriptors"""
+    try:
+        with open("/proc/sys/fs/file-nr", "r") as f:
+            parts = f.read().strip().split()
+            return int(parts[0])  # First value is allocated file handles
+    except Exception:
+        return 0
+
+
 def get_top_processes(limit=30, sort_by="cpu"):
     procs = []
     now = time.time()
@@ -557,6 +567,7 @@ def snapshot():
             "boot_time": get_uptime()[1],
             "proc_count": get_process_count(),
             "proc_states": get_process_states(),
+            "open_files": get_open_files_count(),
         },
         "cpu": {
             "util_pct": cpu_pct,
