@@ -182,23 +182,33 @@
       height: 100%;
     }
 
+    /* Bookmarks + Stats Row */
+    .bookmarks-stats-row {
+      display: grid;
+      grid-template-columns: minmax(0, 3fr) minmax(400px, 2fr);
+      gap: 1.5rem;
+      align-items: stretch;
+    }
+
     /* Bookmarks */
     .bookmarks {
       display: flex;
       flex-direction: column;
       gap: 1rem;
+      min-width: 0;
     }
     .row {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
-      gap: 1rem;
+      gap: 0.75rem;
     }
     .group {
       background: rgba(0, 255, 65, 0.05);
       border: 1px solid #00ff4133;
-      padding: 1rem;
+      padding: 0.75rem;
       transition: border-color 0.15s ease;
       outline: none;
+      min-width: 0;
     }
     .group.highlight {
       border-color: #00ff41;
@@ -241,14 +251,20 @@
       display: flex;
       flex-direction: column;
       gap: 0.1rem;
+      min-width: 0;
+      overflow: hidden;
     }
     .link-name {
       font-size: 1rem;
       font-weight: bold;
     }
     .link-url {
-      font-size: 0.85rem;
+      font-size: 0.8rem;
       color: #00772a;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      max-width: 100%;
     }
     .link:hover .link-url {
       color: #0a0a0a;
@@ -268,16 +284,16 @@
       color: #0a0a0a;
     }
 
-    /* Bottom Section - Stats + Docker side by side */
+    /* Bottom Section - Docker + Processes */
     .bottom-section {
-      display: flex;
-      gap: 2rem;
-      align-items: flex-start;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
+      align-items: start;
     }
 
     /* Docker Section */
     .docker-section {
-      flex: 1;
       height: auto;
       background: rgba(0, 255, 65, 0.03);
       border: 1px solid #00ff4122;
@@ -357,33 +373,144 @@
       color: #00551a;
       padding: 0.5rem 0;
     }
+    .port-chip {
+      display: inline-block;
+      padding: 0.1rem 0.4rem;
+      margin-right: 0.3rem;
+      background: rgba(0, 255, 65, 0.1);
+      border: 1px solid #00ff4144;
+      font-size: 0.85rem;
+    }
+
+    /* GPU Section */
+    .gpu-section {
+      background: rgba(0, 255, 65, 0.03);
+      border: 1px solid #00ff4122;
+      padding: 0.75rem 1.5rem;
+    }
+    .gpu-header {
+      display: flex;
+      align-items: center;
+      gap: 1.5rem;
+      margin-bottom: 0.5rem;
+    }
+    .gpu-title {
+      font-size: 1rem;
+      color: #00551a;
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+    }
+    .gpu-name {
+      color: #00ff41;
+      font-weight: bold;
+    }
+    .gpu-sparklines {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 1.5rem;
+    }
+
+    /* Processes Section */
+    .processes-section {
+      background: rgba(0, 255, 65, 0.03);
+      border: 1px solid #00ff4122;
+      padding: 0.75rem 1.5rem;
+    }
+    .processes-title {
+      font-size: 1rem;
+      color: #00551a;
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+      margin-bottom: 0.5rem;
+    }
+    .processes-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.95rem;
+    }
+    .processes-table th {
+      text-align: left;
+      color: #00551a;
+      font-weight: normal;
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      padding: 0.25rem 0.75rem 0.25rem 0;
+      border-bottom: 1px solid #00ff4122;
+    }
+    .processes-table th.right {
+      text-align: right;
+    }
+    .processes-table td {
+      padding: 0.2rem 0.75rem 0.2rem 0;
+      color: #00aa2a;
+    }
+    .processes-table td.right {
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+    }
+    .processes-table td.proc-name {
+      color: #00ff41;
+      font-weight: bold;
+      max-width: 150px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .processes-table td.proc-user {
+      color: #00772a;
+      font-size: 0.85rem;
+    }
+    .processes-table td.proc-elapsed {
+      color: #00551a;
+      font-size: 0.85rem;
+    }
 
     /* Stats */
     .stats {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
-      gap: 2rem 1.5rem;
+      gap: 1rem 1.5rem;
+      flex: 1;
+      align-content: space-between;
+    }
+    .stats-section {
+      background: rgba(0, 255, 65, 0.03);
+      border: 1px solid #00ff4122;
+      padding: 1.25rem 1.5rem;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-around;
+    }
+    .stats-sidebar {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      height: 100%;
     }
     .stat {
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 0.4rem;
+      gap: 0.3rem;
     }
     .stat-label {
       color: #00551a;
-      font-size: 1.2rem;
+      font-size: 1.1rem;
       text-transform: uppercase;
-      letter-spacing: 0.15em;
+      letter-spacing: 0.1em;
     }
     .stat-value {
       color: #00ff41;
-      font-size: 2.5rem;
+      font-size: 2rem;
       font-weight: bold;
+      white-space: nowrap;
     }
     .stat-sub {
-      color: #00772a;
-      font-size: 0.9rem;
+      color: #00aa2a;
+      font-size: 0.95rem;
+      white-space: nowrap;
     }
     .stat-bar {
       width: 140px;
@@ -397,10 +524,13 @@
       background: #00ff41;
       transition: width 0.5s;
     }
-    #network {
-      width: 14ch;
-      text-align: center;
+    #network, #disk-io {
+      font-size: 1.6rem;
       font-variant-numeric: tabular-nums;
+    }
+    .cumulative {
+      font-size: 0.85rem;
+      color: #00551a;
     }
   </style>
 </head>
@@ -424,8 +554,12 @@
         <span class="sysinfo-label">Kernel</span>
       </div>
       <div class="sysinfo-item">
+        <span class="sysinfo-value" id="cpu-cores">--</span>
+        <span class="sysinfo-label">Cores</span>
+      </div>
+      <div class="sysinfo-item">
         <span class="sysinfo-value" id="load-avg">--</span>
-        <span class="sysinfo-label">Load</span>
+        <span class="sysinfo-label">Load 1/5/15</span>
       </div>
       <div class="sysinfo-item">
         <span class="sysinfo-value" id="proc-count">--</span>
@@ -505,60 +639,105 @@
     </div>
   </div>
 
-  <div class="bookmarks" id="bookmarks"></div>
-
-  <div class="bottom-section">
-    <div class="stats">
-      <div class="stat">
-        <span class="stat-label">CPU</span>
-        <span class="stat-value" id="cpu">--%</span>
-        <div class="stat-bar"><div class="stat-fill" id="cpu-bar" style="width: 0%"></div></div>
-        <span class="stat-sub">Utilization</span>
-      </div>
-      <div class="stat">
-        <span class="stat-label">RAM</span>
-        <span class="stat-value" id="mem">--%</span>
-        <div class="stat-bar"><div class="stat-fill" id="mem-bar" style="width: 0%"></div></div>
-        <span class="stat-sub">Memory</span>
-      </div>
-      <div class="stat">
-        <span class="stat-label">Disk</span>
-        <span class="stat-value" id="disk">--%</span>
-        <div class="stat-bar"><div class="stat-fill" id="disk-bar" style="width: 0%"></div></div>
-        <span class="stat-sub">Storage</span>
-      </div>
-      <div class="stat">
-        <span class="stat-label">Disk I/O</span>
-        <span class="stat-value" id="disk-io">--</span>
-        <span class="stat-sub">Read/Write</span>
-      </div>
-      <div class="stat">
-        <span class="stat-label">Network</span>
-        <span class="stat-value" id="network">--</span>
-        <span class="stat-sub">Bandwidth</span>
-      </div>
-      <div class="stat">
-        <span class="stat-label">Uptime</span>
-        <span class="stat-value" id="uptime">--</span>
-        <span class="stat-sub">System</span>
-      </div>
-      <div class="stat">
-        <span class="stat-label">PCH</span>
-        <span class="stat-value" id="pch-temp">--°C</span>
-        <span class="stat-sub">B650 Chipset</span>
-      </div>
-      <div class="stat">
-        <span class="stat-label">VRM</span>
-        <span class="stat-value" id="vrm-temp">--°C</span>
-        <span class="stat-sub">Power Delivery</span>
-      </div>
-      <div class="stat">
-        <span class="stat-label">NVMe</span>
-        <span class="stat-value" id="nvme-temp">--°C</span>
-        <span class="stat-sub">Sabrent 1TB</span>
+  <div class="bookmarks-stats-row">
+    <div class="bookmarks" id="bookmarks"></div>
+    <div class="stats-sidebar">
+      <div class="stats-section">
+        <div class="stats">
+          <div class="stat">
+            <span class="stat-label">CPU</span>
+            <span class="stat-value" id="cpu">--%</span>
+            <div class="stat-bar"><div class="stat-fill" id="cpu-bar" style="width: 0%"></div></div>
+            <span class="stat-sub" id="cpu-temp">--°C</span>
+          </div>
+          <div class="stat">
+            <span class="stat-label">RAM</span>
+            <span class="stat-value" id="mem">--%</span>
+            <div class="stat-bar"><div class="stat-fill" id="mem-bar" style="width: 0%"></div></div>
+            <span class="stat-sub" id="mem-detail">--</span>
+          </div>
+          <div class="stat">
+            <span class="stat-label">Swap</span>
+            <span class="stat-value" id="swap">--%</span>
+            <div class="stat-bar"><div class="stat-fill" id="swap-bar" style="width: 0%"></div></div>
+            <span class="stat-sub" id="swap-detail">--</span>
+          </div>
+          <div class="stat">
+            <span class="stat-label">Disk</span>
+            <span class="stat-value" id="disk">--%</span>
+            <div class="stat-bar"><div class="stat-fill" id="disk-bar" style="width: 0%"></div></div>
+            <span class="stat-sub" id="disk-detail">--</span>
+          </div>
+          <div class="stat">
+            <span class="stat-label">Disk I/O</span>
+            <span class="stat-value" id="disk-io">--</span>
+            <span class="stat-sub" id="disk-io-total">--</span>
+          </div>
+          <div class="stat">
+            <span class="stat-label">Network</span>
+            <span class="stat-value" id="network">--</span>
+            <span class="stat-sub" id="net-total">--</span>
+          </div>
+          <div class="stat">
+            <span class="stat-label">Uptime</span>
+            <span class="stat-value" id="uptime">--</span>
+            <span class="stat-sub" id="boot-time">--</span>
+          </div>
+          <div class="stat">
+            <span class="stat-label">Temps</span>
+            <span class="stat-value" id="temps">--</span>
+            <span class="stat-sub">PCH/VRM/NVMe</span>
+          </div>
+        </div>
       </div>
     </div>
+  </div>
 
+  <div class="gpu-section">
+    <div class="gpu-header">
+      <span class="gpu-title">GPU</span>
+      <span class="gpu-name" id="gpu-name">--</span>
+    </div>
+    <div class="gpu-sparklines">
+      <div class="sparkline-container">
+        <div class="sparkline-header">
+          <span class="sparkline-label">Util</span>
+          <span class="sparkline-value" id="gpu-util">--%</span>
+        </div>
+        <div class="sparkline"><canvas id="spark-gpu-util"></canvas></div>
+      </div>
+      <div class="sparkline-container">
+        <div class="sparkline-header">
+          <span class="sparkline-label">Temp</span>
+          <span class="sparkline-value" id="gpu-temp">--°C</span>
+        </div>
+        <div class="sparkline"><canvas id="spark-gpu-temp"></canvas></div>
+      </div>
+      <div class="sparkline-container">
+        <div class="sparkline-header">
+          <span class="sparkline-label">Power</span>
+          <span class="sparkline-value" id="gpu-power">--W</span>
+        </div>
+        <div class="sparkline"><canvas id="spark-gpu-power"></canvas></div>
+      </div>
+      <div class="sparkline-container">
+        <div class="sparkline-header">
+          <span class="sparkline-label">Fan</span>
+          <span class="sparkline-value" id="gpu-fan">--%</span>
+        </div>
+        <div class="sparkline"><canvas id="spark-gpu-fan"></canvas></div>
+      </div>
+      <div class="sparkline-container">
+        <div class="sparkline-header">
+          <span class="sparkline-label">VRAM</span>
+          <span class="sparkline-value" id="gpu-vram">--</span>
+        </div>
+        <div class="sparkline"><canvas id="spark-gpu-vram"></canvas></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="bottom-section">
     <div class="docker-section">
       <div class="docker-header">
         <span class="docker-title">Docker</span>
@@ -569,6 +748,11 @@
         </span>
       </div>
       <div class="docker-containers" id="docker-containers"></div>
+    </div>
+
+    <div class="processes-section">
+      <div class="processes-title">Top Processes</div>
+      <div id="processes-table"></div>
     </div>
   </div>
 
@@ -674,7 +858,10 @@
 
     // Sparkline history (loaded from API, 360 data points = 30 minutes)
     const HISTORY_SIZE = 360;
-    let history = { cpu: [], mem: [], netDown: [], netUp: [], cpuTemp: [], gpuTemp: [], diskIO: [] };
+    let history = {
+      cpu: [], mem: [], netDown: [], netUp: [], cpuTemp: [], diskIO: [],
+      gpuUtil: [], gpuTemp: [], gpuPower: [], gpuFan: [], gpuVram: []
+    };
 
     // Load history from API
     async function loadServerHistory() {
@@ -692,6 +879,7 @@
 
     // Draw all sparklines with current history
     function drawAllSparklines() {
+      // System sparklines
       drawSparkline('spark-cpu', history.cpu, 100, '#00ff41');
       drawSparkline('spark-mem', history.mem, 100, '#00ff41');
       const netMax = Math.max(100, ...history.netDown, ...history.netUp);
@@ -700,6 +888,14 @@
       drawSparkline('spark-cputemp', history.cpuTemp, 100, '#00ff41');
       const diskMax = Math.max(100, ...history.diskIO);
       drawSparkline('spark-diskio', history.diskIO, diskMax, '#00ff41');
+
+      // GPU sparklines
+      drawSparkline('spark-gpu-util', history.gpuUtil, 100, '#00ff41');
+      drawSparkline('spark-gpu-temp', history.gpuTemp, 100, '#00ff41');
+      const powerMax = Math.max(100, ...history.gpuPower);
+      drawSparkline('spark-gpu-power', history.gpuPower, powerMax, '#00ff41');
+      drawSparkline('spark-gpu-fan', history.gpuFan, 100, '#00ff41');
+      drawSparkline('spark-gpu-vram', history.gpuVram, 100, '#00ff41');
     }
 
     // Load history on page load (deferred until drawSparkline is defined)
@@ -803,43 +999,121 @@
       return '0';
     }
 
+    // Format bytes to human readable (for cumulative totals)
+    function formatBytes(bytes) {
+      if (bytes >= 1024 * 1024 * 1024) return `${(bytes / (1024 * 1024 * 1024)).toFixed(1)}GB`;
+      if (bytes >= 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(0)}MB`;
+      if (bytes >= 1024) return `${(bytes / 1024).toFixed(0)}KB`;
+      return `${bytes}B`;
+    }
+
+    // Simplify Docker image name (remove vendor prefix)
+    function simplifyImageName(image) {
+      // Remove vendor prefix like "axllent/" or "library/"
+      const parts = image.split('/');
+      return parts.length > 1 ? parts[parts.length - 1] : image;
+    }
+
+    // Parse Docker ports to get only published host ports
+    function parsePublishedPorts(portsStr) {
+      if (!portsStr) return [];
+      const ports = [];
+      const seen = new Set();
+      // Split by comma and space
+      const parts = portsStr.split(/,\s*/);
+      for (const part of parts) {
+        // Skip IPv6 duplicates and non-published ports
+        if (part.startsWith('[::]:') || !part.includes('->')) continue;
+        // Extract host:container mapping
+        const match = part.match(/(?:\d+\.\d+\.\d+\.\d+:)?(\d+)->(\d+)\/(\w+)/);
+        if (match) {
+          const hostPort = parseInt(match[1]);
+          if (!seen.has(hostPort)) {
+            seen.add(hostPort);
+            ports.push({ host: hostPort, container: parseInt(match[2]), proto: match[3] });
+          }
+        }
+      }
+      return ports;
+    }
+
     // Transform API response to display format
     function transformApiResponse(api) {
       const disk = api.disks?.[0] || {};
       const diskRead = api.disk_io?.read_mb_s || 0;
       const diskWrite = api.disk_io?.write_mb_s || 0;
+      const loadAvg = api.cpu?.load_avg || [0, 0, 0];
+
       return {
+        // CPU
         cpu: Math.round(api.cpu?.util_pct || 0),
+        coreUsage: api.cpu?.per_core_pct?.map(Math.round) || [],
+        numCores: api.cpu?.count || 0,
+        numCoresPhysical: api.cpu?.count_physical || 0,
+        loadAvg: loadAvg.map(l => l.toFixed(2)).join(' / '),
+        cpuTemp: api.temps?.cpu_c || 0,
+
+        // Memory
         mem: Math.round(api.mem?.util_pct || 0),
-        memUsed: `${Math.round((api.mem?.used_mb || 0) / 1024)}GB`,
-        memTotal: `${Math.round((api.mem?.total_mb || 0) / 1024)}GB`,
+        memUsed: Math.round((api.mem?.used_mb || 0) / 1024),
+        memTotal: Math.round((api.mem?.total_mb || 0) / 1024),
+        memAvailable: Math.round((api.mem?.available_mb || 0) / 1024),
+        memCached: Math.round((api.mem?.cached_mb || 0) / 1024),
+
+        // Swap
+        swap: Math.round(api.swap?.util_pct || 0),
+        swapUsed: Math.round((api.swap?.used_mb || 0) / 1024),
+        swapTotal: Math.round((api.swap?.total_mb || 0) / 1024),
+
+        // Disk
         disk: Math.round(disk.util_pct || 0),
-        diskUsed: `${Math.round(disk.used_gb || 0)}GB`,
-        diskTotal: `${Math.round(disk.total_gb || 0)}GB`,
-        uptime: api.system?.uptime || '--',
-        gpuUtil: api.gpu?.util_gpu_pct || 0,
-        gpuTemp: api.gpu?.temp_c || 0,
-        gpuMemUsed: `${((api.gpu?.vram_used_mb || 0) / 1024).toFixed(1)}GB`,
-        gpuMemTotal: `${Math.round((api.gpu?.vram_total_mb || 0) / 1024)}GB`,
+        diskUsed: Math.round(disk.used_gb || 0),
+        diskTotal: Math.round(disk.total_gb || 0),
+        diskRead: diskRead >= 1 ? `${diskRead.toFixed(1)}MB` : diskRead > 0 ? `${Math.round(diskRead * 1024)}KB` : '0',
+        diskWrite: diskWrite >= 1 ? `${diskWrite.toFixed(1)}MB` : diskWrite > 0 ? `${Math.round(diskWrite * 1024)}KB` : '0',
+        diskReadTotal: api.disk_io?.read_bytes_total || 0,
+        diskWriteTotal: api.disk_io?.write_bytes_total || 0,
+
+        // Network
         netDown: formatRate(api.net?.down_kb_s || 0),
         netUp: formatRate(api.net?.up_kb_s || 0),
-        cpuTemp: api.temps?.cpu_c || 0,
+        netSentTotal: api.net?.bytes_sent_total || 0,
+        netRecvTotal: api.net?.bytes_recv_total || 0,
+
+        // GPU
+        gpuName: api.gpu?.name || '--',
+        gpuUtil: api.gpu?.util_gpu_pct || 0,
+        gpuTemp: api.gpu?.temp_c || 0,
+        gpuPower: api.gpu?.power_w || 0,
+        gpuFan: api.gpu?.fan_pct || 0,
+        gpuVramUsed: api.gpu?.vram_used_mb || 0,
+        gpuVramTotal: api.gpu?.vram_total_mb || 0,
+
+        // Temps
         pchTemp: api.temps?.pch_c || 0,
         vrmTemp: api.temps?.vrm_c || 0,
         nvmeTemp: api.temps?.nvme_c || 0,
+
+        // System
         hostname: api.system?.hostname || '--',
         kernel: api.system?.kernel || '--',
         distro: api.system?.distro || '--',
-        loadAvg: api.cpu?.load_avg?.[0]?.toFixed(2) || '--',
+        uptime: api.system?.uptime || '--',
+        bootTime: api.system?.boot_time || '--',
         procCount: api.system?.proc_count || '--',
-        coreUsage: api.cpu?.per_core_pct?.map(Math.round) || [],
-        numCores: api.cpu?.count || 0,
-        diskRead: diskRead >= 1 ? `${diskRead.toFixed(1)}MB` : diskRead > 0 ? `${Math.round(diskRead * 1024)}KB` : '0',
-        diskWrite: diskWrite >= 1 ? `${diskWrite.toFixed(1)}MB` : diskWrite > 0 ? `${Math.round(diskWrite * 1024)}KB` : '0',
+
+        // Processes
+        processes: api.processes || [],
+
+        // Docker
         dockerRunning: api.docker?.running || 0,
         dockerStopped: api.docker?.stopped || 0,
         dockerImages: api.docker?.images || 0,
-        dockerContainers: api.docker?.containers || [],
+        dockerContainers: (api.docker?.containers || []).map(c => ({
+          ...c,
+          image: simplifyImageName(c.image),
+          publishedPorts: parsePublishedPorts(c.ports),
+        })),
       };
     }
 
@@ -879,19 +1153,87 @@
       document.getElementById('spark-netup-val').textContent = stats.netUp || '--';
       document.getElementById('spark-cputemp-val').textContent = (stats.cpuTemp || '--') + '°C';
 
-      // Update main stats
+      // Update sysinfo header
+      document.getElementById('hostname').textContent = stats.hostname || '--';
+      document.getElementById('distro').textContent = stats.distro || '--';
+      document.getElementById('kernel').textContent = stats.kernel || '--';
+      document.getElementById('cpu-cores').textContent = `${stats.numCoresPhysical}c/${stats.numCores}t`;
+      document.getElementById('load-avg').textContent = stats.loadAvg || '--';
+      document.getElementById('proc-count').textContent = stats.procCount || '--';
+
+      // GPU section
+      document.getElementById('gpu-name').textContent = stats.gpuName || '--';
+      document.getElementById('gpu-util').textContent = stats.gpuUtil + '%';
+      document.getElementById('gpu-temp').textContent = stats.gpuTemp + '°C';
+      document.getElementById('gpu-power').textContent = stats.gpuPower + 'W';
+      document.getElementById('gpu-fan').textContent = stats.gpuFan + '%';
+      document.getElementById('gpu-vram').textContent = `${(stats.gpuVramUsed / 1024).toFixed(1)}/${Math.round(stats.gpuVramTotal / 1024)}GB`;
+
+      // Main stats
       document.getElementById('cpu').textContent = stats.cpu + '%';
       document.getElementById('cpu-bar').style.width = stats.cpu + '%';
-      document.getElementById('mem').textContent = stats.memUsed + '/' + stats.memTotal;
+      document.getElementById('cpu-temp').textContent = (stats.cpuTemp || '--') + '°C';
+
+      document.getElementById('mem').textContent = stats.mem + '%';
       document.getElementById('mem-bar').style.width = stats.mem + '%';
-      document.getElementById('disk').textContent = stats.diskUsed + '/' + stats.diskTotal;
+      document.getElementById('mem-detail').textContent = `${stats.memUsed}/${stats.memTotal}GB (${stats.memCached}GB cached)`;
+
+      document.getElementById('swap').textContent = stats.swap + '%';
+      document.getElementById('swap-bar').style.width = stats.swap + '%';
+      document.getElementById('swap-detail').textContent = `${stats.swapUsed}/${stats.swapTotal}GB`;
+
+      document.getElementById('disk').textContent = stats.disk + '%';
       document.getElementById('disk-bar').style.width = stats.disk + '%';
-      // Disk I/O - show 0 instead of 0B
+      document.getElementById('disk-detail').textContent = `${stats.diskUsed}/${stats.diskTotal}GB`;
+
+      // Disk I/O with cumulative totals
       const diskRead = stats.diskRead === '0B' || stats.diskRead === '--' ? '0' : stats.diskRead;
       const diskWrite = stats.diskWrite === '0B' || stats.diskWrite === '--' ? '0' : stats.diskWrite;
       document.getElementById('disk-io').textContent = '↓' + diskRead + ' ↑' + diskWrite;
       document.getElementById('spark-diskio-val').textContent = diskRead + '/' + diskWrite;
+      document.getElementById('disk-io-total').textContent = `Total: R ${formatBytes(stats.diskReadTotal)} W ${formatBytes(stats.diskWriteTotal)}`;
+
+      // Network with cumulative totals
       document.getElementById('network').textContent = '↓' + (stats.netDown || '--') + ' ↑' + (stats.netUp || '--');
+      document.getElementById('net-total').textContent = `Total: ↓${formatBytes(stats.netRecvTotal)} ↑${formatBytes(stats.netSentTotal)}`;
+
+      document.getElementById('uptime').textContent = stats.uptime;
+      document.getElementById('boot-time').textContent = 'since ' + (stats.bootTime || '--');
+
+      // Combined temps
+      document.getElementById('temps').textContent = `${Math.round(stats.pchTemp)}/${Math.round(stats.vrmTemp)}/${Math.round(stats.nvmeTemp)}°C`;
+
+      // Processes table
+      const processesEl = document.getElementById('processes-table');
+      if (stats.processes && stats.processes.length > 0) {
+        const top15 = stats.processes.slice(0, 15);
+        processesEl.innerHTML = `
+          <table class="processes-table">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>User</th>
+                <th class="right">CPU%</th>
+                <th class="right">MEM</th>
+                <th class="right">Time</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${top15.map(p => `
+                <tr>
+                  <td class="proc-name" title="${p.name}">${p.name}</td>
+                  <td class="proc-user">${p.user || '--'}</td>
+                  <td class="right">${(p.cpu_pct || 0).toFixed(1)}</td>
+                  <td class="right">${p.rss_mb || 0}MB</td>
+                  <td class="right proc-elapsed">${p.elapsed || '--'}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>`;
+      } else {
+        processesEl.innerHTML = '<div class="docker-empty">No processes</div>';
+      }
+
       // Docker section
       document.getElementById('docker-running').textContent = stats.dockerRunning || 0;
       document.getElementById('docker-stopped').textContent = stats.dockerStopped || 0;
@@ -913,7 +1255,6 @@
             <thead>
               <tr>
                 <th>Name</th>
-                <th>ID</th>
                 <th>Image</th>
                 <th>Status</th>
                 <th>Ports</th>
@@ -922,16 +1263,19 @@
             <tbody>
               ${stats.dockerContainers.map(c => {
                 const { project, service } = parseContainerName(c.name);
+                const portsHtml = c.publishedPorts.length > 0
+                  ? c.publishedPorts.map(p => `<span class="port-chip">${p.host}</span>`).join('')
+                  : '<span style="color:#00551a">-</span>';
+                const status = c.status.replace(/\s*\(healthy\)/gi, '');
                 return `
                 <tr>
                   <td class="container-name">
                     ${project ? `<span class="container-project">${project}</span>` : ''}
                     <span class="container-service">${service}</span>
                   </td>
-                  <td>${c.id}</td>
                   <td>${c.image}</td>
-                  <td class="container-status">${c.status}</td>
-                  <td class="container-ports">${c.ports}</td>
+                  <td class="container-status">${status}</td>
+                  <td class="container-ports">${portsHtml}</td>
                 </tr>`;
               }).join('')}
             </tbody>
@@ -939,17 +1283,6 @@
       } else {
         dockerContainersEl.innerHTML = '<div class="docker-empty">No containers running</div>';
       }
-      document.getElementById('pch-temp').textContent = (stats.pchTemp || '--') + '°C';
-      document.getElementById('vrm-temp').textContent = (stats.vrmTemp || '--') + '°C';
-      document.getElementById('nvme-temp').textContent = (stats.nvmeTemp || '--') + '°C';
-      document.getElementById('uptime').textContent = stats.uptime;
-
-      // Update sysinfo
-      document.getElementById('hostname').textContent = stats.hostname || '--';
-      document.getElementById('distro').textContent = stats.distro || '--';
-      document.getElementById('kernel').textContent = stats.kernel || '--';
-      document.getElementById('load-avg').textContent = stats.loadAvg || '--';
-      document.getElementById('proc-count').textContent = stats.procCount || '--';
     }
 
     // Load cached stats immediately for instant display

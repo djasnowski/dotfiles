@@ -39,8 +39,13 @@ _history = {
     "netDown": deque(maxlen=HISTORY_SIZE),
     "netUp": deque(maxlen=HISTORY_SIZE),
     "cpuTemp": deque(maxlen=HISTORY_SIZE),
-    "gpuTemp": deque(maxlen=HISTORY_SIZE),
     "diskIO": deque(maxlen=HISTORY_SIZE),
+    # GPU metrics
+    "gpuUtil": deque(maxlen=HISTORY_SIZE),
+    "gpuTemp": deque(maxlen=HISTORY_SIZE),
+    "gpuPower": deque(maxlen=HISTORY_SIZE),
+    "gpuFan": deque(maxlen=HISTORY_SIZE),
+    "gpuVram": deque(maxlen=HISTORY_SIZE),
 }
 _history_lock = threading.Lock()
 
@@ -72,7 +77,7 @@ def get_system_info():
 
 
 def get_uptime():
-    """Get system uptime as human-readable string"""
+    """Get system uptime as human-readable string and boot time"""
     boot_time = psutil.boot_time()
     uptime_secs = time.time() - boot_time
 
@@ -88,7 +93,12 @@ def get_uptime():
     if minutes > 0 or not parts:
         parts.append(f"{minutes}m")
 
-    return " ".join(parts)
+    # Format boot time as readable date
+    from datetime import datetime
+    boot_dt = datetime.fromtimestamp(boot_time)
+    boot_str = boot_dt.strftime("%b %d, %H:%M")
+
+    return " ".join(parts), boot_str
 
 
 def get_process_count():
@@ -205,18 +215,38 @@ def get_gpu_processes():
         return []
 
 
+def format_elapsed(secs):
+    """Format elapsed seconds as friendly string"""
+    if secs < 60:
+        return f"{int(secs)}s"
+    elif secs < 3600:
+        return f"{int(secs // 60)}m"
+    elif secs < 86400:
+        hours = int(secs // 3600)
+        mins = int((secs % 3600) // 60)
+        return f"{hours}h {mins}m" if mins else f"{hours}h"
+    else:
+        days = int(secs // 86400)
+        hours = int((secs % 86400) // 3600)
+        return f"{days}d {hours}h" if hours else f"{days}d"
+
+
 def get_top_processes(limit=30, sort_by="cpu"):
     procs = []
+    now = time.time()
     for p in psutil.process_iter(["pid", "username", "name", "cpu_percent", "memory_info", "create_time"]):
         try:
             info = p.info
             rss = info["memory_info"].rss if info.get("memory_info") else 0
+            create_time = info.get("create_time", now)
+            elapsed_secs = now - create_time
             procs.append({
                 "pid": info["pid"],
                 "user": info.get("username"),
                 "name": info.get("name"),
                 "cpu_pct": info.get("cpu_percent", 0.0),
                 "rss_mb": int(rss / (1024 * 1024)),
+                "elapsed": format_elapsed(elapsed_secs),
             })
         except (psutil.NoSuchProcess, psutil.AccessDenied):
             pass
@@ -395,7 +425,8 @@ def format_bytes_rate(kb_s):
         return "0"
 
 
-def record_history(cpu_pct, mem_pct, net_down_kb, net_up_kb, cpu_temp, gpu_temp, disk_io_kb):
+def record_history(cpu_pct, mem_pct, net_down_kb, net_up_kb, cpu_temp, disk_io_kb,
+                   gpu_util=0, gpu_temp=0, gpu_power=0, gpu_fan=0, gpu_vram_pct=0):
     """Record a history sample for sparklines"""
     with _history_lock:
         _history["cpu"].append(cpu_pct)
@@ -403,8 +434,13 @@ def record_history(cpu_pct, mem_pct, net_down_kb, net_up_kb, cpu_temp, gpu_temp,
         _history["netDown"].append(net_down_kb)
         _history["netUp"].append(net_up_kb)
         _history["cpuTemp"].append(cpu_temp or 0)
-        _history["gpuTemp"].append(gpu_temp or 0)
         _history["diskIO"].append(disk_io_kb)
+        # GPU metrics
+        _history["gpuUtil"].append(gpu_util or 0)
+        _history["gpuTemp"].append(gpu_temp or 0)
+        _history["gpuPower"].append(gpu_power or 0)
+        _history["gpuFan"].append(gpu_fan or 0)
+        _history["gpuVram"].append(gpu_vram_pct or 0)
 
 
 def get_history_snapshot():
@@ -416,8 +452,13 @@ def get_history_snapshot():
             "netDown": list(_history["netDown"]),
             "netUp": list(_history["netUp"]),
             "cpuTemp": list(_history["cpuTemp"]),
-            "gpuTemp": list(_history["gpuTemp"]),
             "diskIO": list(_history["diskIO"]),
+            # GPU metrics
+            "gpuUtil": list(_history["gpuUtil"]),
+            "gpuTemp": list(_history["gpuTemp"]),
+            "gpuPower": list(_history["gpuPower"]),
+            "gpuFan": list(_history["gpuFan"]),
+            "gpuVram": list(_history["gpuVram"]),
         }
 
 
@@ -434,16 +475,22 @@ def snapshot():
     mem_pct = vm.percent
 
     # Record history
-    gpu_temp = gpu.get("temp_c") if isinstance(gpu, dict) else None
     disk_io_kb = int((disk_io.get("read_mb_s", 0) + disk_io.get("write_mb_s", 0)) * 1024)
+    gpu_vram_pct = 0
+    if isinstance(gpu, dict) and gpu.get("vram_total_mb"):
+        gpu_vram_pct = round(gpu.get("vram_used_mb", 0) / gpu["vram_total_mb"] * 100, 1)
     record_history(
         cpu_pct=cpu_pct,
         mem_pct=mem_pct,
         net_down_kb=net["down_kb_s"],
         net_up_kb=net["up_kb_s"],
         cpu_temp=temps["cpu_temp_c"],
-        gpu_temp=gpu_temp,
         disk_io_kb=disk_io_kb,
+        gpu_util=gpu.get("util_gpu_pct", 0) if isinstance(gpu, dict) else 0,
+        gpu_temp=gpu.get("temp_c", 0) if isinstance(gpu, dict) else 0,
+        gpu_power=gpu.get("power_w", 0) if isinstance(gpu, dict) else 0,
+        gpu_fan=gpu.get("fan_pct", 0) if isinstance(gpu, dict) else 0,
+        gpu_vram_pct=gpu_vram_pct,
     )
 
     return {
@@ -451,7 +498,8 @@ def snapshot():
             "hostname": sys_info["hostname"],
             "distro": sys_info["distro"],
             "kernel": sys_info["kernel"],
-            "uptime": get_uptime(),
+            "uptime": get_uptime()[0],
+            "boot_time": get_uptime()[1],
             "proc_count": get_process_count(),
         },
         "cpu": {
