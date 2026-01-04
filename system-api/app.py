@@ -657,3 +657,17 @@ async def app_abstracts(mode: str = Query("local", regex="^(local|prod)$")):
         return {"error": "timeout", "abstracts": []}
     except Exception as e:
         return {"error": str(e), "abstracts": []}
+
+
+@app.get("/api/v1/search-agent-health")
+async def search_agent_health(mode: str = Query("local", regex="^(local|prod)$")):
+    """Proxy to Search Agent health endpoint"""
+    base_url = "http://search-agent.titletrackr.com:8080" if mode == "prod" else "http://localhost:3001"
+    try:
+        async with httpx.AsyncClient(timeout=5.0) as client:
+            resp = await client.get(f"{base_url}/health")
+            return resp.json()
+    except httpx.TimeoutException:
+        return {"error": "timeout", "status": "unknown"}
+    except Exception as e:
+        return {"error": str(e), "status": "unknown"}

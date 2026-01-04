@@ -462,6 +462,36 @@
       font-size: 0.9rem;
     }
 
+    /* Search Agent Details (under job queue) */
+    .search-agent-details {
+      margin-top: 1rem;
+      font-size: 0.85rem;
+    }
+    .search-agent-row {
+      display: flex;
+      gap: 1rem;
+      padding: 0.15rem 0;
+    }
+    .search-agent-label {
+      color: #00551a;
+      width: 60px;
+      flex-shrink: 0;
+    }
+    .search-agent-value {
+      color: #00ff41;
+    }
+    .search-agent-job {
+      margin-top: 0.5rem;
+      padding: 0.4rem 0.5rem;
+      border: 1px solid #ffaa0033;
+      background: rgba(255, 170, 0, 0.05);
+    }
+    .search-agent-job-title {
+      color: #ffaa00;
+      font-weight: bold;
+      margin-bottom: 0.2rem;
+    }
+
     /* Services Section */
     .services-section {
     }
@@ -1061,25 +1091,27 @@
             <span class="stat-sub" id="mem-detail">--</span>
           </div>
           <div class="stat">
+            <span class="stat-label">Swap</span>
+            <span class="stat-value" id="swap">--%</span>
+            <span class="stat-sub" id="swap-detail">--</span>
+          </div>
+          <div class="stat">
             <span class="stat-label">Disk</span>
             <span class="stat-value" id="disk">--%</span>
             <div class="stat-bar"><div class="stat-fill" id="disk-bar" style="width: 0%"></div></div>
             <span class="stat-sub" id="disk-detail">--</span>
           </div>
           <div class="stat">
-            <span class="stat-label">Swap</span>
-            <span class="stat-value" id="swap">--%</span>
-            <span class="stat-sub" id="swap-detail">--</span>
-          </div>
-          <div class="stat">
             <span class="stat-label">Disk I/O</span>
             <span class="stat-value" id="disk-io">--</span>
             <span class="stat-sub" id="disk-io-total">--</span>
+            <span class="stat-sub" id="disk-io-total2">--</span>
           </div>
           <div class="stat">
             <span class="stat-label">Network</span>
             <span class="stat-value" id="network">--</span>
             <span class="stat-sub" id="net-total">--</span>
+            <span class="stat-sub" id="net-total2">--</span>
           </div>
           <div class="stat">
             <span class="stat-label">Uptime</span>
@@ -1291,6 +1323,7 @@
         healthLoaded = false;
         checkHealth();
         fetchAbstracts();
+        fetchSearchAgent();
         renderBookmarks();
         return;
       }
@@ -1300,6 +1333,7 @@
         healthLoaded = false;
         checkHealth();
         fetchAbstracts();
+        fetchSearchAgent();
         renderBookmarks();
         return;
       }
@@ -1483,6 +1517,7 @@
 
     // Format bytes to human readable (for cumulative totals)
     function formatBytes(bytes) {
+      if (bytes >= 1024 * 1024 * 1024 * 1024) return `${(bytes / (1024 * 1024 * 1024 * 1024)).toFixed(1)}TB`;
       if (bytes >= 1024 * 1024 * 1024) return `${(bytes / (1024 * 1024 * 1024)).toFixed(1)}GB`;
       if (bytes >= 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(0)}MB`;
       if (bytes >= 1024) return `${(bytes / 1024).toFixed(0)}KB`;
@@ -1683,18 +1718,20 @@
 
       document.getElementById('disk').textContent = stats.disk + '%';
       document.getElementById('disk-bar').style.width = stats.disk + '%';
-      document.getElementById('disk-detail').textContent = `${stats.diskFree}GB free (${stats.diskDevice})`;
+      document.getElementById('disk-detail').textContent = `${stats.diskFree}GB free`;
 
-      // Disk I/O with cumulative totals
+      // Disk I/O with cumulative totals (split across two lines)
       const diskRead = stats.diskRead === '0B' || stats.diskRead === '--' ? '0' : stats.diskRead;
       const diskWrite = stats.diskWrite === '0B' || stats.diskWrite === '--' ? '0' : stats.diskWrite;
       document.getElementById('disk-io').textContent = '↓' + diskRead + ' ↑' + diskWrite;
       document.getElementById('spark-diskio-val').textContent = diskRead + '/' + diskWrite;
-      document.getElementById('disk-io-total').textContent = `Total: R ${formatBytes(stats.diskReadTotal)} W ${formatBytes(stats.diskWriteTotal)}`;
+      document.getElementById('disk-io-total').textContent = `R ${formatBytes(stats.diskReadTotal)}`;
+      document.getElementById('disk-io-total2').textContent = `W ${formatBytes(stats.diskWriteTotal)}`;
 
-      // Network with cumulative totals
+      // Network with cumulative totals (split across two lines)
       document.getElementById('network').textContent = '↓' + (stats.netDown || '--') + ' ↑' + (stats.netUp || '--');
-      document.getElementById('net-total').textContent = `Total: ↓${formatBytes(stats.netRecvTotal)} ↑${formatBytes(stats.netSentTotal)}`;
+      document.getElementById('net-total').textContent = `↓${formatBytes(stats.netRecvTotal)}`;
+      document.getElementById('net-total2').textContent = `↑${formatBytes(stats.netSentTotal)}`;
 
       document.getElementById('uptime').textContent = stats.uptime;
       document.getElementById('boot-time').textContent = 'since ' + (stats.bootTime || '--');
@@ -1709,7 +1746,7 @@
       // Processes table
       const processesEl = document.getElementById('processes-table');
       if (stats.processes && stats.processes.length > 0) {
-        const top15 = stats.processes.slice(0, 15);
+        const top15 = stats.processes.slice(0, 12);
         processesEl.innerHTML = `
           <table class="processes-table">
             <thead>
@@ -1906,6 +1943,8 @@
 
         html += `</div></div>`;
       }
+      // Search Agent details under job queue
+      html += '<div class="search-agent-details" id="search-agent-content"></div>';
       html += '</div>';
 
       // RIGHT: Health status chips
@@ -1953,7 +1992,18 @@
           </div>
         `;
       }
-      html += '</div></div>';
+      // Search Agent chip (updated by fetchSearchAgent)
+      html += `
+        <div class="health-chip" id="search-agent-chip">
+          <span class="health-chip-name">Search Agent</span>
+          <span class="health-chip-right">
+            <span class="health-chip-latency" id="search-agent-info">--</span>
+            <span class="health-chip-indicator" id="search-agent-indicator"></span>
+          </span>
+        </div>
+      `;
+      html += '</div>';
+      html += '</div>';
       html += '</div>';
 
       listEl.innerHTML = html;
@@ -1966,6 +2016,9 @@
           drawQueueSparkline(canvas, history);
         }
       }
+
+      // Now that search-agent-content div exists, fetch search agent data
+      fetchSearchAgent();
     }
 
     function drawQueueSparkline(canvas, data) {
@@ -2002,6 +2055,93 @@
       }
     }
 
+    // Search Agent health
+    async function fetchSearchAgent() {
+      const chipEl = document.getElementById('search-agent-chip');
+      const infoEl = document.getElementById('search-agent-info');
+      const indicatorEl = document.getElementById('search-agent-indicator');
+      const contentEl = document.getElementById('search-agent-content');
+
+      try {
+        const res = await fetch(`${API_BASE}/api/v1/search-agent-health?mode=${servicesMode}`);
+        const data = await res.json();
+
+        if (data.error) {
+          if (chipEl) {
+            chipEl.className = 'health-chip down';
+            infoEl.textContent = 'error';
+            indicatorEl.className = 'health-chip-indicator down';
+          }
+          if (contentEl) {
+            contentEl.innerHTML = `<span style="color:#ff4141">${data.error}</span>`;
+          }
+          return;
+        }
+
+        const worker = data.worker || {};
+        const workerStatus = worker.status || 'unknown';
+        const isProcessing = workerStatus === 'processing';
+        const statusClass = isProcessing ? 'warning' : '';
+
+        // Update chip
+        if (chipEl) {
+          chipEl.className = 'health-chip ' + statusClass;
+          indicatorEl.className = 'health-chip-indicator ' + statusClass;
+          if (isProcessing && data.current_job) {
+            infoEl.textContent = data.current_job.name || 'working...';
+          } else {
+            infoEl.textContent = workerStatus;
+          }
+        }
+
+        // Update content section
+        if (contentEl) {
+          let html = `
+            <div class="search-agent-row">
+              <span class="search-agent-label">Status</span>
+              <span class="search-agent-value" style="color: ${isProcessing ? '#ffaa00' : '#00ff41'}">${workerStatus}</span>
+            </div>
+            <div class="search-agent-row">
+              <span class="search-agent-label">Uptime</span>
+              <span class="search-agent-value">${worker.uptime_human || '--'}</span>
+            </div>
+            <div class="search-agent-row">
+              <span class="search-agent-label">Jobs</span>
+              <span class="search-agent-value">${worker.jobs_completed || 0} done / ${worker.jobs_failed || 0} failed</span>
+            </div>
+          `;
+
+          if (data.current_job) {
+            const job = data.current_job;
+            html += `
+              <div class="search-agent-job">
+                <div class="search-agent-job-title">▶ ${job.name || 'Unknown'}</div>
+                <div class="search-agent-row">
+                  <span class="search-agent-label">County</span>
+                  <span class="search-agent-value">${job.county || '--'}</span>
+                </div>
+                <div class="search-agent-row">
+                  <span class="search-agent-label">Running</span>
+                  <span class="search-agent-value">${job.running_for_seconds || 0}s</span>
+                </div>
+              </div>
+            `;
+          }
+
+          contentEl.innerHTML = html;
+        }
+      } catch (e) {
+        if (chipEl) {
+          chipEl.className = 'health-chip down';
+          infoEl.textContent = 'offline';
+          indicatorEl.className = 'health-chip-indicator down';
+        }
+        if (contentEl) {
+          contentEl.innerHTML = '<span style="color:#ff4141">Failed to connect</span>';
+        }
+      }
+    }
+
     // Abstracts fetching
     async function fetchAbstracts() {
       const listEl = document.getElementById('abstracts-list');
@@ -2020,12 +2160,6 @@
       } catch (e) {
         listEl.innerHTML = `<div class="abstract-item"><span class="abstract-location">Failed to load</span></div>`;
       }
-    }
-
-    function formatBytes(bytes) {
-      if (bytes < 1024) return bytes + ' B';
-      if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
-      return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
     }
 
     function renderAbstracts(abstracts) {
@@ -2054,6 +2188,7 @@
 
     checkHealth();
     fetchAbstracts();
+    // fetchSearchAgent is called after renderHealthChecks() completes
     setInterval(() => { checkHealth(); fetchAbstracts(); }, 30000); // Refresh every 30s
   </script>
 </body>
