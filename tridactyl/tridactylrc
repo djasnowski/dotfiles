@@ -99,6 +99,10 @@ bindurl reddit.com gu urlparent 4
 unbind --mode=ex <C-a>
 unbind --mode=ex <C-c>
 
+" Allow 1Password extension shortcuts
+unbind <C-.>
+unbind <C-S-x>
+
 "
 " Search engines
 "

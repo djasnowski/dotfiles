@@ -641,12 +641,17 @@
       // Clear timeout on new keypress
       if (keyTimeout) clearTimeout(keyTimeout);
 
-      // Build key sequence
-      keyBuffer += e.key;
-
-      // Highlight group when first key is 1-4
-      if (keyBuffer.length === 1 && /^[1-4]$/.test(keyBuffer)) {
-        highlightGroup(keyBuffer);
+      // If pressing a column number (1-4), switch highlight immediately
+      if (/^[1-4]$/.test(e.key)) {
+        keyBuffer = e.key;
+        highlightGroup(e.key);
+      } else if (keyBuffer.length === 1 && /^[1-4]$/.test(keyBuffer)) {
+        // Second key after a column number
+        keyBuffer += e.key;
+      } else {
+        // Reset buffer for any other key
+        keyBuffer = e.key;
+        clearHighlight();
       }
 
       // Check for match
@@ -657,21 +662,6 @@
         return;
       }
 
-      // If buffer is 2+ chars and no match, reset and try current key
-      if (keyBuffer.length >= 2) {
-        clearHighlight();
-        keyBuffer = e.key;
-        if (/^[1-4]$/.test(keyBuffer)) {
-          highlightGroup(keyBuffer);
-        }
-        if (keyMap[keyBuffer]) {
-          clearHighlight();
-          window.location.href = keyMap[keyBuffer];
-          keyBuffer = '';
-          return;
-        }
-      }
-
       // Clear buffer after 20s of no input
       keyTimeout = setTimeout(() => {
         keyBuffer = '';
@@ -679,14 +669,17 @@
       }, 20000);
     });
 
-    // Sparkline history (loaded from server, 360 data points = 30 minutes)
+    // API base URL
+    const API_BASE = 'http://127.0.0.1:61208';
+
+    // Sparkline history (loaded from API, 360 data points = 30 minutes)
     const HISTORY_SIZE = 360;
     let history = { cpu: [], mem: [], netDown: [], netUp: [], cpuTemp: [], gpuTemp: [], diskIO: [] };
 
-    // Load history from server file
+    // Load history from API
     async function loadServerHistory() {
       try {
-        const res = await fetch('stats_history.json?' + Date.now());
+        const res = await fetch(`${API_BASE}/api/v1/history`);
         const data = await res.json();
         if (data.cpu && Array.isArray(data.cpu)) {
           history = data;
@@ -803,11 +796,59 @@
       } catch (e) {}
     }
 
+    // Format bytes to human readable
+    function formatRate(kb) {
+      if (kb >= 1024) return `${(kb / 1024).toFixed(1)}MB`;
+      if (kb >= 1) return `${Math.round(kb)}KB`;
+      return '0';
+    }
+
+    // Transform API response to display format
+    function transformApiResponse(api) {
+      const disk = api.disks?.[0] || {};
+      const diskRead = api.disk_io?.read_mb_s || 0;
+      const diskWrite = api.disk_io?.write_mb_s || 0;
+      return {
+        cpu: Math.round(api.cpu?.util_pct || 0),
+        mem: Math.round(api.mem?.util_pct || 0),
+        memUsed: `${Math.round((api.mem?.used_mb || 0) / 1024)}GB`,
+        memTotal: `${Math.round((api.mem?.total_mb || 0) / 1024)}GB`,
+        disk: Math.round(disk.util_pct || 0),
+        diskUsed: `${Math.round(disk.used_gb || 0)}GB`,
+        diskTotal: `${Math.round(disk.total_gb || 0)}GB`,
+        uptime: api.system?.uptime || '--',
+        gpuUtil: api.gpu?.util_gpu_pct || 0,
+        gpuTemp: api.gpu?.temp_c || 0,
+        gpuMemUsed: `${((api.gpu?.vram_used_mb || 0) / 1024).toFixed(1)}GB`,
+        gpuMemTotal: `${Math.round((api.gpu?.vram_total_mb || 0) / 1024)}GB`,
+        netDown: formatRate(api.net?.down_kb_s || 0),
+        netUp: formatRate(api.net?.up_kb_s || 0),
+        cpuTemp: api.temps?.cpu_c || 0,
+        pchTemp: api.temps?.pch_c || 0,
+        vrmTemp: api.temps?.vrm_c || 0,
+        nvmeTemp: api.temps?.nvme_c || 0,
+        hostname: api.system?.hostname || '--',
+        kernel: api.system?.kernel || '--',
+        distro: api.system?.distro || '--',
+        loadAvg: api.cpu?.load_avg?.[0]?.toFixed(2) || '--',
+        procCount: api.system?.proc_count || '--',
+        coreUsage: api.cpu?.per_core_pct?.map(Math.round) || [],
+        numCores: api.cpu?.count || 0,
+        diskRead: diskRead >= 1 ? `${diskRead.toFixed(1)}MB` : diskRead > 0 ? `${Math.round(diskRead * 1024)}KB` : '0',
+        diskWrite: diskWrite >= 1 ? `${diskWrite.toFixed(1)}MB` : diskWrite > 0 ? `${Math.round(diskWrite * 1024)}KB` : '0',
+        dockerRunning: api.docker?.running || 0,
+        dockerStopped: api.docker?.stopped || 0,
+        dockerImages: api.docker?.images || 0,
+        dockerContainers: api.docker?.containers || [],
+      };
+    }
+
     // Fetch and update stats
     async function fetchStats() {
       try {
-        const res = await fetch('stats.json?' + Date.now());
-        const stats = await res.json();
+        const res = await fetch(`${API_BASE}/api/v1/snapshot`);
+        const apiData = await res.json();
+        const stats = transformApiResponse(apiData);
         cacheStats(stats);
 
         // Update cores
@@ -818,7 +859,7 @@
           updateCores(stats.coreUsage);
         }
 
-        // Reload history from server and draw sparklines
+        // Reload history from API and draw sparklines
         await loadServerHistory();
 
         // Update display

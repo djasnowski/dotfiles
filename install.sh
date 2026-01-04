@@ -107,7 +107,8 @@ install_packages() {
     info "Installing monitoring tools..."
     sudo apt install -y \
         lm-sensors \
-        python3 || true
+        python3 \
+        python3-pip || true
 }
 
 # Install additional dependencies (oh-my-zsh, plugins, etc.)
@@ -237,6 +238,7 @@ create_symlinks() {
     link_config "$DOTFILES_DIR/tridactyl" "$CONFIG_DIR/tridactyl"
     link_config "$DOTFILES_DIR/scripts" "$CONFIG_DIR/scripts"
     link_config "$DOTFILES_DIR/zscroll" "$CONFIG_DIR/zscroll"
+    link_config "$DOTFILES_DIR/system-api" "$CONFIG_DIR/system-api"
 
     # Local bin (zscroll for polybar spotify)
     info "Linking local bin scripts..."
@@ -280,28 +282,36 @@ create_symlinks() {
     fi
 }
 
-# Setup newtab services
-setup_newtab() {
-    section "Setting up newtab services"
+# Setup system-api and newtab services
+setup_services() {
+    section "Setting up system-api and newtab services"
+
+    # Install Python dependencies for system-api
+    info "Installing system-api Python dependencies..."
+    pip3 install --user -r "$DOTFILES_DIR/system-api/requirements.txt" || {
+        warn "pip install failed, trying with --break-system-packages"
+        pip3 install --user --break-system-packages -r "$DOTFILES_DIR/system-api/requirements.txt"
+    }
 
     local systemd_user_dir="$HOME/.config/systemd/user"
     mkdir -p "$systemd_user_dir"
 
     # Link service files
-    link_config "$DOTFILES_DIR/systemd/user/newtab-stats.service" "$systemd_user_dir/newtab-stats.service"
+    link_config "$DOTFILES_DIR/systemd/user/system-api.service" "$systemd_user_dir/system-api.service"
     link_config "$DOTFILES_DIR/systemd/user/newtab-server.service" "$systemd_user_dir/newtab-server.service"
 
     # Reload systemd user daemon
     systemctl --user daemon-reload
 
     # Enable and start services
-    info "Enabling newtab services..."
-    systemctl --user enable newtab-stats.service newtab-server.service
+    info "Enabling services..."
+    systemctl --user enable system-api.service newtab-server.service
 
-    info "Starting newtab services..."
-    systemctl --user start newtab-stats.service newtab-server.service
+    info "Starting services..."
+    systemctl --user start system-api.service newtab-server.service
 
-    info "Newtab services running at http://127.0.0.1:8384/"
+    info "System API running at http://127.0.0.1:61208/"
+    info "Newtab server running at http://127.0.0.1:8384/"
 }
 
 # Post-install setup
@@ -345,7 +355,7 @@ if [ "$INSTALL_ALL" = true ]; then
 fi
 
 create_symlinks
-setup_newtab
+setup_services
 
 if [ "$INSTALL_ALL" = true ]; then
     post_install

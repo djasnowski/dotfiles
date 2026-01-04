@@ -61,6 +61,13 @@ This is a complete desktop environment configuration optimized for:
 | Component | Purpose | Config Location |
 |-----------|---------|----------------|
 | **Tridactyl** | Firefox vim bindings | `tridactyl/tridactylrc` |
+| **Newtab Dashboard** | System stats dashboard | `tridactyl/newtab/` |
+
+### System Monitoring
+
+| Component | Purpose | Config Location |
+|-----------|---------|----------------|
+| **System API** | FastAPI server for system stats | `system-api/` |
 
 ### Custom Scripts
 
@@ -100,7 +107,9 @@ cd ~/dotfiles
 
 The script will:
 - Install apt packages, oh-my-zsh, zsh plugins, tpm, fnm, bun, pnpm
+- Install Python dependencies for system-api
 - Create symlinks and backup existing configs
+- Enable systemd user services (system-api, newtab-server)
 - Set zsh as default shell, install tmux plugins, reload i3/tmux
 
 **Note:** Reload Tridactyl in Firefox with `:source`
@@ -236,6 +245,44 @@ Extensive aliases for:
 - **Tab navigation**: J/K or gT/gt for prev/next
 - **Tab management**: d closes tab and moves left, D just closes
 - **Quickmarks**: g=GitHub, m=Gmail, y=YouTube, r=Reddit, h=HN, c=ChatGPT
+
+### Newtab Dashboard
+
+**Location**: `tridactyl/newtab/`
+
+A Matrix-themed system monitoring dashboard that replaces Firefox's new tab page:
+
+- **Real-time stats**: CPU, memory, disk, network, GPU, temperatures
+- **Per-core CPU bars**: Visual breakdown of all CPU cores
+- **Sparkline graphs**: 30-minute history for CPU, memory, network, disk I/O, temps
+- **Docker status**: Running containers with ports and status
+- **Keyboard navigation**: Quick bookmark access with number+letter shortcuts
+- **Served locally**: Python HTTP server on port 8384
+
+### System API
+
+**Location**: `system-api/`
+
+FastAPI server providing system metrics for the newtab dashboard:
+
+- **Endpoint**: `http://127.0.0.1:61208/api/v1/snapshot` - Full system snapshot
+- **Endpoint**: `http://127.0.0.1:61208/api/v1/history` - Sparkline history data
+- **Endpoint**: `http://127.0.0.1:61208/api/v1/top` - Process list (sortable by cpu/mem)
+
+Data collected:
+- CPU utilization (overall + per-core), load average
+- Memory and swap usage
+- Disk usage and I/O rates
+- Network bandwidth
+- GPU stats (NVIDIA): utilization, temperature, power, VRAM
+- Temperatures: CPU, PCH, VRM, NVMe
+- Docker containers
+- Top processes
+
+Install dependencies:
+```bash
+pip install -r system-api/requirements.txt
+```
 
 ## Keybindings
 

@@ -1,0 +1,13 @@
+[Unit]
+Description=System Stats API Server
+After=default.target
+
+[Service]
+Type=simple
+WorkingDirectory=%h/.config/system-api
+ExecStart=%h/.config/venv/bin/uvicorn app:app --host 127.0.0.1 --port 61208
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=default.target
