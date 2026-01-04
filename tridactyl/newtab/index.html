@@ -373,6 +373,31 @@
       color: #00551a;
       padding: 0.5rem 0;
     }
+    .gpu-processes {
+      margin-top: 0.75rem;
+      border-top: 1px solid #00ff4122;
+      padding-top: 0.5rem;
+    }
+    .gpu-processes-title {
+      font-size: 0.9rem;
+      color: #00551a;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-bottom: 0.25rem;
+    }
+    .gpu-proc-item {
+      display: flex;
+      justify-content: space-between;
+      padding: 0.2rem 0;
+      font-size: 0.95rem;
+    }
+    .gpu-proc-name {
+      color: #00ff41;
+      font-weight: bold;
+    }
+    .gpu-proc-mem {
+      color: #00772a;
+    }
     .port-chip {
       display: inline-block;
       padding: 0.1rem 0.4rem;
@@ -684,9 +709,14 @@
             <span class="stat-sub" id="boot-time">--</span>
           </div>
           <div class="stat">
-            <span class="stat-label">Temps</span>
+            <span class="stat-label">Temperatures</span>
             <span class="stat-value" id="temps">--</span>
             <span class="stat-sub">PCH/VRM/NVMe</span>
+          </div>
+          <div class="stat">
+            <span class="stat-label">Connections</span>
+            <span class="stat-value" id="conns">--</span>
+            <span class="stat-sub" id="conns-detail">--</span>
           </div>
         </div>
       </div>
@@ -748,6 +778,7 @@
         </span>
       </div>
       <div class="docker-containers" id="docker-containers"></div>
+      <div class="gpu-processes" id="gpu-processes"></div>
     </div>
 
     <div class="processes-section">
@@ -1057,7 +1088,7 @@
         mem: Math.round(api.mem?.util_pct || 0),
         memUsed: Math.round((api.mem?.used_mb || 0) / 1024),
         memTotal: Math.round((api.mem?.total_mb || 0) / 1024),
-        memAvailable: Math.round((api.mem?.available_mb || 0) / 1024),
+        memAvailable: ((api.mem?.available_mb || 0) / 1024).toFixed(1),
         memCached: Math.round((api.mem?.cached_mb || 0) / 1024),
 
         // Swap
@@ -1069,6 +1100,8 @@
         disk: Math.round(disk.util_pct || 0),
         diskUsed: Math.round(disk.used_gb || 0),
         diskTotal: Math.round(disk.total_gb || 0),
+        diskFree: Math.round(disk.free_gb || 0),
+        diskDevice: disk.device || '--',
         diskRead: diskRead >= 1 ? `${diskRead.toFixed(1)}MB` : diskRead > 0 ? `${Math.round(diskRead * 1024)}KB` : '0',
         diskWrite: diskWrite >= 1 ? `${diskWrite.toFixed(1)}MB` : diskWrite > 0 ? `${Math.round(diskWrite * 1024)}KB` : '0',
         diskReadTotal: api.disk_io?.read_bytes_total || 0,
@@ -1102,8 +1135,14 @@
         bootTime: api.system?.boot_time || '--',
         procCount: api.system?.proc_count || '--',
 
+        // Connections
+        connsTotal: api.connections?.total || 0,
+        connsEstablished: api.connections?.established || 0,
+        connsListening: api.connections?.listening || 0,
+
         // Processes
         processes: api.processes || [],
+        gpuProcesses: api.gpu_processes || [],
 
         // Docker
         dockerRunning: api.docker?.running || 0,
@@ -1176,7 +1215,7 @@
 
       document.getElementById('mem').textContent = stats.mem + '%';
       document.getElementById('mem-bar').style.width = stats.mem + '%';
-      document.getElementById('mem-detail').textContent = `${stats.memUsed}/${stats.memTotal}GB (${stats.memCached}GB cached)`;
+      document.getElementById('mem-detail').textContent = `${stats.memUsed}/${stats.memTotal}GB (${stats.memAvailable}GB avail)`;
 
       document.getElementById('swap').textContent = stats.swap + '%';
       document.getElementById('swap-bar').style.width = stats.swap + '%';
@@ -1184,7 +1223,7 @@
 
       document.getElementById('disk').textContent = stats.disk + '%';
       document.getElementById('disk-bar').style.width = stats.disk + '%';
-      document.getElementById('disk-detail').textContent = `${stats.diskUsed}/${stats.diskTotal}GB`;
+      document.getElementById('disk-detail').textContent = `${stats.diskFree}GB free (${stats.diskDevice})`;
 
       // Disk I/O with cumulative totals
       const diskRead = stats.diskRead === '0B' || stats.diskRead === '--' ? '0' : stats.diskRead;
@@ -1202,6 +1241,10 @@
 
       // Combined temps
       document.getElementById('temps').textContent = `${Math.round(stats.pchTemp)}/${Math.round(stats.vrmTemp)}/${Math.round(stats.nvmeTemp)}°C`;
+
+      // Connections
+      document.getElementById('conns').textContent = stats.connsTotal;
+      document.getElementById('conns-detail').textContent = `${stats.connsEstablished} estab / ${stats.connsListening} listen`;
 
       // Processes table
       const processesEl = document.getElementById('processes-table');
@@ -1282,6 +1325,22 @@
           </table>`;
       } else {
         dockerContainersEl.innerHTML = '<div class="docker-empty">No containers running</div>';
+      }
+
+      // GPU Processes
+      const gpuProcsEl = document.getElementById('gpu-processes');
+      if (stats.gpuProcesses && stats.gpuProcesses.length > 0) {
+        gpuProcsEl.innerHTML = `
+          <div class="gpu-processes-title">GPU Processes</div>
+          ${stats.gpuProcesses.map(p => `
+            <div class="gpu-proc-item">
+              <span class="gpu-proc-name">${p.name}</span>
+              <span class="gpu-proc-mem">${p.gpu_mem_mb}MB VRAM</span>
+            </div>
+          `).join('')}
+        `;
+      } else {
+        gpuProcsEl.innerHTML = '';
       }
     }
 

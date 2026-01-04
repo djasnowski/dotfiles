@@ -361,6 +361,21 @@ def get_swap():
     }
 
 
+def get_connections():
+    """Get network connection counts"""
+    try:
+        conns = psutil.net_connections(kind='inet')
+        established = sum(1 for c in conns if c.status == 'ESTABLISHED')
+        listening = sum(1 for c in conns if c.status == 'LISTEN')
+        return {
+            "total": len(conns),
+            "established": established,
+            "listening": listening,
+        }
+    except (psutil.AccessDenied, PermissionError):
+        return {"total": 0, "established": 0, "listening": 0}
+
+
 def get_docker():
     """Get Docker container info"""
     try:
@@ -530,6 +545,7 @@ def snapshot():
         "gpu": gpu,
         "docker": get_docker(),
         "battery": get_battery(),
+        "connections": get_connections(),
         "processes": get_top_processes(),
         "gpu_processes": get_gpu_processes(),
     }
