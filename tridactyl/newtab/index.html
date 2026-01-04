@@ -574,20 +574,6 @@
     .health-chip-indicator.down {
       background: #ff4141;
     }
-    .queue-breakdown {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.3rem;
-      margin-bottom: 0.3rem;
-      padding-left: 0.5rem;
-    }
-    .queue-chip {
-      font-size: 0.8rem;
-      color: #00772a;
-      padding: 0.1rem 0.4rem;
-      background: rgba(0, 255, 65, 0.05);
-      border: 1px solid #00ff4122;
-    }
     .latency-chip {
       font-size: 0.8rem;
       color: #00772a;
@@ -1630,9 +1616,8 @@
       const listEl = document.getElementById('services-list');
       const checks = data.checkResults || [];
 
-      // Group checks: core services, queues, pings
+      // Group checks: core services, pulse, pings
       const coreChecks = checks.filter(c => ['Database', 'Redis', 'Cache', 'Horizon'].includes(c.name));
-      const queueCheck = checks.find(c => c.name === 'Queue Backlog');
       const pulseCheck = checks.find(c => c.name === 'Pulse Queue Metrics');
       const pingCheck = checks.find(c => c.name === 'Service Ping');
 
@@ -1650,32 +1635,6 @@
         `;
       }
       html += '</div>';
-
-      // Queue backlog
-      if (queueCheck) {
-        const meta = queueCheck.meta || {};
-        const queues = meta.queues || {};
-        const total = meta.total_jobs || 0;
-        const statusClass = queueCheck.status === 'ok' ? '' : (queueCheck.status === 'warning' ? 'warning' : 'down');
-        html += `
-          <div class="service-item">
-            <span class="service-name">Queues</span>
-            <span class="service-status">
-              <span class="service-time">${total} jobs</span>
-              <span class="service-indicator ${statusClass}"></span>
-            </span>
-          </div>
-        `;
-        if (total > 0) {
-          html += '<div class="queue-breakdown">';
-          for (const [name, count] of Object.entries(queues)) {
-            if (count > 0) {
-              html += `<span class="queue-chip">${name}: ${count}</span>`;
-            }
-          }
-          html += '</div>';
-        }
-      }
 
       // Pulse metrics with per-queue sparklines
       if (pulseCheck) {
