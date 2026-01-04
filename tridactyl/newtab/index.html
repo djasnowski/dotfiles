@@ -1792,17 +1792,14 @@
 
         // Render inline sparklines for each queue
         for (const [qName, stats] of Object.entries(queueStats)) {
-          const total = stats.processed + stats.failed;
-          if (total > 0) {
-            const historyData = JSON.stringify(stats.history);
-            html += `
-              <div class="job-queue-item">
-                <span class="job-queue-name">${qName}</span>
-                <canvas class="queue-spark-canvas" data-history='${historyData}' width="100" height="32"></canvas>
-                <span class="job-queue-count">${stats.processed}</span>
-              </div>
-            `;
-          }
+          const historyData = JSON.stringify(stats.history);
+          html += `
+            <div class="job-queue-item">
+              <span class="job-queue-name">${qName}</span>
+              <canvas class="queue-spark-canvas" data-history='${historyData}' width="100" height="32"></canvas>
+              <span class="job-queue-count">${stats.processed}</span>
+            </div>
+          `;
         }
 
         html += '</div></div>';
