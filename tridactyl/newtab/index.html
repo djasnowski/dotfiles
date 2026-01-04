@@ -1789,7 +1789,7 @@
           <div class="job-queue-section">
             <div class="job-queue-header">
               <span class="job-queue-title">Job Queue</span>
-              <span class="job-queue-summary">${totals.processed || 0} processed / ${totals.failed || 0} failed (1hr)</span>
+              <span class="job-queue-summary">${totals.processed || 0} processed / ${totals.failed || 0} failed (${Math.round((meta.period_minutes || 60) / 60)}hr)</span>
               <span class="service-indicator ${statusClass}"></span>
             </div>
             <div class="job-queue-sparklines">
