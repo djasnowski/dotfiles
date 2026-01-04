@@ -637,52 +637,51 @@
       letter-spacing: 0.15em;
     }
     .abstracts-list {
-      display: flex;
-      flex-direction: column;
-      gap: 0.5rem;
+      border: 1px solid #00ff4122;
     }
     .abstract-item {
-      display: grid;
-      grid-template-columns: 1fr auto;
-      gap: 0.75rem;
-      padding: 0.5rem 0.75rem;
-      background: rgba(0, 255, 65, 0.03);
-      border: 1px solid #00ff4122;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      padding: 0.4rem 0.75rem;
       font-size: 0.85rem;
     }
-    .abstract-main {
-      display: flex;
-      flex-direction: column;
-      gap: 0.2rem;
-      min-width: 0;
+    .abstract-item:not(:last-child) {
+      border-bottom: 1px solid #00ff4122;
     }
     .abstract-location {
       color: #00ff41;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
+      min-width: 180px;
+      max-width: 220px;
     }
     .abstract-meta {
       display: flex;
-      gap: 0.75rem;
+      gap: 1rem;
       color: #00772a;
       font-size: 0.8rem;
+    }
+    .abstract-meta span {
+      white-space: nowrap;
     }
     .abstract-stats {
       display: flex;
-      flex-direction: column;
-      align-items: flex-end;
-      gap: 0.2rem;
+      align-items: center;
+      gap: 1rem;
       font-size: 0.8rem;
-    }
-    .abstract-stats-row {
-      display: flex;
-      gap: 0.5rem;
       color: #00772a;
+    }
+    .abstract-stats span {
+      white-space: nowrap;
     }
     .abstract-time {
       color: #00551a;
-      font-size: 0.75rem;
+      font-size: 0.8rem;
+      min-width: 90px;
+      text-align: right;
     }
     .port-chip {
       display: inline-block;
@@ -1862,22 +1861,18 @@
 
       listEl.innerHTML = abstracts.map(a => `
         <div class="abstract-item">
-          <div class="abstract-main">
-            <span class="abstract-location">${a.location || 'Untitled'}</span>
-            <div class="abstract-meta">
-              <span>${a.tenant || 'Unknown'}</span>
-              <span>${a.rows} rows</span>
-              <span>${a.pages} pages</span>
-            </div>
+          <span class="abstract-location">${a.location || 'Untitled'}</span>
+          <div class="abstract-meta">
+            <span>${a.tenant || 'Unknown'}</span>
+            <span>${a.rows} rows</span>
+            <span>${a.pages} pg</span>
           </div>
           <div class="abstract-stats">
-            <div class="abstract-stats-row">
-              <span>$${a.cost}</span>
-              <span>${(a.tokens / 1000).toFixed(1)}k tok</span>
-              <span>${formatBytes(a.file_size)}</span>
-            </div>
-            <span class="abstract-time">${a.created_at}</span>
+            <span>$${a.cost}</span>
+            <span>${(a.tokens / 1000).toFixed(1)}k</span>
+            <span>${formatBytes(a.file_size)}</span>
           </div>
+          <span class="abstract-time">${a.created_at}</span>
         </div>
       `).join('');
     }
