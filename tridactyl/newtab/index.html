@@ -591,6 +591,11 @@
     }
     .health-right {
     }
+    .health-chips-header {
+      display: flex;
+      justify-content: flex-end;
+      margin-bottom: 0.5rem;
+    }
     .health-chips-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -1824,7 +1829,10 @@
       html += '</div>';
 
       // RIGHT: Health status chips
+      const modeLabel = servicesMode === 'local' ? 'localhost' : 'app.titletrackr.com';
+      const modeClass = servicesMode === 'local' ? 'local' : '';
       html += '<div class="health-right">';
+      html += `<div class="health-chips-header"><span class="services-mode ${modeClass}">${modeLabel}</span></div>`;
       html += '<div class="health-chips-grid">';
       for (const check of coreChecks) {
         const statusClass = check.status === 'ok' ? '' : (check.status === 'warning' ? 'warning' : 'down');
