@@ -615,3 +615,17 @@ async def app_health(mode: str = Query("local", regex="^(local|prod)$")):
         return {"error": "timeout", "checkResults": []}
     except Exception as e:
         return {"error": str(e), "checkResults": []}
+
+
+@app.get("/api/v1/app-abstracts")
+async def app_abstracts(mode: str = Query("local", regex="^(local|prod)$")):
+    """Proxy to TitleTrackr abstracts.json endpoint (bypasses CORS)"""
+    base_url = "https://app.titletrackr.com" if mode == "prod" else "http://localhost"
+    try:
+        async with httpx.AsyncClient(timeout=5.0) as client:
+            resp = await client.get(f"{base_url}/abstracts.json")
+            return resp.json()
+    except httpx.TimeoutException:
+        return {"error": "timeout", "abstracts": []}
+    except Exception as e:
+        return {"error": str(e), "abstracts": []}

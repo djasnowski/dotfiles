@@ -620,6 +620,70 @@
     .queue-spark-canvas {
       background: transparent;
     }
+
+    /* Abstracts Section */
+    .abstracts-section {
+    }
+    .abstracts-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.5rem;
+    }
+    .abstracts-title {
+      font-size: 1rem;
+      color: #00551a;
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+    }
+    .abstracts-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+    .abstract-item {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 0.75rem;
+      padding: 0.5rem 0.75rem;
+      background: rgba(0, 255, 65, 0.03);
+      border: 1px solid #00ff4122;
+      font-size: 0.85rem;
+    }
+    .abstract-main {
+      display: flex;
+      flex-direction: column;
+      gap: 0.2rem;
+      min-width: 0;
+    }
+    .abstract-location {
+      color: #00ff41;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .abstract-meta {
+      display: flex;
+      gap: 0.75rem;
+      color: #00772a;
+      font-size: 0.8rem;
+    }
+    .abstract-stats {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 0.2rem;
+      font-size: 0.8rem;
+    }
+    .abstract-stats-row {
+      display: flex;
+      gap: 0.5rem;
+      color: #00772a;
+    }
+    .abstract-time {
+      color: #00551a;
+      font-size: 0.75rem;
+    }
     .port-chip {
       display: inline-block;
       padding: 0.1rem 0.4rem;
@@ -998,6 +1062,13 @@
           <span class="services-mode" id="services-mode">PROD</span>
         </div>
         <div class="services-list" id="services-list"></div>
+      </div>
+
+      <div class="abstracts-section">
+        <div class="abstracts-header">
+          <span class="abstracts-title">Recent Abstracts</span>
+        </div>
+        <div class="abstracts-list" id="abstracts-list"></div>
       </div>
     </div>
 
@@ -1760,12 +1831,64 @@
       }
     }
 
+    // Abstracts fetching
+    async function fetchAbstracts() {
+      const listEl = document.getElementById('abstracts-list');
+      try {
+        const res = await fetch(`${API_BASE}/api/v1/app-abstracts?mode=${servicesMode}`);
+        const data = await res.json();
+        if (data.error) {
+          listEl.innerHTML = `<div class="abstract-item"><span class="abstract-location">${data.error}</span></div>`;
+          return;
+        }
+        renderAbstracts(data);
+      } catch (e) {
+        listEl.innerHTML = `<div class="abstract-item"><span class="abstract-location">Failed to load</span></div>`;
+      }
+    }
+
+    function formatBytes(bytes) {
+      if (bytes < 1024) return bytes + ' B';
+      if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+      return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+    }
+
+    function renderAbstracts(abstracts) {
+      const listEl = document.getElementById('abstracts-list');
+      if (!abstracts || abstracts.length === 0) {
+        listEl.innerHTML = '<div class="abstract-item"><span class="abstract-location">No recent abstracts</span></div>';
+        return;
+      }
+
+      listEl.innerHTML = abstracts.map(a => `
+        <div class="abstract-item">
+          <div class="abstract-main">
+            <span class="abstract-location">${a.location || 'Untitled'}</span>
+            <div class="abstract-meta">
+              <span>${a.tenant || 'Unknown'}</span>
+              <span>${a.rows} rows</span>
+              <span>${a.pages} pages</span>
+            </div>
+          </div>
+          <div class="abstract-stats">
+            <div class="abstract-stats-row">
+              <span>$${a.cost}</span>
+              <span>${(a.tokens / 1000).toFixed(1)}k tok</span>
+              <span>${formatBytes(a.file_size)}</span>
+            </div>
+            <span class="abstract-time">${a.created_at}</span>
+          </div>
+        </div>
+      `).join('');
+    }
+
     // Toggle modes with 'l' (services) and 'p' (bookmarks) keys
     document.addEventListener('keydown', e => {
       if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
       if (e.key === 'l' && keyBuffer === '') {
         servicesMode = servicesMode === 'prod' ? 'local' : 'prod';
         checkHealth();
+        fetchAbstracts();
       }
       if (e.key === 'p' && keyBuffer === '') {
         bookmarksMode = bookmarksMode === 'prod' ? 'local' : 'prod';
@@ -1774,7 +1897,8 @@
     });
 
     checkHealth();
-    setInterval(checkHealth, 30000); // Refresh every 30s
+    fetchAbstracts();
+    setInterval(() => { checkHealth(); fetchAbstracts(); }, 30000); // Refresh every 30s
   </script>
 </body>
 </html>
