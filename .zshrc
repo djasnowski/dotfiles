@@ -143,3 +143,4 @@ if [ -d "$FNM_PATH" ]; then
   eval "`fnm env`"
 fi
 export DBUS_SESSION_BUS_ADDRESS="unix:path=/run/user/$(id -u)/bus"
+export PATH="$HOME/.local/bin:$PATH"

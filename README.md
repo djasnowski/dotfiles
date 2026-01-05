@@ -32,6 +32,7 @@ This is a complete desktop environment configuration optimized for:
 - **XFCE4 Terminal**: Custom color scheme and JetBrains Mono Nerd Font
 - **Zsh + Oh-My-Zsh**: Shell with Spaceship theme and extensive aliases
 - **Tmux**: Terminal multiplexer with vim-style navigation
+- **Neovim**: AstroNvim with custom Matrix colorscheme and statusline
 - **Tridactyl**: Vim bindings for Firefox
 
 ## Components
@@ -55,6 +56,13 @@ This is a complete desktop environment configuration optimized for:
 | **Oh-My-Zsh** | Zsh framework | Referenced in `.zshrc` |
 | **Spaceship** | Zsh theme | Referenced in `.zshrc` |
 | **Tmux** | Terminal multiplexer | `.tmux.conf` |
+
+### Editor
+
+| Component | Purpose | Config Location |
+|-----------|---------|----------------|
+| **Neovim** | Text editor (AstroNvim) | `nvim/` |
+| **Matrix colorscheme** | Custom Neovim theme | `nvim/colors/matrix.lua` |
 
 ### Browser & Extensions
 
@@ -235,6 +243,40 @@ Extensive aliases for:
 - **Auto-renumber windows**
 - **Plugins**: tpm, tmux-sensible, tmux-fingers, tmux-sessionist, tmux-resurrect
 
+### Neovim
+
+**Location**: `nvim/`
+
+AstroNvim-based configuration with custom Matrix colorscheme:
+
+- **Distribution**: [AstroNvim](https://astronvim.com/) v4
+- **Colorscheme**: Custom `matrix` theme matching the desktop aesthetic
+- **Statusline**: Heirline with Matrix-themed mode colors
+
+#### Matrix Colorscheme
+
+**Location**: `nvim/colors/matrix.lua`
+
+Color palette (pixel-sampled from Polybar):
+| Color | Hex | Usage |
+|-------|-----|-------|
+| Background | `#001900` | Editor background |
+| Statusline BG | `#0A5F00` | Dark forest green |
+| Foreground | `#00FF41` | Neon terminal green (text) |
+| Bright | `#1AFF00` | Indicators, scrollbar |
+| Muted | `#1eba1e` | Comments, inactive |
+| Cyan | `#00d9d9` | Types, constants, Insert mode |
+| Yellow | `#b5e61d` | Warnings, Command mode |
+| Red | `#ff3333` | Errors, Replace mode |
+| Magenta | `#00ff9f` | Special chars, Terminal mode |
+
+Full coverage includes:
+- Core editor UI (statusline, tabline, floats, pmenu)
+- Treesitter syntax highlighting
+- LSP semantic tokens + diagnostics
+- Plugin support: Telescope, Neo-tree, GitSigns, Cmp, Which-key, Notify, Lazy, Mason, Flash/Leap, Trouble, Navic
+- Heirline statusline with mode-specific colors
+
 ### Tridactyl (Firefox)
 
 **Location**: `tridactyl/tridactylrc`
@@ -392,6 +434,8 @@ The Matrix theme is defined in multiple files:
 3. **i3 colors**: `i3/config` (lines 176-181)
 4. **Rofi theme**: `~/.local/share/rofi/themes/matrix.rasi`
 5. **Terminal colors**: `xfce4/terminal/terminalrc` (lines 32-42)
+6. **Neovim colorscheme**: `nvim/colors/matrix.lua`
+7. **Neovim statusline**: `nvim/lua/plugins/astroui.lua` (status.colors)
 
 ### Changing Monitors
 

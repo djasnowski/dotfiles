@@ -210,5 +210,6 @@ exec_always --no-startup-id feh --bg-scale ~/Pictures/matrix-wallpaper.png
 
 # Spotify controls
 bindsym Control+Mod1+z exec --no-startup-id playerctl play-pause
+bindsym Control+Mod1+Shift+z exec --no-startup-id playerctl next
 bindsym Control+Mod1+x exec --no-startup-id playerctl next
 bindsym Control+Mod1+c exec --no-startup-id playerctl previous
