@@ -49,7 +49,7 @@
     }
     .clock-section {
       display: flex;
-      align-items: baseline;
+      align-items: flex-end;
       gap: 1.5rem;
     }
     .clock {
@@ -966,6 +966,15 @@
     .processes-states .state-i, .processes-legend .state-i { color: #00551a; }
     .processes-states .state-z, .processes-legend .state-z { color: #ff4141; }
     .processes-states .state-t, .processes-legend .state-t { color: #ffaa00; }
+    .load-avg-inline {
+      font-size: 0.9rem;
+      color: #00551a;
+      margin-left: 1rem;
+    }
+    .load-avg-inline span {
+      color: #00aa2a;
+      font-weight: bold;
+    }
     .processes-legend {
       font-size: 0.85rem;
       color: #00551a;
@@ -1099,10 +1108,6 @@
       <div class="sysinfo-item">
         <span class="sysinfo-value" id="kernel">--</span>
         <span class="sysinfo-label">Kernel</span>
-      </div>
-      <div class="sysinfo-item">
-        <span class="sysinfo-value" id="load-avg">--</span>
-        <span class="sysinfo-label">Load 1/5/15</span>
       </div>
     </div>
     <div class="shortcuts">
@@ -1339,6 +1344,7 @@
           <span class="processes-count" id="proc-count-big">--</span>
           <span class="processes-title">Procs</span>
           <span class="processes-states" id="proc-states"></span>
+          <span class="load-avg-inline">Load <span id="load-avg">--</span></span>
           <span class="processes-legend">
             <span class="state-r">R</span>=run
             <span class="state-s">S</span>=sleep
@@ -1366,8 +1372,9 @@
       const now = new Date();
       document.getElementById('clock').textContent =
         now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
-      document.getElementById('date').textContent =
-        now.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+      const weekday = now.toLocaleDateString('en-US', { weekday: 'long' });
+      const monthDay = now.toLocaleDateString('en-US', { month: 'long', day: 'numeric' });
+      document.getElementById('date').innerHTML = `${weekday}<br>${monthDay}`;
     }
     updateClock();
     setInterval(updateClock, 1000);

@@ -4,3 +4,4 @@ tridactyl/newtab/bookmarks.json
 # Stats files (generated)
 tridactyl/newtab/stats.json
 tridactyl/newtab/stats_history.json
+system-api/__pycache__/
