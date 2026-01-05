@@ -111,6 +111,88 @@ def get_process_count():
     return len(list(psutil.process_iter()))
 
 
+def get_process_states():
+    """Count processes by state (R=running, S=sleeping, I=idle, Z=zombie, T=stopped)"""
+    states = {"running": 0, "sleeping": 0, "idle": 0, "zombie": 0, "stopped": 0}
+    for p in psutil.process_iter(['status']):
+        try:
+            status = p.info['status']
+            if status == psutil.STATUS_RUNNING:
+                states["running"] += 1
+            elif status == psutil.STATUS_SLEEPING:
+                states["sleeping"] += 1
+            elif status == psutil.STATUS_IDLE:
+                states["idle"] += 1
+            elif status == psutil.STATUS_ZOMBIE:
+                states["zombie"] += 1
+            elif status in (psutil.STATUS_STOPPED, psutil.STATUS_TRACING_STOP):
+                states["stopped"] += 1
+        except (psutil.NoSuchProcess, psutil.AccessDenied):
+            pass
+    return states
+
+
+def get_thread_count():
+    """Get total thread count across all processes"""
+    total = 0
+    for p in psutil.process_iter(['num_threads']):
+        try:
+            total += p.info['num_threads'] or 0
+        except (psutil.NoSuchProcess, psutil.AccessDenied):
+            pass
+    return total
+
+
+# Cache for rate-based stats (ctx switches, interrupts)
+_prev_cpu_stats = {"time": 0, "ctx_switches": 0, "interrupts": 0, "soft_interrupts": 0}
+
+
+def get_cpu_stats_rates():
+    """Get context switches/s, interrupts/s, and soft interrupts/s"""
+    global _prev_cpu_stats
+    now = time.time()
+    stats = psutil.cpu_stats()
+
+    if _prev_cpu_stats["time"] == 0:
+        _prev_cpu_stats = {
+            "time": now,
+            "ctx_switches": stats.ctx_switches,
+            "interrupts": stats.interrupts,
+            "soft_interrupts": stats.soft_interrupts,
+        }
+        return {"ctx_per_sec": 0, "irq_per_sec": 0, "softirq_per_sec": 0}
+
+    elapsed = now - _prev_cpu_stats["time"]
+    if elapsed < 0.1:
+        elapsed = 0.1
+
+    ctx_per_sec = int((stats.ctx_switches - _prev_cpu_stats["ctx_switches"]) / elapsed)
+    irq_per_sec = int((stats.interrupts - _prev_cpu_stats["interrupts"]) / elapsed)
+    softirq_per_sec = int((stats.soft_interrupts - _prev_cpu_stats["soft_interrupts"]) / elapsed)
+
+    _prev_cpu_stats = {
+        "time": now,
+        "ctx_switches": stats.ctx_switches,
+        "interrupts": stats.interrupts,
+        "soft_interrupts": stats.soft_interrupts,
+    }
+
+    return {
+        "ctx_per_sec": max(0, ctx_per_sec),
+        "irq_per_sec": max(0, irq_per_sec),
+        "softirq_per_sec": max(0, softirq_per_sec),
+    }
+
+
+def get_cpu_times_pct():
+    """Get IO wait % and softirq % from CPU times"""
+    times = psutil.cpu_times_percent(interval=0)
+    return {
+        "iowait_pct": round(getattr(times, 'iowait', 0), 1),
+        "softirq_pct": round(getattr(times, 'softirq', 0), 1),
+    }
+
+
 def get_all_temps():
     """Get all temperatures including motherboard sensors"""
     temps = {
@@ -632,6 +714,8 @@ def snapshot():
     net = get_net_rates()
     disk_io = get_disk_io_rates()
     gpu = get_gpu()
+    cpu_times = get_cpu_times_pct()
+    cpu_stats = get_cpu_stats_rates()
 
     cpu_pct = psutil.cpu_percent(interval=0.2)
     mem_pct = vm.percent
@@ -663,6 +747,7 @@ def snapshot():
             "uptime": get_uptime()[0],
             "boot_time": get_uptime()[1],
             "proc_count": get_process_count(),
+            "proc_states": get_process_states(),
         },
         "cpu": {
             "util_pct": cpu_pct,
@@ -671,6 +756,11 @@ def snapshot():
             "count": psutil.cpu_count(),
             "count_physical": psutil.cpu_count(logical=False),
             "temp_c": temps["cpu_temp_c"],
+            "iowait_pct": cpu_times["iowait_pct"],
+            "softirq_pct": cpu_times["softirq_pct"],
+            "ctx_per_sec": cpu_stats["ctx_per_sec"],
+            "irq_per_sec": cpu_stats["irq_per_sec"],
+            "thread_count": get_thread_count(),
         },
         "temps": {
             "cpu_c": temps["cpu_temp_c"],

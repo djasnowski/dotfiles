@@ -1026,7 +1026,7 @@
     .stats {
       display: grid;
       grid-template-columns: repeat(5, 1fr);
-      grid-template-rows: 1fr 1fr;
+      grid-template-rows: 1fr 1fr 1fr;
       height: 100%;
       justify-items: center;
       align-items: center;
@@ -1236,6 +1236,31 @@
           <div class="stat">
             <span class="stat-label">Files Open</span>
             <span class="stat-value" id="files-open">--</span>
+          </div>
+          <div class="stat">
+            <span class="stat-label">IO Wait</span>
+            <span class="stat-value" id="iowait">--%</span>
+            <span class="stat-sub" title="CPU time spent waiting for disk I/O operations to complete. High values indicate disk bottleneck.">disk wait</span>
+          </div>
+          <div class="stat">
+            <span class="stat-label">Ctx/s</span>
+            <span class="stat-value" id="ctx-sec">--</span>
+            <span class="stat-sub" title="Context switches per second. The kernel saving/restoring CPU state when switching between processes or threads.">switches</span>
+          </div>
+          <div class="stat">
+            <span class="stat-label">IRQs/s</span>
+            <span class="stat-value" id="irq-sec">--</span>
+            <span class="stat-sub" title="Hardware interrupts per second. Signals from devices (disk, network, keyboard) requiring CPU attention.">hardware</span>
+          </div>
+          <div class="stat">
+            <span class="stat-label">Threads</span>
+            <span class="stat-value" id="threads">--</span>
+            <span class="stat-sub" id="threads-sub" title="Total threads across all running processes. Each process has at least one thread.">--</span>
+          </div>
+          <div class="stat">
+            <span class="stat-label">Softirq</span>
+            <span class="stat-value" id="softirq">--%</span>
+            <span class="stat-sub" title="CPU time handling software interrupts. Deferred work from hardware interrupts, mostly network and timer processing.">net/timer</span>
           </div>
         </div>
       </div>
@@ -1657,6 +1682,13 @@
       } catch (e) {}
     }
 
+    // Format large numbers compactly (e.g., 164K, 1.2M)
+    function formatNumber(n) {
+      if (n >= 1000000) return `${(n / 1000000).toFixed(1)}M`;
+      if (n >= 1000) return `${(n / 1000).toFixed(0)}K`;
+      return n.toString();
+    }
+
     // Format bytes to human readable
     function formatRate(kb) {
       if (kb >= 1024) return `${(kb / 1024).toFixed(1)}MB`;
@@ -1773,6 +1805,13 @@
         procCount: api.system?.proc_count || '--',
         procStates: api.system?.proc_states || {},
         openFiles: api.system?.open_files || 0,
+
+        // CPU stats
+        iowait: api.cpu?.iowait_pct || 0,
+        softirq: api.cpu?.softirq_pct || 0,
+        ctxPerSec: api.cpu?.ctx_per_sec || 0,
+        irqPerSec: api.cpu?.irq_per_sec || 0,
+        threadCount: api.cpu?.thread_count || 0,
 
         // Connections
         connsTotal: api.connections?.total || 0,
@@ -1899,6 +1938,14 @@
 
       // Files Open
       document.getElementById('files-open').textContent = stats.openFiles.toLocaleString();
+
+      // New CPU stats
+      document.getElementById('iowait').textContent = stats.iowait + '%';
+      document.getElementById('softirq').textContent = stats.softirq + '%';
+      document.getElementById('ctx-sec').textContent = formatNumber(stats.ctxPerSec);
+      document.getElementById('irq-sec').textContent = formatNumber(stats.irqPerSec);
+      document.getElementById('threads').textContent = stats.threadCount.toLocaleString();
+      document.getElementById('threads-sub').textContent = `${stats.procCount} procs`;
 
       // Processes table
       const processesEl = document.getElementById('processes-table');

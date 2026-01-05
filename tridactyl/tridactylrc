@@ -8,7 +8,7 @@ colorscheme matrix
 " Use vim-like hinting mode
 set hintfiltermode vimperator-reflow
 set hintnames short
-set hintchars asdfgqwertzxcv
+set hintchars 1234567890
 set hintdelay 100
 
 " Smooth scrolling
