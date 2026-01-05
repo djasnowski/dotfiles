@@ -1,17 +1,13 @@
 from fastapi import FastAPI, Query
 from fastapi.middleware.cors import CORSMiddleware
-from contextlib import asynccontextmanager
 import psutil
 import subprocess
 import socket
 import platform
 import time
-import asyncio
 import threading
 import httpx
 from collections import deque
-from dataclasses import dataclass, field
-from typing import Optional, Dict, Any, List
 from pynvml import (
     nvmlInit, nvmlDeviceGetHandleByIndex, nvmlDeviceGetName,
     nvmlDeviceGetTemperature, NVML_TEMPERATURE_GPU,
@@ -19,181 +15,7 @@ from pynvml import (
     nvmlDeviceGetPowerUsage, nvmlDeviceGetFanSpeed
 )
 
-
-# =============================================================================
-# Network Collector (btop-style with 1s resolution)
-# =============================================================================
-
-def get_ipv4_for_iface(iface: str) -> Optional[str]:
-    """Get IPv4 address for a network interface"""
-    addrs = psutil.net_if_addrs().get(iface, [])
-    for a in addrs:
-        if a.family == socket.AF_INET:
-            return a.address
-    return None
-
-
-def get_default_interface() -> str:
-    """Get the default network interface (the one with most traffic)"""
-    try:
-        counters = psutil.net_io_counters(pernic=True)
-        # Filter out loopback and virtual interfaces
-        candidates = {k: v for k, v in counters.items()
-                      if not k.startswith(('lo', 'docker', 'br-', 'veth', 'virbr'))}
-        if candidates:
-            # Return interface with most bytes transferred
-            return max(candidates.keys(), key=lambda k: counters[k].bytes_recv + counters[k].bytes_sent)
-    except Exception:
-        pass
-    return "enp8s0"  # fallback
-
-
-@dataclass
-class NetState:
-    iface: str
-    dt_s: float
-    rx_Bps: float = 0.0
-    tx_Bps: float = 0.0
-    rx_peak_Bps: float = 0.0
-    tx_peak_Bps: float = 0.0
-    rx_total_bytes: int = 0
-    tx_total_bytes: int = 0
-    ip: Optional[str] = None
-    ok: bool = False
-    err: Optional[str] = None
-    # Internal counters (not exposed)
-    _last_rx: int = 0
-    _last_tx: int = 0
-    _last_ts: float = 0.0
-
-
-class NetCollector:
-    """Collects network statistics at high frequency for btop-style display"""
-
-    def __init__(self, iface: str = None, dt_s: float = 1.0, history_len: int = 180):
-        if iface is None:
-            iface = get_default_interface()
-        self.state = NetState(iface=iface, dt_s=dt_s, ip=get_ipv4_for_iface(iface))
-        self.rx_hist_Bps: deque = deque([0.0] * history_len, maxlen=history_len)
-        self.tx_hist_Bps: deque = deque([0.0] * history_len, maxlen=history_len)
-        self.history_len = history_len
-        self._lock = threading.Lock()
-
-    def _read_iface_counters(self) -> tuple:
-        """Read current byte counters for the interface"""
-        pernic = psutil.net_io_counters(pernic=True)
-        if self.state.iface not in pernic:
-            # Try to find a new default interface
-            new_iface = get_default_interface()
-            if new_iface in pernic:
-                self.state.iface = new_iface
-                self.state.ip = get_ipv4_for_iface(new_iface)
-            else:
-                raise RuntimeError(f"Interface not found: {self.state.iface}")
-        c = pernic[self.state.iface]
-        return int(c.bytes_recv), int(c.bytes_sent)
-
-    def tick(self) -> None:
-        """Update network statistics (call every dt_s seconds)"""
-        now = time.time()
-        with self._lock:
-            try:
-                rx, tx = self._read_iface_counters()
-
-                # Initialize on first run
-                if not self.state.ok:
-                    self.state._last_rx = rx
-                    self.state._last_tx = tx
-                    self.state._last_ts = now
-                    self.state.ok = True
-                    self.state.err = None
-                    self.rx_hist_Bps.append(0.0)
-                    self.tx_hist_Bps.append(0.0)
-                    return
-
-                dt = max(0.001, now - self.state._last_ts)
-
-                drx = rx - self.state._last_rx
-                dtx = tx - self.state._last_tx
-
-                # Handle counter reset/wrap
-                if drx < 0:
-                    drx = 0
-                if dtx < 0:
-                    dtx = 0
-
-                self.state.rx_total_bytes += drx
-                self.state.tx_total_bytes += dtx
-
-                self.state.rx_Bps = drx / dt
-                self.state.tx_Bps = dtx / dt
-
-                # Track peaks
-                if self.state.rx_Bps > self.state.rx_peak_Bps:
-                    self.state.rx_peak_Bps = self.state.rx_Bps
-                if self.state.tx_Bps > self.state.tx_peak_Bps:
-                    self.state.tx_peak_Bps = self.state.tx_Bps
-
-                self.rx_hist_Bps.append(self.state.rx_Bps)
-                self.tx_hist_Bps.append(self.state.tx_Bps)
-
-                self.state._last_rx = rx
-                self.state._last_tx = tx
-                self.state._last_ts = now
-                self.state.ip = get_ipv4_for_iface(self.state.iface)
-                self.state.err = None
-
-            except Exception as e:
-                self.state.err = str(e)
-                self.rx_hist_Bps.append(0.0)
-                self.tx_hist_Bps.append(0.0)
-                self.state._last_ts = now
-
-    def payload(self) -> Dict[str, Any]:
-        """Get current state as a dictionary for API response"""
-        with self._lock:
-            return {
-                "iface": self.state.iface,
-                "ip": self.state.ip,
-                "dt_s": self.state.dt_s,
-                "rx_Bps": round(self.state.rx_Bps, 2),
-                "tx_Bps": round(self.state.tx_Bps, 2),
-                "rx_peak_Bps": round(self.state.rx_peak_Bps, 2),
-                "tx_peak_Bps": round(self.state.tx_peak_Bps, 2),
-                "rx_total_bytes": self.state.rx_total_bytes,
-                "tx_total_bytes": self.state.tx_total_bytes,
-                "rx_hist_Bps": list(self.rx_hist_Bps),
-                "tx_hist_Bps": list(self.tx_hist_Bps),
-                "ok": self.state.ok,
-                "err": self.state.err,
-            }
-
-
-# Global network collector (1s interval, 180 samples = 3 minutes)
-net_collector = NetCollector(dt_s=1.0, history_len=180)
-
-
-async def net_collector_loop():
-    """Background task to collect network stats every second"""
-    while True:
-        net_collector.tick()
-        await asyncio.sleep(net_collector.state.dt_s)
-
-
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    """Startup/shutdown lifecycle manager"""
-    # Start background task
-    task = asyncio.create_task(net_collector_loop())
-    yield
-    # Cleanup
-    task.cancel()
-    try:
-        await task
-    except asyncio.CancelledError:
-        pass
-
-app = FastAPI(title="System Stats API", lifespan=lifespan)
+app = FastAPI(title="System Stats API")
 
 # CORS for newtab page
 app.add_middleware(
@@ -206,6 +28,10 @@ app.add_middleware(
 # Cache for rate calculations
 _prev_net = {"time": 0, "sent": 0, "recv": 0}
 _prev_disk = {"time": 0, "read": 0, "write": 0}
+
+# Per-interface network tracking (btop-style) - now tracks ALL interfaces
+NET_HISTORY_SIZE = 120  # 2 minutes at 1s intervals
+_net_interfaces = {}  # dict of interface name -> stats dict
 
 # Cache for static system info (doesn't change)
 _system_info_cache = None
@@ -247,23 +73,10 @@ def get_system_info():
 
     kernel = platform.release().split("-")[0]
 
-    # Motherboard info
-    board_vendor = ""
-    board_name = ""
-    try:
-        with open("/sys/devices/virtual/dmi/id/board_vendor") as f:
-            board_vendor = f.read().strip()
-        with open("/sys/devices/virtual/dmi/id/board_name") as f:
-            board_name = f.read().strip()
-    except Exception:
-        pass
-
     _system_info_cache = {
         "hostname": socket.gethostname(),
         "distro": distro,
         "kernel": kernel,
-        "board_vendor": board_vendor,
-        "board_name": board_name,
     }
     return _system_info_cache
 
@@ -435,51 +248,15 @@ def format_elapsed(secs):
         return f"{days}d {hours}h" if hours else f"{days}d"
 
 
-def get_process_states():
-    """Get count of processes by state"""
-    states = {"running": 0, "sleeping": 0, "idle": 0, "zombie": 0, "stopped": 0, "other": 0}
-    for p in psutil.process_iter(["status"]):
-        try:
-            status = p.info.get("status", "")
-            if status == psutil.STATUS_RUNNING:
-                states["running"] += 1
-            elif status in (psutil.STATUS_SLEEPING, psutil.STATUS_DISK_SLEEP):
-                states["sleeping"] += 1
-            elif status == psutil.STATUS_IDLE:
-                states["idle"] += 1
-            elif status == psutil.STATUS_ZOMBIE:
-                states["zombie"] += 1
-            elif status == psutil.STATUS_STOPPED:
-                states["stopped"] += 1
-            else:
-                states["other"] += 1
-        except (psutil.NoSuchProcess, psutil.AccessDenied):
-            pass
-    return states
-
-
-def get_open_files_count():
-    """Get system-wide count of open file descriptors"""
-    try:
-        with open("/proc/sys/fs/file-nr", "r") as f:
-            parts = f.read().strip().split()
-            return int(parts[0])  # First value is allocated file handles
-    except Exception:
-        return 0
-
-
 def get_top_processes(limit=30, sort_by="cpu"):
     procs = []
     now = time.time()
-    for p in psutil.process_iter(["pid", "username", "name", "cpu_percent", "memory_info", "create_time", "status"]):
+    for p in psutil.process_iter(["pid", "username", "name", "cpu_percent", "memory_info", "create_time"]):
         try:
             info = p.info
             rss = info["memory_info"].rss if info.get("memory_info") else 0
             create_time = info.get("create_time", now)
             elapsed_secs = now - create_time
-            # Map status to short code
-            status = info.get("status", "")
-            state = {"running": "R", "sleeping": "S", "disk-sleep": "D", "idle": "I", "zombie": "Z", "stopped": "T"}.get(status, "?")
             procs.append({
                 "pid": info["pid"],
                 "user": info.get("username"),
@@ -487,7 +264,6 @@ def get_top_processes(limit=30, sort_by="cpu"):
                 "cpu_pct": info.get("cpu_percent", 0.0),
                 "rss_mb": int(rss / (1024 * 1024)),
                 "elapsed": format_elapsed(elapsed_secs),
-                "state": state,
             })
         except (psutil.NoSuchProcess, psutil.AccessDenied):
             pass
@@ -522,6 +298,136 @@ def get_net_rates():
         "bytes_sent_total": counters.bytes_sent,
         "bytes_recv_total": counters.bytes_recv,
     }
+
+
+def get_net_interface_stats():
+    """Get per-interface network stats for ALL active interfaces (btop-style)"""
+    global _net_interfaces
+    import os
+    import socket
+    import struct
+    import fcntl
+
+    now = time.time()
+    results = []
+
+    # Find all active interfaces
+    try:
+        ifaces = os.listdir("/sys/class/net")
+    except Exception:
+        return {"interfaces": [], "err": "cannot list interfaces"}
+
+    for iface in ifaces:
+        # Skip docker veth interfaces (virtual endpoints)
+        if iface.startswith("veth"):
+            continue
+
+        # Check if interface is up (lo shows "unknown" but is always up)
+        try:
+            state_path = f"/sys/class/net/{iface}/operstate"
+            with open(state_path) as f:
+                state = f.read().strip()
+                if state not in ("up", "unknown"):
+                    continue
+        except Exception:
+            continue
+
+        # Read bytes from sysfs
+        try:
+            with open(f"/sys/class/net/{iface}/statistics/rx_bytes") as f:
+                rx_bytes = int(f.read().strip())
+            with open(f"/sys/class/net/{iface}/statistics/tx_bytes") as f:
+                tx_bytes = int(f.read().strip())
+        except Exception:
+            continue
+
+        # Get IP address
+        ip = "--"
+        try:
+            s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            ip = socket.inet_ntoa(fcntl.ioctl(
+                s.fileno(),
+                0x8915,  # SIOCGIFADDR
+                struct.pack('256s', iface.encode()[:15])
+            )[20:24])
+            s.close()
+        except Exception:
+            pass
+
+        # Initialize tracking for this interface if needed
+        if iface not in _net_interfaces:
+            _net_interfaces[iface] = {
+                "time": now,
+                "rx_bytes": rx_bytes,
+                "tx_bytes": tx_bytes,
+                "rx_Bps": 0,
+                "tx_Bps": 0,
+                "rx_peak_Bps": 0,
+                "tx_peak_Bps": 0,
+                "rx_hist": deque(maxlen=NET_HISTORY_SIZE),
+                "tx_hist": deque(maxlen=NET_HISTORY_SIZE),
+            }
+
+        cached = _net_interfaces[iface]
+        elapsed = now - cached["time"]
+
+        if elapsed >= 0.1:
+            # Calculate bytes per second
+            rx_Bps = max(0, int((rx_bytes - cached["rx_bytes"]) / elapsed))
+            tx_Bps = max(0, int((tx_bytes - cached["tx_bytes"]) / elapsed))
+
+            # Update peaks
+            if rx_Bps > cached["rx_peak_Bps"]:
+                cached["rx_peak_Bps"] = rx_Bps
+            if tx_Bps > cached["tx_peak_Bps"]:
+                cached["tx_peak_Bps"] = tx_Bps
+
+            # Record history
+            cached["rx_hist"].append(rx_Bps)
+            cached["tx_hist"].append(tx_Bps)
+
+            # Update cache
+            cached.update({
+                "time": now,
+                "rx_bytes": rx_bytes,
+                "tx_bytes": tx_bytes,
+                "rx_Bps": rx_Bps,
+                "tx_Bps": tx_Bps,
+            })
+        else:
+            rx_Bps = cached["rx_Bps"]
+            tx_Bps = cached["tx_Bps"]
+
+        results.append({
+            "iface": iface,
+            "ip": ip,
+            "rx_Bps": rx_Bps,
+            "tx_Bps": tx_Bps,
+            "rx_peak_Bps": cached["rx_peak_Bps"],
+            "tx_peak_Bps": cached["tx_peak_Bps"],
+            "rx_total_bytes": rx_bytes,
+            "tx_total_bytes": tx_bytes,
+            "rx_hist_Bps": list(cached["rx_hist"]),
+            "tx_hist_Bps": list(cached["tx_hist"]),
+        })
+
+    # Sort: wired first, then wireless, then bridges, then loopback
+    def sort_key(x):
+        name = x["iface"]
+        if name.startswith("enp") or name.startswith("eth"):
+            return (0, name)
+        elif name.startswith("wl"):
+            return (1, name)
+        elif name.startswith("br-"):
+            return (2, name)
+        elif name == "lo":
+            return (4, name)
+        else:
+            return (3, name)
+
+    results.sort(key=sort_key)
+
+    return {"interfaces": results}
 
 
 def get_disk_io_rates():
@@ -757,8 +663,6 @@ def snapshot():
             "uptime": get_uptime()[0],
             "boot_time": get_uptime()[1],
             "proc_count": get_process_count(),
-            "proc_states": get_process_states(),
-            "open_files": get_open_files_count(),
         },
         "cpu": {
             "util_pct": cpu_pct,
@@ -801,14 +705,14 @@ def history():
 
 
 @app.get("/api/v1/net")
-def net_stats():
-    """Get btop-style network statistics with 1s resolution history"""
-    return net_collector.payload()
+def net():
+    """Get per-interface network stats (btop-style)"""
+    return get_net_interface_stats()
 
 
 @app.get("/api/v1/top")
 def top(
-    sort: str = Query("cpu", regex="^(cpu|mem|gpu_mem)$"),
+    sort: str = Query("cpu", pattern="^(cpu|mem|gpu_mem)$"),
     limit: int = Query(30, ge=1, le=100)
 ):
     """btop-like process list sorted by cpu, mem, or gpu_mem"""
@@ -840,7 +744,7 @@ async def health_check(url: str):
 
 
 @app.get("/api/v1/app-health")
-async def app_health(mode: str = Query("local", regex="^(local|prod)$")):
+async def app_health(mode: str = Query("local", pattern="^(local|prod)$")):
     """Proxy to TitleTrackr health.json endpoint (bypasses CORS)"""
     base_url = "https://app.titletrackr.com" if mode == "prod" else "http://localhost"
     try:
@@ -854,7 +758,7 @@ async def app_health(mode: str = Query("local", regex="^(local|prod)$")):
 
 
 @app.get("/api/v1/app-abstracts")
-async def app_abstracts(mode: str = Query("local", regex="^(local|prod)$")):
+async def app_abstracts(mode: str = Query("local", pattern="^(local|prod)$")):
     """Proxy to TitleTrackr abstracts.json endpoint (bypasses CORS)"""
     base_url = "https://app.titletrackr.com" if mode == "prod" else "http://localhost"
     try:
@@ -868,14 +772,14 @@ async def app_abstracts(mode: str = Query("local", regex="^(local|prod)$")):
 
 
 @app.get("/api/v1/search-agent-health")
-async def search_agent_health(mode: str = Query("local", regex="^(local|prod)$")):
-    """Proxy to Search Agent health endpoint"""
-    base_url = "http://search-agents.titletrackr.com:8080" if mode == "prod" else "http://localhost:3001"
+async def search_agent_health(mode: str = Query("local", pattern="^(local|prod)$")):
+    """Proxy to search agent health endpoint"""
+    base_url = "https://app.titletrackr.com" if mode == "prod" else "http://localhost:3001"
     try:
         async with httpx.AsyncClient(timeout=5.0) as client:
             resp = await client.get(f"{base_url}/health")
             return resp.json()
     except httpx.TimeoutException:
-        return {"error": "timeout", "status": "unknown"}
+        return {"error": "timeout", "worker": {"status": "unknown"}}
     except Exception as e:
-        return {"error": str(e), "status": "unknown"}
+        return {"error": str(e), "worker": {"status": "unknown"}}
