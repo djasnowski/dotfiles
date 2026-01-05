@@ -939,26 +939,56 @@
     }
     .processes-header {
       display: flex;
-      align-items: baseline;
-      gap: 0.75rem;
+      align-items: center;
+      justify-content: space-between;
       margin-bottom: 0.5rem;
+    }
+    .procs-left {
+      display: flex;
+      align-items: baseline;
+      gap: 0.5rem;
     }
     .processes-title {
       font-size: 1rem;
       color: #00551a;
       text-transform: uppercase;
-      letter-spacing: 0.15em;
+      letter-spacing: 0.1em;
     }
     .processes-count {
       font-size: 2rem;
       font-weight: bold;
       color: #00ff41;
     }
+    .load-center {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .load-label {
+      font-size: 0.8rem;
+      color: #00551a;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+    .load-value {
+      font-size: 1.4rem;
+      font-weight: bold;
+      color: #00ff41;
+    }
+    .load-sub {
+      font-size: 0.7rem;
+      color: #00772a;
+    }
+    .procs-right {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 0.2rem;
+    }
     .processes-states {
-      font-size: 1.5rem;
+      font-size: 1rem;
       font-weight: bold;
       color: #00aa2a;
-      margin-left: 1.5rem;
       letter-spacing: 0.1em;
     }
     .processes-states .state-r, .processes-legend .state-r { color: #00ff41; }
@@ -966,19 +996,9 @@
     .processes-states .state-i, .processes-legend .state-i { color: #00551a; }
     .processes-states .state-z, .processes-legend .state-z { color: #ff4141; }
     .processes-states .state-t, .processes-legend .state-t { color: #ffaa00; }
-    .load-avg-inline {
-      font-size: 0.9rem;
-      color: #00551a;
-      margin-left: 1rem;
-    }
-    .load-avg-inline span {
-      color: #00aa2a;
-      font-weight: bold;
-    }
     .processes-legend {
-      font-size: 0.85rem;
+      font-size: 0.75rem;
       color: #00551a;
-      margin-left: auto;
     }
     .processes-table {
       width: 100%;
@@ -1341,17 +1361,25 @@
     <div class="right-column">
       <div class="processes-section">
         <div class="processes-header">
-          <span class="processes-count" id="proc-count-big">--</span>
-          <span class="processes-title">Procs</span>
-          <span class="processes-states" id="proc-states"></span>
-          <span class="load-avg-inline" title="Average number of processes waiting to run over 1, 5, and 15 minutes. Values above CPU core count indicate system is overloaded.">Load <span id="load-avg">--</span></span>
-          <span class="processes-legend">
-            <span class="state-r">R</span>=run
-            <span class="state-s">S</span>=sleep
-            <span class="state-i">I</span>=idle
-            <span class="state-z">Z</span>=zombie
-            <span class="state-t">T</span>=stop
-          </span>
+          <div class="procs-left">
+            <span class="processes-count" id="proc-count-big">--</span>
+            <span class="processes-title">Procs</span>
+          </div>
+          <div class="load-center">
+            <span class="load-label">Load</span>
+            <span class="load-value" id="load-avg">--</span>
+            <span class="load-sub" title="Average number of processes waiting to run over 1, 5, and 15 minutes. Values above CPU core count indicate system is overloaded.">1/5/15 min</span>
+          </div>
+          <div class="procs-right">
+            <span class="processes-states" id="proc-states"></span>
+            <span class="processes-legend">
+              <span class="state-r">R</span>=run
+              <span class="state-s">S</span>=sleep
+              <span class="state-i">I</span>=idle
+              <span class="state-z">Z</span>=zombie
+              <span class="state-t">T</span>=stop
+            </span>
+          </div>
         </div>
         <div id="processes-table"></div>
       </div>
