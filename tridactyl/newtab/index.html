@@ -206,7 +206,7 @@
       flex: '0 0 auto';
     }
     .bookmarks-stats-row > .bookmarks {
-      padding: 0.75rem 1.5rem 0.75rem 1.5rem;
+      padding: 0.4rem 0.5rem;
     }
     .bookmarks-stats-row > .stats-sidebar {
       padding: 0.75rem 1.5rem 0.75rem 1.5rem;
@@ -217,13 +217,13 @@
     .bookmarks {
       display: flex;
       flex-direction: column;
-      gap: 0.75rem;
+      gap: 0.4rem;
       min-width: 0;
     }
     .row {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
-      gap: 0.5rem;
+      gap: 0.3rem;
     }
     .group {
       background: transparent;
@@ -238,11 +238,11 @@
       outline: 1px solid #00ff41;
     }
     .group-title {
-      font-size: 1.1rem;
+      font-size: 1rem;
       color: #00aa2a;
       border-bottom: 1px solid #00ff4133;
-      padding-bottom: 0.5rem;
-      margin-bottom: 0.75rem;
+      padding-bottom: 0.25rem;
+      margin-bottom: 0.3rem;
       text-transform: uppercase;
       letter-spacing: 0.2em;
       display: flex;
@@ -271,15 +271,15 @@
     .links {
       display: flex;
       flex-direction: column;
-      gap: 0.5rem;
+      gap: 0.15rem;
     }
     .link {
       display: flex;
       align-items: center;
-      gap: 0.5rem;
+      gap: 0.4rem;
       text-decoration: none;
       color: #00ff41;
-      padding: 0.4rem 0.5rem;
+      padding: 0.15rem 0.4rem 0.15rem 0;
       transition: all 0.15s;
     }
     .link:hover {
@@ -309,17 +309,23 @@
       color: #0a0a0a;
     }
     .key {
-      display: inline-block;
-      min-width: 1.5rem;
-      text-align: center;
-      padding: 0.2rem 0.4rem;
-      border: 1px solid #00ff41;
-      font-size: 0.9rem;
-      color: #00aa2a;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 1.4rem;
+      height: 1.4rem;
+      font-size: 0.8rem;
+      color: #00ff41;
+      background: rgba(0, 255, 65, 0.15);
       flex-shrink: 0;
+      font-weight: bold;
     }
     .link:hover .key {
-      border-color: #0a0a0a;
+      color: #0a0a0a;
+      background: rgba(0, 0, 0, 0.2);
+    }
+    .key.selected {
+      background: #00ff41;
       color: #0a0a0a;
     }
 
@@ -359,7 +365,6 @@
     /* Docker Section */
     .docker-section {
       height: auto;
-      padding-top: 0.25rem !important;
     }
     .docker-header {
       display: flex;
@@ -1445,7 +1450,7 @@
                   // Handle both url-only and prod/local links
                   const url = link.url || (bookmarksMode === 'prod' ? link.prod : link.local);
                   keyMap[link.key] = url;
-                  const displayKey = link.key.length > 1 ? link.key.slice(1) : link.key;
+                  const displayKey = link.key;
                   const hasToggle = link.prod && link.local;
                   // For toggleable links, show the current URL; otherwise use static display
                   const displayUrl = hasToggle ? url.replace(/^https?:\/\//, '') : link.display;
@@ -1506,25 +1511,37 @@
       // Clear timeout on new keypress
       if (keyTimeout) clearTimeout(keyTimeout);
 
-      // If pressing a column number (1-4), switch highlight immediately
-      if (/^[1-4]$/.test(e.key)) {
+      // Two-digit key system: first digit is group (1-4), second is item (1-5)
+      if (keyBuffer.length === 0 && /^[1-4]$/.test(e.key)) {
+        // First digit: group number
         keyBuffer = e.key;
         highlightGroup(e.key);
-      } else if (keyBuffer.length === 1 && /^[1-4]$/.test(keyBuffer)) {
-        // Second key after a column number
+      } else if (keyBuffer.length === 1 && /^[1-5]$/.test(e.key)) {
+        // Second digit: item number
         keyBuffer += e.key;
+        // Check for match
+        if (keyMap[keyBuffer]) {
+          const url = keyMap[keyBuffer];
+          clearHighlight();
+          // Highlight the key square before navigating
+          document.querySelectorAll('.link .key').forEach(k => {
+            if (k.textContent === keyBuffer) {
+              k.classList.add('selected');
+            }
+          });
+          keyBuffer = '';
+          setTimeout(() => {
+            window.location.href = url;
+          }, 120);
+          return;
+        }
+        // No match, reset
+        keyBuffer = '';
+        clearHighlight();
       } else {
         // Reset buffer for any other key
-        keyBuffer = e.key;
-        clearHighlight();
-      }
-
-      // Check for match
-      if (keyMap[keyBuffer]) {
-        clearHighlight();
-        window.location.href = keyMap[keyBuffer];
         keyBuffer = '';
-        return;
+        clearHighlight();
       }
 
       // Clear buffer after 20s of no input
