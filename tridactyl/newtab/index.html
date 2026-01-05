@@ -687,9 +687,6 @@
       flex-direction: column;
       padding-right: 1.5rem;
     }
-    .health-left > * {
-      padding: 0.75rem 0;
-    }
     .health-right {
       min-width: 340px;
       padding-left: 1.5rem;
@@ -698,7 +695,7 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 0.75rem 0;
+      padding-bottom: 1rem;
     }
     .search-agents-stats {
       font-size: 0.8rem;
@@ -708,7 +705,6 @@
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 0;
-      padding-top: 0.75rem;
     }
     .health-chips-grid .health-chip {
       margin-right: -1px;
@@ -720,6 +716,7 @@
       display: flex;
       align-items: center;
       gap: 1rem;
+      padding-bottom: 1rem;
     }
     .job-queue-title {
       font-size: 1.1rem;
@@ -735,6 +732,7 @@
       display: flex;
       gap: 1rem;
       align-items: center;
+      padding-bottom: 1rem;
     }
     .job-queue-item {
       display: flex;
@@ -2347,52 +2345,58 @@
 
       // LEFT: Job Queue with inline sparklines
       html += '<div class="health-left">';
-      if (pulseCheck) {
-        const meta = pulseCheck.meta || {};
-        const totals = meta.totals || {};
-        const history = meta.history || [];
-        const statusClass = pulseCheck.status === 'ok' ? '' : (pulseCheck.status === 'warning' ? 'warning' : 'down');
+      const meta = pulseCheck?.meta || {};
+      const totals = meta.totals || {};
+      const history = meta.history || [];
+      const statusClass = !pulseCheck ? '' : (pulseCheck.status === 'ok' ? '' : (pulseCheck.status === 'warning' ? 'warning' : 'down'));
 
-        // Build per-queue totals and history from the data
-        const queueStats = {};
-        for (const entry of history) {
-          const byQueue = entry.by_queue || {};
-          for (const [qName, qData] of Object.entries(byQueue)) {
-            if (!queueStats[qName]) {
-              queueStats[qName] = { processed: 0, failed: 0, history: [] };
-            }
-            queueStats[qName].processed += qData.processed || 0;
-            queueStats[qName].failed += qData.failed || 0;
-            queueStats[qName].history.push(qData.processed || 0);
+      // Build per-queue totals and history from the data
+      const queueStats = {};
+      for (const entry of history) {
+        const byQueue = entry.by_queue || {};
+        for (const [qName, qData] of Object.entries(byQueue)) {
+          if (!queueStats[qName]) {
+            queueStats[qName] = { processed: 0, failed: 0, history: [] };
           }
+          queueStats[qName].processed += qData.processed || 0;
+          queueStats[qName].failed += qData.failed || 0;
+          queueStats[qName].history.push(qData.processed || 0);
         }
-
-        html += `
-          <div class="job-queue-header">
-            <span class="job-queue-title">Job Queue</span>
-            <span class="job-queue-summary">${totals.processed || 0} processed / ${totals.failed || 0} failed (${Math.round((meta.period_minutes || 60) / 60)}hr)</span>
-            <span class="service-indicator ${statusClass}"></span>
-          </div>
-          <div class="job-queue-sparklines">
-        `;
-
-        // Render inline sparklines for each queue
-        const periodHours = Math.round((meta.period_minutes || 60) / 60);
-        for (const [qName, stats] of Object.entries(queueStats)) {
-          const historyData = JSON.stringify(stats.history);
-          html += `
-            <div class="job-queue-item">
-              <div class="job-queue-item-top">
-                <span class="job-queue-name">${qName}</span>
-                <canvas class="queue-spark-canvas" data-history='${historyData}' width="100" height="32"></canvas>
-                <span class="job-queue-count">${stats.processed}</span>
-              </div>
-            </div>
-          `;
-        }
-
-        html += `</div>`;
       }
+
+      // Default queues to show even when empty
+      const defaultQueues = ['ocr', 'merge', 'llm'];
+      for (const qName of defaultQueues) {
+        if (!queueStats[qName]) {
+          queueStats[qName] = { processed: 0, failed: 0, history: [] };
+        }
+      }
+
+      html += `
+        <div class="job-queue-header">
+          <span class="job-queue-title">Job Queue</span>
+          <span class="job-queue-summary">${totals.processed || 0} processed / ${totals.failed || 0} failed (${Math.round((meta.period_minutes || 60) / 60)}hr)</span>
+          <span class="service-indicator ${statusClass}"></span>
+        </div>
+        <div class="job-queue-sparklines">
+      `;
+
+      // Render inline sparklines for each queue (in consistent order)
+      for (const qName of defaultQueues) {
+        const stats = queueStats[qName];
+        const historyData = JSON.stringify(stats.history);
+        html += `
+          <div class="job-queue-item">
+            <div class="job-queue-item-top">
+              <span class="job-queue-name">${qName}</span>
+              <canvas class="queue-spark-canvas" data-history='${historyData}' width="100" height="32"></canvas>
+              <span class="job-queue-count">${stats.processed}</span>
+            </div>
+          </div>
+        `;
+      }
+
+      html += `</div>`;
       // Search Agent details under job queue
       html += '<div class="search-agent-details" id="search-agent-content"></div>';
       html += '</div>';
@@ -2634,7 +2638,7 @@
       }
 
       const baseUrl = servicesMode === 'local' ? 'http://localhost' : 'https://app.titletrackr.com';
-      listEl.innerHTML = abstracts.map(a => `
+      listEl.innerHTML = abstracts.slice(0, 5).map(a => `
         <div class="abstract-item">
           <a href="${baseUrl}/abstracts/${a.slug}" class="abstract-slug" target="_blank">${a.slug || '-'}</a>
           <span class="abstract-location">${a.location || 'Untitled'}</span>
