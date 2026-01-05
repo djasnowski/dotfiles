@@ -11,7 +11,8 @@
       background: #0a0a0a;
       color: #00ff41;
       font-family: 'VCR OSD Mono', monospace;
-      min-height: 100vh;
+      height: 100vh;
+      overflow: hidden;
       display: flex;
       flex-direction: column;
       padding: 1rem 2rem;
@@ -433,13 +434,13 @@
       color: #00551a;
       padding: 0.5rem 0;
     }
-    /* Btop Network Panel */
+    /* Btop Network Panel - Multi-interface */
     .net-panel {
       display: flex;
       flex-direction: column;
       gap: 0.5rem;
     }
-    .net-header {
+    .net-panel-header {
       display: flex;
       align-items: center;
       gap: 1rem;
@@ -450,17 +451,44 @@
       text-transform: uppercase;
       letter-spacing: 0.15em;
     }
-    .net-iface {
+    #net-interfaces {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+    .net-iface-block {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+    }
+    .net-iface-header {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      font-size: 0.85rem;
+    }
+    .net-iface-name {
       color: #00ff41;
       font-weight: bold;
     }
-    .net-ip {
+    .net-iface-desc {
+      color: #00551a;
+      font-size: 0.8rem;
+    }
+    .net-iface-ip {
       color: #00772a;
-      font-size: 0.9rem;
+    }
+    .net-iface-rates {
+      color: #00aa2a;
+    }
+    .net-iface-totals {
+      color: #00551a;
+      margin-left: auto;
+      font-size: 0.8rem;
     }
     .net-chart-container {
       position: relative;
-      height: 120px;
+      height: 70px;
       background: #001a00;
       border: 1px solid #00ff4122;
     }
@@ -468,30 +496,18 @@
       width: 100%;
       height: 100%;
     }
-    .net-stats {
-      display: grid;
-      grid-template-columns: repeat(6, 1fr);
-      gap: 1rem;
-    }
-    .net-stat-box {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 0.5rem;
-    }
-    .net-stat-label {
+    .net-scale {
+      position: absolute;
+      right: 4px;
+      font-size: 0.65rem;
       color: #00551a;
-      font-size: 1.2rem;
+      z-index: 1;
     }
-    .net-stat-value {
-      color: #00ff41;
-      font-weight: bold;
-      font-size: 1.8rem;
-      font-variant-numeric: tabular-nums;
+    .net-scale.top {
+      top: 1px;
     }
-    .net-stat-value.dim {
-      color: #00772a;
-      font-weight: normal;
+    .net-scale.bottom {
+      bottom: 1px;
     }
 
     /* Search Agent Details (under job queue) */
@@ -1308,40 +1324,10 @@
       </div>
 
       <div class="net-panel">
-        <div class="net-header">
+        <div class="net-panel-header">
           <span class="net-title">Network</span>
-          <span class="net-iface" id="net-iface">--</span>
-          <span class="net-ip" id="net-ip">--</span>
         </div>
-        <div class="net-chart-container">
-          <canvas id="net-chart"></canvas>
-        </div>
-        <div class="net-stats">
-          <div class="net-stat-box">
-            <span class="net-stat-label">▼ Down</span>
-            <span class="net-stat-value" id="net-rx-rate">--</span>
-          </div>
-          <div class="net-stat-box">
-            <span class="net-stat-label">▲ Up</span>
-            <span class="net-stat-value" id="net-tx-rate">--</span>
-          </div>
-          <div class="net-stat-box">
-            <span class="net-stat-label">Peak ▼</span>
-            <span class="net-stat-value dim" id="net-rx-peak">--</span>
-          </div>
-          <div class="net-stat-box">
-            <span class="net-stat-label">Peak ▲</span>
-            <span class="net-stat-value dim" id="net-tx-peak">--</span>
-          </div>
-          <div class="net-stat-box">
-            <span class="net-stat-label">Total ▼</span>
-            <span class="net-stat-value dim" id="net-rx-total">--</span>
-          </div>
-          <div class="net-stat-box">
-            <span class="net-stat-label">Total ▲</span>
-            <span class="net-stat-value dim" id="net-tx-total">--</span>
-          </div>
-        </div>
+        <div id="net-interfaces"></div>
       </div>
     </div>
   </div>
@@ -2014,8 +2000,8 @@
       return humanBytes(Bps) + "/s";
     }
 
-    // Draw btop-style mirrored network chart
-    function drawNetMirrored(canvas, rxHist, txHist) {
+    // Draw btop-style mirrored network chart with dot matrix
+    function drawNetMirrored(canvas, rxHist, txHist, ifaceIdx = 0) {
       const ctx = canvas.getContext('2d');
       const rect = canvas.parentElement.getBoundingClientRect();
       canvas.width = rect.width;
@@ -2027,88 +2013,140 @@
 
       ctx.clearRect(0, 0, w, h);
 
-      // Draw zero line (dim green)
-      ctx.strokeStyle = '#00ff41';
-      ctx.globalAlpha = 0.3;
-      ctx.beginPath();
-      ctx.moveTo(0, mid + 0.5);
-      ctx.lineTo(w, mid + 0.5);
-      ctx.stroke();
-      ctx.globalAlpha = 1;
+      // Dot matrix settings
+      const dotSize = 3;      // size of each dot
+      const dotGapX = 2;      // horizontal gap between columns
+      const dotGapY = 1;      // vertical gap between dots
+      const colWidth = dotSize + dotGapX;
+      const rowHeight = dotSize + dotGapY;
 
       const n = Math.min(rxHist.length, txHist.length);
-      if (n < 2) return;
 
-      const barW = w / n;
+      // Calculate how many columns fit
+      const maxCols = Math.floor(w / colWidth);
+      const visibleData = Math.min(n, maxCols);
+      const startIdx = Math.max(0, n - maxCols);
 
-      // Autoscale to recent max (with headroom like btop)
-      let maxV = 1;
-      for (let i = 0; i < n; i++) {
+      // Draw baseline dots (dark green)
+      ctx.fillStyle = '#00551a';
+      for (let col = 0; col < maxCols; col++) {
+        const x = col * colWidth;
+        ctx.fillRect(x, mid - 1, dotSize, 2);
+      }
+
+      if (visibleData < 2) return;
+
+      // Autoscale
+      let maxV = 1024;
+      for (let i = startIdx; i < n; i++) {
         if (rxHist[i] > maxV) maxV = rxHist[i];
         if (txHist[i] > maxV) maxV = txHist[i];
       }
-      maxV *= 1.15;
+      maxV *= 1.2;
 
-      ctx.fillStyle = '#00ff41';
+      // Update scale labels (top and bottom like btop)
+      const scaleTop = document.getElementById(`net-scale-top-${ifaceIdx}`);
+      const scaleBottom = document.getElementById(`net-scale-bottom-${ifaceIdx}`);
+      const scaleText = humanBps(maxV);
+      if (scaleTop) scaleTop.textContent = scaleText;
+      if (scaleBottom) scaleBottom.textContent = scaleText;
 
-      for (let i = 0; i < n; i++) {
-        const x = Math.floor(i * barW);
-        const bw = Math.max(1, Math.floor(barW));
+      // Calculate max dots that fit in half height
+      const maxDotsPerSide = Math.floor((mid - 4) / rowHeight);
 
-        const tx = txHist[i] || 0;
-        const rx = rxHist[i] || 0;
+      // Draw dot columns
+      for (let i = 0; i < visibleData; i++) {
+        const dataIdx = startIdx + i;
+        const x = i * colWidth;
 
-        const txH = Math.round((tx / maxV) * (mid - 2));
-        const rxH = Math.round((rx / maxV) * (mid - 2));
+        const rx = rxHist[dataIdx] || 0;
+        const tx = txHist[dataIdx] || 0;
 
-        // Vary alpha based on intensity
-        const txAlpha = Math.min(1, 0.15 + (tx / maxV) * 0.85);
-        const rxAlpha = Math.min(1, 0.15 + (rx / maxV) * 0.85);
+        // Calculate number of dots for each direction
+        const rxDots = Math.round((rx / maxV) * maxDotsPerSide);
+        const txDots = Math.round((tx / maxV) * maxDotsPerSide);
 
-        // Upload (top half, growing upward from middle)
-        ctx.globalAlpha = txAlpha;
-        ctx.fillRect(x, mid - txH, bw, txH);
+        // RX (download) - dots above center, dark to bright green
+        for (let d = 0; d < rxDots; d++) {
+          const y = mid - 3 - (d * rowHeight);
+          // Color gradient: brighter green at top
+          const intensity = (d + 1) / maxDotsPerSide;
+          const g = Math.floor(80 + intensity * 175);  // 50 -> ff
+          ctx.fillStyle = `rgb(0, ${g}, ${Math.floor(g * 0.25)})`;
+          ctx.fillRect(x, y, dotSize, dotSize);
+        }
 
-        // Download (bottom half, growing downward from middle)
-        ctx.globalAlpha = rxAlpha;
-        ctx.fillRect(x, mid + 1, bw, rxH);
+        // TX (upload) - dots below center, dark to bright green
+        for (let d = 0; d < txDots; d++) {
+          const y = mid + 2 + (d * rowHeight);
+          // Color gradient: brighter green at bottom
+          const intensity = (d + 1) / maxDotsPerSide;
+          const g = Math.floor(80 + intensity * 175);  // 50 -> ff
+          ctx.fillStyle = `rgb(0, ${g}, ${Math.floor(g * 0.25)})`;
+          ctx.fillRect(x, y, dotSize, dotSize);
+        }
       }
-
-      ctx.globalAlpha = 1;
     }
 
-    // Fetch and update network panel
+    // Fetch and update network panel (multi-interface)
     async function fetchNetStats() {
       try {
         const res = await fetch(`${API_BASE}/api/v1/net`);
-        const net = await res.json();
+        const data = await res.json();
 
-        if (net.err) {
-          console.error('Net error:', net.err);
+        if (data.err) {
+          console.error('Net error:', data.err);
           return;
         }
 
-        // Update header
-        document.getElementById('net-iface').textContent = net.iface || '--';
-        document.getElementById('net-ip').textContent = net.ip || '--';
+        const container = document.getElementById('net-interfaces');
+        if (!container) return;
 
-        // Update rates
-        document.getElementById('net-rx-rate').textContent = humanBps(net.rx_Bps);
-        document.getElementById('net-tx-rate').textContent = humanBps(net.tx_Bps);
+        // Filter: skip veth (docker virtual endpoints)
+        const interfaces = (data.interfaces || []).filter(iface => {
+          // Skip docker veth interfaces
+          if (iface.iface.startsWith('veth')) return false;
+          // Show everything else (physical, bridges, loopback)
+          return true;
+        });
 
-        // Update peaks
-        document.getElementById('net-rx-peak').textContent = humanBps(net.rx_peak_Bps);
-        document.getElementById('net-tx-peak').textContent = humanBps(net.tx_peak_Bps);
-
-        // Update totals
-        document.getElementById('net-rx-total').textContent = humanBytes(net.rx_total_bytes);
-        document.getElementById('net-tx-total').textContent = humanBytes(net.tx_total_bytes);
-
-        // Draw mirrored chart
-        const canvas = document.getElementById('net-chart');
-        if (canvas && net.rx_hist_Bps && net.tx_hist_Bps) {
-          drawNetMirrored(canvas, net.rx_hist_Bps, net.tx_hist_Bps);
+        // Get description for interface type
+        function getIfaceDesc(name) {
+          if (name.startsWith('enp') || name.startsWith('eth')) return 'Wired Ethernet';
+          if (name.startsWith('wl') || name.startsWith('wlan')) return 'WiFi';
+          if (name.startsWith('br-')) return 'Docker Bridge';
+          if (name === 'lo') return 'Loopback (local)';
+          if (name.startsWith('docker')) return 'Docker';
+          if (name.startsWith('virbr')) return 'Virtual Bridge';
+          if (name.startsWith('tun') || name.startsWith('tap')) return 'VPN Tunnel';
+          return '';
         }
+
+        // Build HTML for each interface
+        container.innerHTML = interfaces.map((iface, idx) => `
+          <div class="net-iface-block">
+            <div class="net-iface-header">
+              <span class="net-iface-name">${iface.iface}</span>
+              <span class="net-iface-desc">${getIfaceDesc(iface.iface)}</span>
+              <span class="net-iface-ip">${iface.ip}</span>
+              <span class="net-iface-rates">▼${humanBps(iface.rx_Bps)} ▲${humanBps(iface.tx_Bps)}</span>
+              <span class="net-iface-totals">Σ ▼${humanBytes(iface.rx_total_bytes)} ▲${humanBytes(iface.tx_total_bytes)}</span>
+            </div>
+            <div class="net-chart-container">
+              <span class="net-scale top" id="net-scale-top-${idx}">--</span>
+              <canvas id="net-chart-${idx}"></canvas>
+              <span class="net-scale bottom" id="net-scale-bottom-${idx}">--</span>
+            </div>
+          </div>
+        `).join('');
+
+        // Draw charts for each interface
+        interfaces.forEach((iface, idx) => {
+          const canvas = document.getElementById(`net-chart-${idx}`);
+          if (canvas && iface.rx_hist_Bps && iface.tx_hist_Bps) {
+            drawNetMirrored(canvas, iface.rx_hist_Bps, iface.tx_hist_Bps, idx);
+          }
+        });
       } catch (e) {
         console.error('Net fetch error:', e);
       }
