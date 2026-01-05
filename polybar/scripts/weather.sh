@@ -95,9 +95,9 @@ get_weather() {
 
         # Format: [Icon] Current°F, [Sunset icon] time
         if [ -n "$sunset" ]; then
-            echo "%{T10}${weather_icon}%{T-} ${temp}°F, %{T10}J%{T-} ${sunset} —"
+            echo "%{T5}${weather_icon}%{T-} ${temp}°F, %{T5}J%{T-} ${sunset} —"
         else
-            echo "%{T10}${weather_icon}%{T-} ${temp}°F —"
+            echo "%{T5}${weather_icon}%{T-} ${temp}°F —"
         fi
     fi
 }
