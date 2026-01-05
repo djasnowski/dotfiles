@@ -23,6 +23,27 @@ This is a complete desktop environment configuration optimized for:
 - **Development-focused** with extensive aliases and tool integrations
 - **Spotify integration** with custom controls and status display
 
+## Screenshots
+
+### Neovim Editor `:colo matrix`
+
+<img width="2556" height="1440" alt="image" src="https://github.com/user-attachments/assets/9b91c4b7-e478-420a-b370-320df9627afd" />
+
+- This also shows: Tmux, Heirline, i3 and polybar.
+
+### My background
+
+<img width="2558" height="1440" alt="image" src="https://github.com/user-attachments/assets/e85f5c3d-b461-4d97-83c8-89b3dc37adb6" />
+
+### My terminal `xfce4-terminal`
+
+<img width="2555" height="1440" alt="image" src="https://github.com/user-attachments/assets/d38af18d-82ed-4736-917a-1ec9670abbf2" />
+
+### My file viewer (`yazi`)
+
+<img width="2559" height="1440" alt="image" src="https://github.com/user-attachments/assets/a671e138-9061-49ee-8a81-37c01b6dde2c" />
+
+
 ### Key Features
 
 - **i3 Window Manager**: Tiling window manager with custom keybindings
