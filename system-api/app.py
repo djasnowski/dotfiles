@@ -774,7 +774,7 @@ async def app_abstracts(mode: str = Query("local", pattern="^(local|prod)$")):
 @app.get("/api/v1/search-agent-health")
 async def search_agent_health(mode: str = Query("local", pattern="^(local|prod)$")):
     """Proxy to search agent health endpoint"""
-    base_url = "https://app.titletrackr.com" if mode == "prod" else "http://localhost:3001"
+    base_url = "http://search-agents.titletrackr.com:8080" if mode == "prod" else "http://localhost:3001"
     try:
         async with httpx.AsyncClient(timeout=5.0) as client:
             resp = await client.get(f"{base_url}/health")
