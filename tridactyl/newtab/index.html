@@ -201,14 +201,15 @@
       display: grid;
       grid-template-columns: minmax(0, 2fr) minmax(400px, 2fr);
       gap: 0;
-      flex: '0 0 auto';
+      flex: 1;
     }
     .bookmarks-stats-row > .bookmarks {
       padding: 0.4rem 0.5rem;
     }
     .bookmarks-stats-row > .stats-sidebar {
-      padding: 0.75rem 1.5rem 0.75rem 1.5rem;
+      padding: 0;
       border-left: 1px solid #00ff4122;
+      height: 100%;
     }
 
     /* Bookmarks */
@@ -1053,17 +1054,18 @@
       font-size: 0.85rem;
     }
 
-    /* Stats */
+    /* Stats - 5x3 grid filling all available space */
     .stats {
       display: grid;
       grid-template-columns: repeat(5, 1fr);
-      grid-template-rows: 1fr 1fr 1fr;
+      grid-template-rows: repeat(3, 1fr);
       height: 100%;
-      justify-items: center;
-      align-items: center;
+      width: 100%;
+      gap: 0;
     }
     .stats-section {
       height: 100%;
+      width: 100%;
     }
     .stats-sidebar {
       height: 100%;
@@ -1072,7 +1074,18 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 0.3rem;
+      justify-content: center;
+      gap: 0.2rem;
+      width: 100%;
+      height: 100%;
+      border-right: 1px solid #00ff4122;
+      border-bottom: 1px solid #00ff4122;
+    }
+    .stat:nth-child(5n) {
+      border-right: none;
+    }
+    .stat:nth-child(n+11) {
+      border-bottom: none;
     }
     .stat-label {
       color: #00551a;
