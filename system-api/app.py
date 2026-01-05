@@ -38,6 +38,7 @@ _system_info_cache = None
 
 # History for sparklines (360 samples = 30 min at 5s intervals)
 HISTORY_SIZE = 360
+CORE_HISTORY_SIZE = 60  # 1 minute for per-core rolling charts
 _history = {
     "cpu": deque(maxlen=HISTORY_SIZE),
     "mem": deque(maxlen=HISTORY_SIZE),
@@ -52,6 +53,8 @@ _history = {
     "gpuFan": deque(maxlen=HISTORY_SIZE),
     "gpuVram": deque(maxlen=HISTORY_SIZE),
 }
+# Per-core CPU history (initialized on first use)
+_core_history = []  # list of deques, one per core
 _history_lock = threading.Lock()
 
 
@@ -670,8 +673,10 @@ def format_bytes_rate(kb_s):
 
 
 def record_history(cpu_pct, mem_pct, net_down_kb, net_up_kb, cpu_temp, disk_io_kb,
-                   gpu_util=0, gpu_temp=0, gpu_power=0, gpu_fan=0, gpu_vram_pct=0):
+                   gpu_util=0, gpu_temp=0, gpu_power=0, gpu_fan=0, gpu_vram_pct=0,
+                   per_core_pct=None):
     """Record a history sample for sparklines"""
+    global _core_history
     with _history_lock:
         _history["cpu"].append(cpu_pct)
         _history["mem"].append(mem_pct)
@@ -685,6 +690,13 @@ def record_history(cpu_pct, mem_pct, net_down_kb, net_up_kb, cpu_temp, disk_io_k
         _history["gpuPower"].append(gpu_power or 0)
         _history["gpuFan"].append(gpu_fan or 0)
         _history["gpuVram"].append(gpu_vram_pct or 0)
+        # Per-core CPU history
+        if per_core_pct:
+            # Initialize core history deques if needed
+            while len(_core_history) < len(per_core_pct):
+                _core_history.append(deque(maxlen=CORE_HISTORY_SIZE))
+            for i, pct in enumerate(per_core_pct):
+                _core_history[i].append(pct)
 
 
 def get_history_snapshot():
@@ -703,6 +715,8 @@ def get_history_snapshot():
             "gpuPower": list(_history["gpuPower"]),
             "gpuFan": list(_history["gpuFan"]),
             "gpuVram": list(_history["gpuVram"]),
+            # Per-core CPU history
+            "perCore": [list(core) for core in _core_history],
         }
 
 
@@ -718,6 +732,7 @@ def snapshot():
     cpu_stats = get_cpu_stats_rates()
 
     cpu_pct = psutil.cpu_percent(interval=0.2)
+    per_core_pct = psutil.cpu_percent(interval=0, percpu=True)
     mem_pct = vm.percent
 
     # Record history
@@ -737,6 +752,7 @@ def snapshot():
         gpu_power=gpu.get("power_w", 0) if isinstance(gpu, dict) else 0,
         gpu_fan=gpu.get("fan_pct", 0) if isinstance(gpu, dict) else 0,
         gpu_vram_pct=gpu_vram_pct,
+        per_core_pct=per_core_pct,
     )
 
     return {
@@ -751,7 +767,7 @@ def snapshot():
         },
         "cpu": {
             "util_pct": cpu_pct,
-            "per_core_pct": psutil.cpu_percent(interval=0, percpu=True),
+            "per_core_pct": per_core_pct,
             "load_avg": list(psutil.getloadavg()),
             "count": psutil.cpu_count(),
             "count_physical": psutil.cpu_count(logical=False),

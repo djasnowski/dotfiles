@@ -127,37 +127,35 @@
     .cores-grid {
       display: grid;
       grid-template-columns: repeat(8, 1fr);
-      gap: 0.5rem 1rem;
+      gap: 0.4rem 0.6rem;
     }
     .core {
       display: flex;
       flex-direction: column;
-      gap: 0.25rem;
+      gap: 0.15rem;
+    }
+    .core-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
     }
     .core-label {
-      font-size: 0.8rem;
+      font-size: 0.7rem;
       color: #00551a;
     }
-    .core-bar {
-      height: 1.2rem;
-      background: #001a00;
-      border: 1px solid #00ff4133;
-      position: relative;
-      overflow: hidden;
-    }
-    .core-fill {
-      height: 100%;
-      background: linear-gradient(90deg, #003300 0%, #00ff41 100%);
-      transition: width 0.3s ease;
-    }
     .core-pct {
-      position: absolute;
-      right: 0.3rem;
-      top: 50%;
-      transform: translateY(-50%);
       font-size: 0.7rem;
       color: #00aa2a;
-      text-shadow: 0 0 3px #0a0a0a;
+      font-variant-numeric: tabular-nums;
+    }
+    .core-chart {
+      height: 28px;
+      background: #001a00;
+      border: 1px solid #00ff4122;
+    }
+    .core-chart canvas {
+      width: 100%;
+      height: 100%;
     }
 
     /* Sparklines */
@@ -1570,6 +1568,10 @@
           history = data;
           drawAllSparklines();
         }
+        // Update per-core rolling charts
+        if (data.perCore && Array.isArray(data.perCore)) {
+          updateCoreCharts(data.perCore);
+        }
       } catch (e) {
         console.error('Failed to load history:', e);
       }
@@ -1635,7 +1637,7 @@
     // Load history on page load (deferred until drawSparkline is defined)
     setTimeout(loadServerHistory, 0);
 
-    // Initialize CPU cores grid
+    // Initialize CPU cores grid with rolling bar charts
     function initCoresGrid(numCores) {
       const grid = document.getElementById('cores-grid');
       if (grid.children.length === numCores) return;
@@ -1644,25 +1646,66 @@
         const core = document.createElement('div');
         core.className = 'core';
         core.innerHTML = `
-          <div class="core-label">Core ${i}</div>
-          <div class="core-bar">
-            <div class="core-fill" id="core-fill-${i}" style="width: 0%"></div>
+          <div class="core-header">
+            <span class="core-label">Core ${i}</span>
             <span class="core-pct" id="core-pct-${i}">0%</span>
+          </div>
+          <div class="core-chart">
+            <canvas id="core-canvas-${i}"></canvas>
           </div>
         `;
         grid.appendChild(core);
       }
     }
 
-    // Update CPU cores
+    // Update CPU cores (just the percentage text)
     function updateCores(coreUsage) {
       coreUsage.forEach((usage, i) => {
-        const fill = document.getElementById(`core-fill-${i}`);
         const pct = document.getElementById(`core-pct-${i}`);
-        if (fill && pct) {
-          fill.style.width = usage + '%';
+        if (pct) {
           pct.textContent = usage + '%';
         }
+      });
+    }
+
+    // Draw rolling bar chart for a core
+    function drawCoreChart(coreIdx, history) {
+      const canvas = document.getElementById(`core-canvas-${coreIdx}`);
+      if (!canvas || !history || history.length === 0) return;
+
+      const ctx = canvas.getContext('2d');
+      const rect = canvas.parentElement.getBoundingClientRect();
+      canvas.width = rect.width;
+      canvas.height = rect.height;
+
+      const w = canvas.width;
+      const h = canvas.height;
+      const n = history.length;
+      const barW = Math.max(2, Math.floor(w / 60));  // 60 bars max
+      const gap = 1;
+      const visibleBars = Math.min(n, Math.floor(w / barW));
+      const startIdx = Math.max(0, n - visibleBars);
+
+      ctx.clearRect(0, 0, w, h);
+
+      for (let i = 0; i < visibleBars; i++) {
+        const val = history[startIdx + i] || 0;
+        const barH = Math.round((val / 100) * h);
+        const x = i * barW;
+
+        // Green gradient based on intensity
+        const intensity = val / 100;
+        const g = Math.floor(80 + intensity * 175);
+        ctx.fillStyle = `rgb(0, ${g}, ${Math.floor(g * 0.25)})`;
+        ctx.fillRect(x, h - barH, barW - gap, barH);
+      }
+    }
+
+    // Update all core charts from history
+    function updateCoreCharts(perCoreHistory) {
+      if (!perCoreHistory) return;
+      perCoreHistory.forEach((history, i) => {
+        drawCoreChart(i, history);
       });
     }
 
