@@ -2122,12 +2122,62 @@
     let servicesMode = 'local'; // 'prod' or 'local'
 
     let healthLoaded = false;
+
+    function renderHealthSkeleton() {
+      const listEl = document.getElementById('services-list');
+      const modeLabel = servicesMode === 'local' ? 'localhost' : 'app.titletrackr.com';
+      const modeClass = servicesMode === 'prod' ? 'prod' : '';
+
+      listEl.innerHTML = `
+        <div class="health-grid">
+          <div class="health-left">
+            <div class="job-queue-header">
+              <span class="job-queue-title">Job Queue</span>
+              <span class="job-queue-summary" style="color: #00551a;">loading...</span>
+              <span class="service-indicator"></span>
+            </div>
+            <div class="job-queue-sparklines">
+              <div class="job-queue-item"><div class="job-queue-item-top"><span class="job-queue-name" style="color: #00551a;">---</span><canvas width="100" height="32"></canvas><span class="job-queue-count">-</span></div></div>
+              <div class="job-queue-item"><div class="job-queue-item-top"><span class="job-queue-name" style="color: #00551a;">---</span><canvas width="100" height="32"></canvas><span class="job-queue-count">-</span></div></div>
+              <div class="job-queue-item"><div class="job-queue-item-top"><span class="job-queue-name" style="color: #00551a;">---</span><canvas width="100" height="32"></canvas><span class="job-queue-count">-</span></div></div>
+            </div>
+            <div class="search-agent-details" id="search-agent-content">
+              <div class="search-agent-job" style="display: flex; gap: 1rem; align-items: center; border-color: #00551a33; background: rgba(0, 85, 26, 0.05);">
+                <span style="color: #00551a; font-weight: bold;">▶ ---</span>
+                <span style="color: #00441a;">--</span>
+                <span style="color: #00551a;">--</span>
+              </div>
+              <div class="search-agent-job" style="display: flex; gap: 1rem; align-items: center; border-color: #00551a33; background: rgba(0, 85, 26, 0.05);">
+                <span style="color: #00551a; font-weight: bold;">✓ ---</span>
+                <span style="color: #00441a;">--</span>
+                <span style="color: #00551a;">--</span>
+              </div>
+            </div>
+          </div>
+          <div class="health-right">
+            <div class="health-chips-header">
+              <span class="search-agents-stats" id="search-agents-stats">Search Agents</span>
+              <span class="services-mode ${modeClass}">${modeLabel}</span>
+            </div>
+            <div class="health-chips-grid">
+              <div class="health-chip"><span class="health-chip-name" style="color: #00551a;">Database</span><span class="health-chip-right"><span class="health-chip-latency" style="color: #00551a;">--</span><span class="health-chip-indicator"></span></span></div>
+              <div class="health-chip"><span class="health-chip-name" style="color: #00551a;">Redis</span><span class="health-chip-right"><span class="health-chip-latency" style="color: #00551a;">--</span><span class="health-chip-indicator"></span></span></div>
+              <div class="health-chip"><span class="health-chip-name" style="color: #00551a;">Horizon</span><span class="health-chip-right"><span class="health-chip-latency" style="color: #00551a;">--</span><span class="health-chip-indicator"></span></span></div>
+              <div class="health-chip"><span class="health-chip-name" style="color: #00551a;">TitleTrackr</span><span class="health-chip-right"><span class="health-chip-latency" style="color: #00551a;">--</span><span class="health-chip-indicator"></span></span></div>
+              <div class="health-chip"><span class="health-chip-name" style="color: #00551a;">Anthropic</span><span class="health-chip-right"><span class="health-chip-latency" style="color: #00551a;">--</span><span class="health-chip-indicator"></span></span></div>
+              <div class="health-chip" id="search-agent-chip"><span class="health-chip-name" style="color: #00551a;">Search Agent</span><span class="health-chip-right"><span class="health-chip-latency" style="color: #00551a;" id="search-agent-uptime">--</span><span class="health-chip-indicator" id="search-agent-indicator"></span></span></div>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
     async function checkHealth() {
       const listEl = document.getElementById('services-list');
 
-      // Show loading state only on first load
+      // Show skeleton on first load or mode switch
       if (!healthLoaded) {
-        listEl.innerHTML = '<div class="service-item"><span class="service-name">Loading...</span></div>';
+        renderHealthSkeleton();
       }
 
       try {
@@ -2362,7 +2412,7 @@
         if (chipEl) {
           chipEl.className = 'health-chip ' + statusClass;
           indicatorEl.className = 'health-chip-indicator ' + statusClass;
-          if (uptimeEl) uptimeEl.textContent = worker.uptime_human || '--';
+          if (uptimeEl) uptimeEl.textContent = (worker.uptime_human || '--').replace(/\s*\d+s$/, '');
         }
 
         // Update stats header above health chips
