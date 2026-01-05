@@ -239,6 +239,7 @@ create_symlinks() {
     link_config "$DOTFILES_DIR/scripts" "$CONFIG_DIR/scripts"
     link_config "$DOTFILES_DIR/zscroll" "$CONFIG_DIR/zscroll"
     link_config "$DOTFILES_DIR/system-api" "$CONFIG_DIR/system-api"
+    link_config "$DOTFILES_DIR/nvim" "$CONFIG_DIR/nvim"
 
     # Local bin (zscroll for polybar spotify)
     info "Linking local bin scripts..."
