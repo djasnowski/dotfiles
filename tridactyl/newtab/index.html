@@ -1602,22 +1602,29 @@
 
       const step = canvas.width / (HISTORY_SIZE - 1);
       const scale = canvas.height / maxVal;
+      // Right-align: newest data at right edge (btop-style)
+      const xOffset = canvas.width - (data.length - 1) * step;
 
       ctx.beginPath();
       ctx.strokeStyle = color;
       ctx.lineWidth = 1.5;
 
+      let firstX = 0;
       data.forEach((val, i) => {
-        const x = i * step;
+        const x = xOffset + i * step;
         const y = canvas.height - (val * scale);
-        if (i === 0) ctx.moveTo(x, y);
-        else ctx.lineTo(x, y);
+        if (i === 0) {
+          ctx.moveTo(x, y);
+          firstX = x;
+        } else {
+          ctx.lineTo(x, y);
+        }
       });
       ctx.stroke();
 
       // Fill under the line
-      ctx.lineTo((data.length - 1) * step, canvas.height);
-      ctx.lineTo(0, canvas.height);
+      ctx.lineTo(xOffset + (data.length - 1) * step, canvas.height);
+      ctx.lineTo(firstX, canvas.height);
       ctx.closePath();
       ctx.fillStyle = color.replace(')', ', 0.1)').replace('rgb', 'rgba');
       ctx.fill();
@@ -2026,6 +2033,8 @@
       const maxCols = Math.floor(w / colWidth);
       const visibleData = Math.min(n, maxCols);
       const startIdx = Math.max(0, n - maxCols);
+      // Right-align: offset so newest data is at right edge
+      const xOffset = (maxCols - visibleData) * colWidth;
 
       // Draw baseline dots (dark green)
       ctx.fillStyle = '#00551a';
@@ -2054,10 +2063,10 @@
       // Calculate max dots that fit in half height
       const maxDotsPerSide = Math.floor((mid - 4) / rowHeight);
 
-      // Draw dot columns
+      // Draw dot columns (right-aligned)
       for (let i = 0; i < visibleData; i++) {
         const dataIdx = startIdx + i;
-        const x = i * colWidth;
+        const x = xOffset + i * colWidth;
 
         const rx = rxHist[dataIdx] || 0;
         const tx = txHist[dataIdx] || 0;
@@ -2387,6 +2396,8 @@
       const height = canvas.height;
       const max = Math.max(...data, 1);
       const step = width / Math.max(data.length - 1, 1);
+      // Right-align: newest data at right edge
+      const xOffset = width - (data.length - 1) * step;
 
       ctx.clearRect(0, 0, width, height);
 
@@ -2395,7 +2406,7 @@
       ctx.strokeStyle = '#00ff41';
       ctx.lineWidth = 1.5;
       for (let i = 0; i < data.length; i++) {
-        const x = i * step;
+        const x = xOffset + i * step;
         const y = height - (data[i] / max) * (height - 2) - 1;
         if (i === 0) ctx.moveTo(x, y);
         else ctx.lineTo(x, y);
@@ -2406,7 +2417,7 @@
       ctx.fillStyle = '#00ff41';
       for (let i = 0; i < data.length; i++) {
         if (data[i] > 0) {
-          const x = i * step;
+          const x = xOffset + i * step;
           const y = height - (data[i] / max) * (height - 2) - 1;
           ctx.beginPath();
           ctx.arc(x, y, 2, 0, Math.PI * 2);
