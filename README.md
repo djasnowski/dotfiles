@@ -27,7 +27,8 @@ This is a complete desktop environment configuration optimized for:
 
 ### My newtab screen on Tridactyl
 
-<img width="2557" height="1268" alt="image" src="https://github.com/user-attachments/assets/4be62c0f-05aa-46b5-9db8-cb17bb8262e1" />
+<img width="2560" height="1440" alt="image" src="https://github.com/user-attachments/assets/16aab86a-3e98-4892-8daa-1241b1312c3c" />
+
 
 - Pop!_OS workstation + dev box (Linux, recent kernel)
 - tmux-first workflow: named sessions/windows, persistent panes for “work / config / site”
