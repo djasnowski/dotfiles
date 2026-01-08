@@ -777,6 +777,85 @@
     }
 
     /* Abstracts Section */
+    /* Tmux Sessions Panel */
+    .tmux-section {
+      padding: 0.5rem 0.75rem !important;
+    }
+    .tmux-header {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 0.4rem;
+    }
+    .tmux-title {
+      font-size: 1rem;
+      color: #00551a;
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+    }
+    .tmux-summary {
+      font-size: 0.9rem;
+      color: #00772a;
+    }
+    .tmux-sessions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.35rem;
+    }
+    .tmux-session {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.3rem 0.5rem;
+      background: rgba(0, 255, 65, 0.03);
+      border: 1px solid #00ff4115;
+    }
+    .tmux-session.attached {
+      border-color: #00ff4144;
+      background: rgba(0, 255, 65, 0.08);
+      position: relative;
+      overflow: hidden;
+    }
+    .tmux-session.attached::after {
+      content: '';
+      position: absolute;
+      right: 0;
+      top: 0;
+      bottom: 0;
+      width: 4px;
+      background: #00ff41;
+    }
+    .tmux-session-name {
+      color: #00ff41;
+      font-weight: bold;
+      min-width: 100px;
+    }
+    .tmux-session.attached .tmux-session-name {
+      color: #00ff41;
+    }
+    .tmux-session-age {
+      color: #00551a;
+      font-size: 0.85rem;
+      min-width: 50px;
+    }
+    .tmux-window-list {
+      display: flex;
+      gap: 0.4rem;
+      flex-wrap: wrap;
+      flex: 1;
+    }
+    .tmux-window {
+      font-size: 0.75rem;
+      color: #00772a;
+      padding: 0.1rem 0.35rem;
+      background: rgba(0, 255, 65, 0.05);
+      border: 1px solid #00ff4122;
+    }
+    .tmux-empty {
+      color: #00551a;
+      font-size: 0.9rem;
+    }
+
     .abstracts-section {
       padding: 0.5rem 0 0 0 !important;
     }
@@ -1404,6 +1483,14 @@
           <span class="net-title">Network</span>
         </div>
         <div id="net-interfaces"></div>
+      </div>
+
+      <div class="tmux-section">
+        <div class="tmux-header">
+          <span class="tmux-title">Tmux Sessions</span>
+          <span class="tmux-summary" id="tmux-summary"></span>
+        </div>
+        <div class="tmux-sessions" id="tmux-sessions"></div>
       </div>
     </div>
   </div>
@@ -2267,11 +2354,11 @@
         const container = document.getElementById('net-interfaces');
         if (!container) return;
 
-        // Filter: skip veth (docker virtual endpoints)
+        // Filter: show main interfaces, exclude docker/veth
         const interfaces = (data.interfaces || []).filter(iface => {
-          // Skip docker veth interfaces
-          if (iface.iface.startsWith('veth')) return false;
-          // Show everything else (physical, bridges, loopback)
+          const name = iface.iface;
+          // Exclude docker-related interfaces
+          if (name.startsWith('docker') || name.startsWith('br-') || name.startsWith('veth')) return false;
           return true;
         });
 
@@ -2320,6 +2407,42 @@
     // Fetch network stats every second (matches backend collection rate)
     fetchNetStats();
     setInterval(fetchNetStats, 1000);
+
+    // Tmux sessions
+    async function fetchTmuxSessions() {
+      try {
+        const res = await fetch(`${API_BASE}/api/v1/tmux`);
+        const data = await res.json();
+
+        const container = document.getElementById('tmux-sessions');
+        const summary = document.getElementById('tmux-summary');
+
+        if (data.error || !data.sessions || data.sessions.length === 0) {
+          container.innerHTML = '<div class="tmux-empty">No sessions</div>';
+          summary.textContent = '';
+          return;
+        }
+
+        const attached = data.sessions.filter(s => s.attached).length;
+        const total = data.sessions.length;
+        summary.textContent = `${attached}/${total} attached`;
+
+        container.innerHTML = data.sessions.map(s => `
+          <div class="tmux-session ${s.attached ? 'attached' : ''}">
+            <span class="tmux-session-name">${s.name}</span>
+            <span class="tmux-session-age">${s.age}</span>
+            <div class="tmux-window-list">
+              ${s.window_list.map(w => `<span class="tmux-window">${w}</span>`).join('')}
+            </div>
+          </div>
+        `).join('');
+      } catch (e) {
+        console.error('Tmux fetch error:', e);
+      }
+    }
+
+    fetchTmuxSessions();
+    setInterval(fetchTmuxSessions, 5000);
 
     // Services health check
     let servicesMode = 'local'; // 'prod' or 'local'

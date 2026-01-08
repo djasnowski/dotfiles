@@ -889,3 +889,53 @@ async def search_agent_health(mode: str = Query("local", pattern="^(local|prod)$
         return {"error": "timeout", "worker": {"status": "unknown"}}
     except Exception as e:
         return {"error": str(e), "worker": {"status": "unknown"}}
+
+
+@app.get("/api/v1/tmux")
+def tmux_sessions():
+    """Get tmux sessions with windows info"""
+    try:
+        # Get sessions: name, windows count, attached status, created time
+        result = subprocess.run(
+            ["tmux", "list-sessions", "-F", "#{session_name}|#{session_windows}|#{?session_attached,1,0}|#{session_created}"],
+            capture_output=True, text=True, timeout=5
+        )
+        if result.returncode != 0:
+            return {"sessions": [], "error": "no tmux server"}
+
+        sessions = []
+        for line in result.stdout.strip().split("\n"):
+            if not line.strip():
+                continue
+            parts = line.split("|")
+            if len(parts) >= 4:
+                name = parts[0]
+                windows = int(parts[1])
+                attached = parts[2] == "1"
+                created = int(parts[3])
+
+                # Get window names for this session
+                win_result = subprocess.run(
+                    ["tmux", "list-windows", "-t", name, "-F", "#{window_index}:#{window_name}"],
+                    capture_output=True, text=True, timeout=2
+                )
+                window_list = []
+                if win_result.returncode == 0:
+                    for win_line in win_result.stdout.strip().split("\n"):
+                        if win_line.strip():
+                            window_list.append(win_line.strip())
+
+                sessions.append({
+                    "name": name,
+                    "windows": windows,
+                    "window_list": window_list[:6],  # Limit to 6 windows
+                    "attached": attached,
+                    "created": created,
+                    "age": format_elapsed(time.time() - created),
+                })
+
+        return {"sessions": sessions}
+    except FileNotFoundError:
+        return {"sessions": [], "error": "tmux not installed"}
+    except Exception as e:
+        return {"sessions": [], "error": str(e)}

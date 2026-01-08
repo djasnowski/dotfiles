@@ -18,11 +18,26 @@ Custom **Matrix** theme - bright green (#00ff41) on near-black background.
 A Matrix-themed new tab page with live system stats, bookmarks, and keyboard shortcuts.
 
 ### Features
-- **Clock/Date** - Centered time display
-- **System Info** - Hostname, distro, kernel, load avg, process count
-- **Bookmarks** - Keyboard-accessible links loaded from JSON
-- **Keyboard Shortcuts** - Quick reference panel
-- **Live Stats** - CPU, GPU, RAM, disk, temps, network, uptime (updates every 5s)
+
+**Header**
+- **Clock/Date** - Large time display with weekday and date
+- **System Info** - Hostname, distro, kernel version
+- **Keyboard Shortcuts** - Quick reference panel for Tridactyl keys
+
+**System Monitoring**
+- **CPU Cores Grid** - Per-core usage with rolling sparkline charts
+- **Sparklines** - CPU, Memory, Network (↓/↑), CPU Temp, Disk I/O
+- **GPU Stats** - Utilization, temperature, power draw, VRAM usage with sparklines
+- **Top Processes** - Live process list sorted by CPU/memory with load averages
+- **Docker Containers** - Running containers with status and ports
+- **Network Interfaces** - Per-interface bandwidth with mirrored RX/TX charts
+- **Tmux Sessions** - Active sessions with window lists, age, and attached indicator
+
+**Bookmarks**
+- Keyboard-accessible bookmark groups loaded from JSON
+- Press number key to select group, then letter key to open link
+
+All stats update live via the system-api service.
 
 ### Setup
 
@@ -61,15 +76,15 @@ A Matrix-themed new tab page with live system stats, bookmarks, and keyboard sho
 
 | Service | Description | Port |
 |---------|-------------|------|
-| `newtab-server` | HTTP server for new tab | 8384 |
-| `newtab-stats` | Stats collector (JSON) | - |
+| `newtab-server` | HTTP server for new tab page | 8384 |
+| `system-api` | FastAPI backend for system stats | 61208 |
 
 ```bash
 # Check status
-systemctl --user status newtab-stats newtab-server
+systemctl --user status newtab-server system-api
 
 # View logs
-journalctl --user -u newtab-stats -f
+journalctl --user -u system-api -f
 ```
 
 ## Keybindings

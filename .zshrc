@@ -144,3 +144,12 @@ if [ -d "$FNM_PATH" ]; then
 fi
 export DBUS_SESSION_BUS_ADDRESS="unix:path=/run/user/$(id -u)/bus"
 export PATH="$HOME/.local/bin:$PATH"
+
+# Source local env vars (not in dotfiles)
+[ -f ~/.env.local ] && source ~/.env.local
+export PATH="$HOME/.composer/vendor/bin:$PATH"
+
+# ===== Auto-attach to tmux =====
+if command -v tmux &> /dev/null && [ -z "$TMUX" ]; then
+    tmux attach || tmux
+fi
