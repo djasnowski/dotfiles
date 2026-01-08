@@ -25,6 +25,18 @@ This is a complete desktop environment configuration optimized for:
 
 ## Screenshots
 
+### My newtab screen on Tridactyl
+
+<img width="2557" height="1268" alt="image" src="https://github.com/user-attachments/assets/4be62c0f-05aa-46b5-9db8-cb17bb8262e1" />
+
+- Pop!_OS workstation + dev box (Linux, recent kernel)
+- tmux-first workflow: named sessions/windows, persistent panes for “work / config / site”
+- Terminal dashboard UI aggregating: CPU (per-core + total), RAM/swap, disk usage + IO, network per interface, temps, uptime, connections, processes
+- NVIDIA GPU stats embedded (util, power, temp, VRAM)
+- Docker as the app runtime: app + Postgres + Redis (+ support services) always-on
+- Queue/worker visibility (e.g., Horizon/worker health tiles)
+- Internal bookmarks panel (dev tools/URLs grouped by category for fast navigation)
+
 ### Neovim Editor `:colo matrix`
 
 <img width="2556" height="1440" alt="image" src="https://github.com/user-attachments/assets/9b91c4b7-e478-420a-b370-320df9627afd" />
