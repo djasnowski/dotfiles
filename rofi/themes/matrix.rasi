@@ -1,6 +1,10 @@
 /* Matrix Terminal Theme */
 /* Inspired by The Matrix digital rain */
 
+configuration {
+    font: "VCR OSD Mono 14";
+}
+
 * {
     /* Pure black void */
     bg:             #000000;

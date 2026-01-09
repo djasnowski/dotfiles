@@ -46,6 +46,8 @@ bindsym $mod+Shift+p exec /home/dan/.config/i3/auto-display.sh
 
 # Screenshot selection to clipboard
 bindsym $mod+Shift+s exec flameshot gui --clipboard
+# Screenshot selection to file
+bindsym $mod+Ctrl+s exec flameshot gui -p ~/Pictures/Screenshots
 
 # Start rofi (program launcher)
 bindsym $mod+Shift+Return exec rofi -show drun -show-icons
