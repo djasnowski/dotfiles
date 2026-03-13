@@ -52,11 +52,6 @@ This is a complete desktop environment configuration optimized for:
 
 <img width="2555" height="1440" alt="image" src="https://github.com/user-attachments/assets/d38af18d-82ed-4736-917a-1ec9670abbf2" />
 
-### My file viewer (`yazi`)
-
-<img width="2559" height="1440" alt="image" src="https://github.com/user-attachments/assets/a671e138-9061-49ee-8a81-37c01b6dde2c" />
-
-
 ### Key Features
 
 - **i3 Window Manager**: Tiling window manager with custom keybindings
